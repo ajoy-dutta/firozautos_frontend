@@ -20,7 +20,10 @@ export default function Authentication() {
   const [showName1, setShowName1] = useState("");
   const fileInputRef = useRef();
 
-  const [credentials, setCredentials] = useState({ username: "", password: "" });
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
   const [user, setUser] = useState({
     username: "",
     full_name: "",
@@ -31,18 +34,22 @@ export default function Authentication() {
     confirm_password: "",
   });
 
-  const handleLoginChange = (e) => setCredentials({ ...credentials, [e.target.name]: e.target.value });
+  const handleLoginChange = (e) =>
+    setCredentials({ ...credentials, [e.target.name]: e.target.value });
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!credentials.username || !credentials.password) return alert("Username and password are required!");
+    if (!credentials.username || !credentials.password)
+      return alert("Username and password are required!");
     try {
       const res = await AxiosInstance.post("login/", credentials);
       localStorage.setItem("access_token", res.data.access);
       refreshUser();
       router.push("/dashboard");
     } catch (error) {
-      alert(error.response?.status === 401 ? "Invalid credentials" : "Login failed!");
+      alert(
+        error.response?.status === 401 ? "Invalid credentials" : "Login failed!"
+      );
     }
   };
 
@@ -62,14 +69,27 @@ export default function Authentication() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (user.password !== user.confirm_password) return alert("Passwords do not match!");
+    if (user.password !== user.confirm_password)
+      return alert("Passwords do not match!");
 
     const formData = new FormData();
-    Object.entries(user).forEach(([key, value]) => value && formData.append(key, value));
+    Object.entries(user).forEach(
+      ([key, value]) => value && formData.append(key, value)
+    );
 
     try {
-      await AxiosInstance.post("register/", formData, { headers: { "Content-Type": "multipart/form-data" } });
-      setUser({ username: "", full_name: "", email: "", phone: "", profile_picture: null, password: "", confirm_password: "" });
+      await AxiosInstance.post("register/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setUser({
+        username: "",
+        full_name: "",
+        email: "",
+        phone: "",
+        profile_picture: null,
+        password: "",
+        confirm_password: "",
+      });
       setShowName1("");
       alert("Registered Successfully!");
     } catch (error) {
@@ -78,18 +98,35 @@ export default function Authentication() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-2 py-4 bg-cover bg-center" style={{ backgroundImage: "url('/register.avif')" }}>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-2 py-4 bg-cover bg-center"
+      style={{ backgroundImage: "url('/register.avif')" }}
+    >
       <div className="bg-white bg-opacity-90 backdrop-blur-md rounded-2xl shadow-2xl flex flex-col lg:flex-row overflow-hidden max-w-4xl w-full">
-<div
-  className={`w-full lg:w-2/5 relative p-6 flex flex-col items-center justify-center bg-white transition-all duration-500 ${
-    registers ? "min-h-[600px]" : "min-h-[400px]"
-  }`}
->
-         
-<Image src={modelImage} alt="Model" width={220} height={registers ? 330 : 200} className="rounded-xl object-cover shadow-lg mb-6" />
-          <Image src={bikeImage} alt="Product" width={140} height={100} className="rounded-xl object-cover shadow-md" />
-         <div className="mt-8">
-            <Link href="/" className="text-pink-500 border border-pink-400 px-4 py-2 rounded-full font-semibold hover:bg-pink-100 transition">
+        <div
+          className={`w-full lg:w-2/5 relative p-6 flex flex-col items-center justify-center bg-white transition-all duration-500 ${
+            registers ? "min-h-[600px]" : "min-h-[400px]"
+          }`}
+        >
+          <Image
+            src={modelImage}
+            alt="Model"
+            width={220}
+            height={registers ? 330 : 200}
+            className="rounded-xl object-cover shadow-lg mb-6"
+          />
+          <Image
+            src={bikeImage}
+            alt="Product"
+            width={140}
+            height={100}
+            className="rounded-xl object-cover shadow-md"
+          />
+          <div className="mt-8">
+            <Link
+              href="/"
+              className="text-pink-500 border border-pink-400 px-4 py-2 rounded-full font-semibold hover:bg-pink-100 transition"
+            >
               ← Back to Home
             </Link>
           </div>
@@ -98,13 +135,17 @@ export default function Authentication() {
         <div className="w-full lg:w-3/5 p-10 bg-white">
           {registers ? (
             <form onSubmit={handleSubmit} className="space-y-6">
-              <h2 className="text-2xl font-bold text-pink-500 mb-6 text-center">Create an Account</h2>
+              <h2 className="text-2xl font-bold text-pink-500 mb-6 text-center">
+                Create an Account
+              </h2>
               {["username", "full_name", "email", "phone"].map((field) => (
                 <input
                   key={field}
                   name={field}
                   value={user[field]}
-                  onChange={(e) => setUser({ ...user, [field]: e.target.value })}
+                  onChange={(e) =>
+                    setUser({ ...user, [field]: e.target.value })
+                  }
                   placeholder={field.replace("_", " ").toUpperCase()}
                   className="w-full px-2 py-2 rounded-full border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
                   required={field !== "email"}
@@ -113,10 +154,18 @@ export default function Authentication() {
 
               <div>
                 <label className="text-sm mb-1 block">Profile Picture</label>
-                <div className="cursor-pointer border px-4 py-2 rounded-full text-gray-600 bg-gray-100" onClick={() => fileInputRef.current.click()}>
+                <div
+                  className="cursor-pointer border px-4 py-2 rounded-full text-gray-600 bg-gray-100"
+                  onClick={() => fileInputRef.current.click()}
+                >
                   {showName1 || "Choose File"}
                 </div>
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
                 {showName1 && (
                   <div className="text-sm text-red-500 flex items-center gap-2 mt-2">
                     <span>{showName1}</span>
@@ -131,34 +180,67 @@ export default function Authentication() {
                 <div key={field} className="relative">
                   <input
                     name={field}
-                    type={field === "password" ? (showPassword ? "text" : "password") : showConfirmPassword ? "text" : "password"}
+                    type={
+                      field === "password"
+                        ? showPassword
+                          ? "text"
+                          : "password"
+                        : showConfirmPassword
+                        ? "text"
+                        : "password"
+                    }
                     value={user[field]}
-                    onChange={(e) => setUser({ ...user, [field]: e.target.value })}
+                    onChange={(e) =>
+                      setUser({ ...user, [field]: e.target.value })
+                    }
                     placeholder={field.replace("_", " ").toUpperCase()}
                     className="w-full border px-2 py-2 rounded-full bg-gray-100 pr-10 focus:outline-none focus:ring-2 focus:ring-pink-400"
                     required
                   />
                   <span
-                    onClick={() => field === "password" ? setShowPassword(!showPassword) : setShowConfirmPassword(!showConfirmPassword)}
+                    onClick={() =>
+                      field === "password"
+                        ? setShowPassword(!showPassword)
+                        : setShowConfirmPassword(!showConfirmPassword)
+                    }
                     className="absolute right-4 top-3.5 cursor-pointer text-gray-500"
                   >
-                    {field === "password"
-                      ? showPassword ? <FaEyeSlash /> : <FaEye />
-                      : showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                    {field === "password" ? (
+                      showPassword ? (
+                        <FaEyeSlash />
+                      ) : (
+                        <FaEye />
+                      )
+                    ) : showConfirmPassword ? (
+                      <FaEyeSlash />
+                    ) : (
+                      <FaEye />
+                    )}
                   </span>
                 </div>
               ))}
 
-              <button type="submit" className="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-full">
+              <button
+                type="submit"
+                className="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-full"
+              >
                 SIGN UP
               </button>
               <p className="text-sm text-center text-gray-500">
-                Already have an account? <span onClick={() => setRegister(false)} className="text-pink-500 cursor-pointer font-medium">Login</span>
+                Already have an account?{" "}
+                <span
+                  onClick={() => setRegister(false)}
+                  className="text-pink-500 cursor-pointer font-medium"
+                >
+                  Login
+                </span>
               </p>
             </form>
           ) : (
             <form onSubmit={handleLogin} className="space-y-6">
-              <h2 className="text-2xl font-bold text-pink-500 mb-6 text-center">Login</h2>
+              <h2 className="text-2xl font-bold text-pink-500 mb-6 text-center">
+                Login
+              </h2>
               <input
                 name="username"
                 value={credentials.username}
@@ -188,7 +270,13 @@ export default function Authentication() {
                 LOGIN
               </button>
               <p className="text-center text-sm text-gray-500">
-                Don’t have an account? <span onClick={() => setRegister(true)} className="text-pink-500 font-medium cursor-pointer">Register</span>
+                Don’t have an account?{" "}
+                <span
+                  onClick={() => setRegister(true)}
+                  className="text-pink-500 font-medium cursor-pointer"
+                >
+                  Register
+                </span>
               </p>
             </form>
           )}

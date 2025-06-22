@@ -39,8 +39,8 @@ function SidebarContent() {
       label: "Product",
       icon: "⚙️",
       children: [
-        { label: "Add Product", href: "/product/add" },
-        { label: "Product List", href: "/product/list" }
+        { label: "Add Product", href: "/products/addproducts" },
+        { label: "Product List", href: "/products/productslist" }
       ]
     },
     {
@@ -146,7 +146,7 @@ function SidebarContent() {
       icon: "⚙️",
       children: [
         { label: "Company Master", href: "/settings/company" },
-        { label: "Product Category Master", href: "/settings/product-category" },
+        { label: "Product Category Master", href: "/settings/productcategory" },
         { label: "Cost Category Master", href: "/settings/cost-category" },
         { label: "Sourse Category Master", href: "/settings/source-category" },
         { label: "Payment Mode Master", href: "/settings/payment-mode" },
@@ -161,8 +161,8 @@ function SidebarContent() {
 
   return (
     <div className="flex h-screen">
-      <aside className={`bg-sky-900 text-white transition-all duration-300 ${isMinimized ? "w-14" : "w-60"} shadow-lg`}>
-        <div className="flex flex-col h-full p-2">
+      <aside className={`bg-sky-900 text-white transition-all duration-300 ${isMinimized ? "w-14" : "w-72"} shadow-lg`}>
+        <div className="flex flex-col h-full px-2 py-4">
           <div className="relative flex justify-between items-center border-b border-gray-700 pb-2">
             {!isMinimized && (
               <Link href="/" className="flex items-center gap-3 p-2">
@@ -175,7 +175,7 @@ function SidebarContent() {
             </button>
           </div>
 
-          <nav className="flex-1 mt-2 overflow-y-auto">
+          <nav className="flex-1 mt-2 space-y-2 text-xs overflow-y-auto">
             {links.map((item, index) => {
               const isChildActive = item.children?.some(child => pathname === child.href);
               const isActive = item.href && pathname === item.href;
@@ -239,7 +239,7 @@ function SidebarContent() {
           <div className="mt-auto p-2 border-t border-gray-700">
             <button
               onClick={handleLogout}
-              className={`flex items-center gap-3 p-2 w-full rounded-lg transition cursor-pointer duration-200 ${pathname === "/authentication" ? "bg-white text-black" : "hover:bg-white hover:text-black"} ${isMinimized ? "justify-center" : ""}`}
+              className={`flex items-center text-xs gap-3 p-2 w-full rounded-lg transition cursor-pointer duration-200 ${pathname === "/authentication" ? "bg-white text-black" : "hover:bg-white hover:text-black"} ${isMinimized ? "justify-center" : ""}`}
             >
               <FaSignOutAlt />
               {!isMinimized && <span>Log Out</span>}
