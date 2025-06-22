@@ -24,9 +24,9 @@ const Navbar = () => {
   const activeClass = "text-green-600 font-semibold";
 
   return (
-    <div className="border-b bg-[#FAFBFC]">
+<div className="border-b bg-[#FAFBFC] fixed top-0 left-0 w-full z-50 shadow-md">
       {/* Top Bar */}
-      <div className="flex flex-col lg:flex-row items-center justify-between px-4 lg:px-6 bg-white py-2">
+      <div className="flex flex-col lg:flex-row items-center justify-between px-4 lg:px-6 bg-white">
         <div className="flex items-center w-full justify-between lg:w-auto">
           <img src={logo.src} alt="Motor Sheba" className="h-20 w-auto" />
           <button className="lg:hidden text-xl" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -79,7 +79,7 @@ const Navbar = () => {
       </div>
 
       {/* Desktop Menu */}
-      <div className="hidden lg:flex items-center justify-center gap-6 px-6 py-2 bg-[#FAFBFC] text-sm font-semibold">
+      <div className="hidden lg:flex items-center justify-center gap-6 px-6 py-1 bg-[#FAFBFC] text-sm font-semibold">
         <a href="/" className={`hover:text-blue-600 ${pathname === "/" ? activeClass : ""}`}>Home</a>
         <a href="/brands" className={`hover:text-blue-600 ${pathname === "/brands" ? activeClass : ""}`}>Brands</a>
         <a href="/accessories" className={`hover:text-blue-600 ${pathname === "/accessories" ? activeClass : ""}`}>Accessories</a>
