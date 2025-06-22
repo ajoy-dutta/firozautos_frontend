@@ -7,20 +7,21 @@ import { FiMail } from 'react-icons/fi';
 import { MdHeadsetMic } from 'react-icons/md';
 import { IoIosArrowDown } from 'react-icons/io';
 import logo from '../assets/Feroz_logo.jpg';
+import { useUser } from "../provider/UserProvider";
 
 const Navbar = () => {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { signOut } = useUser();
 
   const user = typeof window !== "undefined" ? localStorage.getItem("user") : null;
   const isAuthenticated = user !== null && user !== undefined && user !== "null";
 
-  const handleSignOut = () => {
-    localStorage.removeItem("user");
-    window.location.reload();
+const handleSignOut = () => {
+    signOut();
+    Router.push("/");
   };
-
   const activeClass = "text-green-600 font-semibold";
 
   return (
