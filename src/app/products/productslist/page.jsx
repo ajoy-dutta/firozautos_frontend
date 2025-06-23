@@ -7,6 +7,11 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 export default function ProductList() {
   const [products, setProducts] = useState([]);
 
+  const [filterCompany, setFilterCompany] = useState("");
+const [filterPartNo, setFilterPartNo] = useState("");
+const [filterProduct, setFilterProduct] = useState("");
+
+
   const fetchProducts = async () => {
     try {
       const response = await AxiosInstance.get("products/"); // Adjust the API endpoint as needed
@@ -40,6 +45,21 @@ export default function ProductList() {
     }
   };
 
+  const filteredProducts = products.filter((item) => {
+  const matchCompany = filterCompany
+    ? item.category_detail.company_detail.id.toString() === filterCompany
+    : true;
+  const matchPartNo = filterPartNo
+    ? item.part_no.toLowerCase().includes(filterPartNo.toLowerCase())
+    : true;
+  const matchProduct = filterProduct
+    ? item.id.toString() === filterProduct
+    : true;
+
+  return matchCompany && matchPartNo && matchProduct;
+});
+
+
   return (
     <div className="p-4 max-w-screen-xl mx-auto">
       <h1 className="text-slate-500 text-xl mb-6 pb-1 border-slate-500 border-b-[1px]">
@@ -47,25 +67,48 @@ export default function ProductList() {
       </h1>
 
       {/* Filter Form */}
-      <div className=" mt-10 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
-        <select className="w-full border border-gray-300 rounded-sm px-4 py-[6px]">
-          <option>--Select Company--</option>
-        </select>
-        <input
-          type="text"
-          placeholder="Part No"
-          className="w-full border border-gray-300 rounded-sm px-4 py-1"
-        />
-        <select className="w-full border border-gray-300 rounded-sm px-4 py-[6px]">
-          <option>--Select Product--</option>
-        </select>
-        <button className="w-1/2  bg-sky-600 text-white  rounded-sm px-4 py-1">
-          Search
-        </button>
-        <button className="w-1/2 text-sm bg-emerald-600 text-white   rounded-sm px-4 py-[6px]">
-          Export To Excel
-        </button>
-      </div>
+     <div className="mt-10 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+  {/* Filter by Company */}
+  <select
+    className="w-full border border-gray-300 rounded-sm px-4 py-[6px]"
+    value={filterCompany}
+    onChange={(e) => setFilterCompany(e.target.value)}
+  >
+    <option value="">--Select Company--</option>
+    {[...new Set(products.map((p) => p.category_detail.company_detail.id))].map((id) => {
+      const name = products.find(p => p.category_detail.company_detail.id === id)?.category_detail.company_detail.company_name;
+      return <option key={id} value={id}>{name}</option>;
+    })}
+  </select>
+
+  {/* Filter by Part No */}
+  <input
+    type="text"
+    placeholder="Part No"
+    value={filterPartNo}
+    onChange={(e) => setFilterPartNo(e.target.value)}
+    className="w-full border border-gray-300 rounded-sm px-4 py-1"
+  />
+
+  {/* Filter by Product */}
+  <select
+    className="w-full border border-gray-300 rounded-sm px-4 py-[6px]"
+    value={filterProduct}
+    onChange={(e) => setFilterProduct(e.target.value)}
+  >
+    <option value="">--Select Product--</option>
+    {products.map((p) => (
+      <option key={p.id} value={p.id}>
+        {p.product_name}
+      </option>
+    ))}
+  </select>
+
+  <button className="w-1/2 text-sm bg-emerald-600 text-white rounded-sm px-4 py-[6px]">
+    Export To Excel
+  </button>
+</div>
+
 
       {/* Table */}
       <div className="overflow-x-auto">
@@ -92,7 +135,7 @@ export default function ProductList() {
             </tr>
           </thead>
           <tbody>
-            {products.map((item, idx) => (
+            {filteredProducts.map((item, idx) => (
               <tr
                 key={item.id}
                 className="border text-center border-slate-400 "
