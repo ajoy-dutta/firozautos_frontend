@@ -3,11 +3,13 @@
 import AxiosInstance from "@/app/components/AxiosInstance";
 import { useEffect, useState } from "react";
 
+
 export default function ProductEntryForm() {
   const [categoryList, setCategoryList] = useState([]);
   const [companyList, setCompanyList] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [editId, setEditId] = useState(null);
 
   const [formData, setFormData] = useState({
     company: "",
@@ -46,6 +48,27 @@ export default function ProductEntryForm() {
   useEffect(() => {
     fetchCompanyNames();
     fetchCategories();
+
+    const storedProduct = localStorage.getItem("editProduct");
+    if (storedProduct) {
+      const parsed = JSON.parse(storedProduct);
+      setEditId(parsed.id);
+      setFormData({
+        company: parsed.category_detail?.company_detail?.id || "",
+        category: parsed.category_detail?.id || "",
+        product_name: parsed.product_name || "",
+        part_no: parsed.part_no || "",
+        hs_code: parsed.hs_code || "",
+        image: null,
+        brand_name: parsed.brand_name || "",
+        model_no: parsed.model_no || "",
+        net_weight: parsed.net_weight || "",
+        remarks: parsed.remarks || "",
+        product_mrp: parsed.product_mrp || "",
+        percentage: parsed.percentage || "",
+        product_bdt: parsed.product_bdt || "",
+      });
+    }
   }, []);
 
   const handleChange = (e) => {
@@ -59,7 +82,6 @@ export default function ProductEntryForm() {
       return;
     }
 
-    // Handle MRP & Percentage calculation
     if (name === "product_mrp" || name === "percentage") {
       const updatedForm = {
         ...formData,
@@ -68,7 +90,6 @@ export default function ProductEntryForm() {
 
       const mrp = parseFloat(updatedForm.product_mrp);
       const percentage = parseFloat(updatedForm.percentage);
-
       const isValid = !isNaN(mrp) && !isNaN(percentage);
       const bdt = isValid ? (percentage * mrp).toFixed(2) : "";
 
@@ -79,8 +100,6 @@ export default function ProductEntryForm() {
       return;
     }
 
-
-    // Filter categories by selected company
     if (name === "company") {
       const companyId = parseInt(value);
       const filtered = categoryList.filter(
@@ -105,10 +124,13 @@ export default function ProductEntryForm() {
         submitData.append(key, formData[key]);
       }
 
-      const res = await AxiosInstance.post("/products/", submitData);
+      const res = editId
+        ? await AxiosInstance.put(`/products/${editId}/`, submitData)
+        : await AxiosInstance.post("/products/", submitData);
 
       if (res.status === 201 || res.status === 200) {
-        alert("Product submitted successfully!");
+        alert(editId ? "Product updated successfully!" : "Product submitted successfully!");
+
         setFormData({
           company: "",
           category: "",
@@ -124,7 +146,8 @@ export default function ProductEntryForm() {
           percentage: "",
           product_bdt: "",
         });
-        // document.querySelector('input[name="image"]')?.value = "";
+        setEditId(null);
+        localStorage.removeItem("editProduct");
       } else {
         alert("Something went wrong during submission.");
       }
@@ -305,17 +328,19 @@ export default function ProductEntryForm() {
           </div>
         </div>
         {/* Buttons */}
-        {loading ? (
-        <div className="flex items-center justify-center">  <div className="h-10 w-10 animate-[spin_1s_linear_infinite] rounded-full border-4 border-l-0 border-r-0 border-double border-b-sky-400 border-t-sky-700"></div></div>
+         {loading ? (
+          <div className="flex items-center justify-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-l-0 border-r-0 border-double border-b-sky-400 border-t-sky-700"></div>
+          </div>
         ) : (
-          <div className="">
-          <button
-            type="submit"
-            className="bg-sky-950 text-white px-3 py-1 h-1/2  rounded hover:bg-sky-700"
-          >
-            Submit
-          </button>
-        </div>
+          <div>
+            <button
+              type="submit"
+              className="bg-sky-950 text-white px-3 py-1 rounded hover:bg-sky-700"
+            >
+              {editId ? "Update" : "Submit"}
+            </button>
+          </div>
         )}
       </form>
     </div>

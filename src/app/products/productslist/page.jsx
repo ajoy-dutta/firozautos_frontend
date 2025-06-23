@@ -3,14 +3,41 @@ import AxiosInstance from "@/app/components/AxiosInstance";
 import { useEffect, useState } from "react";
 import { MdModeEdit } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import { MdNavigateBefore } from "react-icons/md";
+import { MdNavigateNext } from "react-icons/md";
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
 
   const [filterCompany, setFilterCompany] = useState("");
-const [filterPartNo, setFilterPartNo] = useState("");
-const [filterProduct, setFilterProduct] = useState("");
+  const [filterPartNo, setFilterPartNo] = useState("");
+  const [filterProduct, setFilterProduct] = useState("");
 
+  const filteredProducts = products.filter((item) => {
+    const matchCompany = filterCompany
+      ? item.category_detail.company_detail.id.toString() === filterCompany
+      : true;
+    const matchPartNo = filterPartNo
+      ? item.part_no.toLowerCase().includes(filterPartNo.toLowerCase())
+      : true;
+    const matchProduct = filterProduct
+      ? item.id.toString() === filterProduct
+      : true;
+
+    return matchCompany && matchPartNo && matchProduct;
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 30;
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredProducts.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
   const fetchProducts = async () => {
     try {
@@ -45,20 +72,9 @@ const [filterProduct, setFilterProduct] = useState("");
     }
   };
 
-  const filteredProducts = products.filter((item) => {
-  const matchCompany = filterCompany
-    ? item.category_detail.company_detail.id.toString() === filterCompany
-    : true;
-  const matchPartNo = filterPartNo
-    ? item.part_no.toLowerCase().includes(filterPartNo.toLowerCase())
-    : true;
-  const matchProduct = filterProduct
-    ? item.id.toString() === filterProduct
-    : true;
-
-  return matchCompany && matchPartNo && matchProduct;
-});
-
+  useEffect(() => {
+    setCurrentPage(1); // reset page when filters change
+  }, [filterCompany, filterPartNo, filterProduct]);
 
   return (
     <div className="p-4 max-w-screen-xl mx-auto">
@@ -67,48 +83,57 @@ const [filterProduct, setFilterProduct] = useState("");
       </h1>
 
       {/* Filter Form */}
-     <div className="mt-10 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
-  {/* Filter by Company */}
-  <select
-    className="w-full border border-gray-300 rounded-sm px-4 py-[6px]"
-    value={filterCompany}
-    onChange={(e) => setFilterCompany(e.target.value)}
-  >
-    <option value="">--Select Company--</option>
-    {[...new Set(products.map((p) => p.category_detail.company_detail.id))].map((id) => {
-      const name = products.find(p => p.category_detail.company_detail.id === id)?.category_detail.company_detail.company_name;
-      return <option key={id} value={id}>{name}</option>;
-    })}
-  </select>
+      <div className="mt-10 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Filter by Company */}
+        <select
+          className="w-full border border-gray-300 rounded-sm px-4 py-[6px]"
+          value={filterCompany}
+          onChange={(e) => setFilterCompany(e.target.value)}
+        >
+          <option value="">--Select Company--</option>
+          {[
+            ...new Set(
+              products.map((p) => p.category_detail.company_detail.id)
+            ),
+          ].map((id) => {
+            const name = products.find(
+              (p) => p.category_detail.company_detail.id === id
+            )?.category_detail.company_detail.company_name;
+            return (
+              <option key={id} value={id}>
+                {name}
+              </option>
+            );
+          })}
+        </select>
 
-  {/* Filter by Part No */}
-  <input
-    type="text"
-    placeholder="Part No"
-    value={filterPartNo}
-    onChange={(e) => setFilterPartNo(e.target.value)}
-    className="w-full border border-gray-300 rounded-sm px-4 py-1"
-  />
+        {/* Filter by Part No */}
+        <input
+          type="text"
+          placeholder="Part No"
+          value={filterPartNo}
+          onChange={(e) => setFilterPartNo(e.target.value)}
+          className="w-full border border-gray-300 rounded-sm px-4 py-1"
+        />
 
-  {/* Filter by Product */}
-  <select
-    className="w-full border border-gray-300 rounded-sm px-4 py-[6px]"
-    value={filterProduct}
-    onChange={(e) => setFilterProduct(e.target.value)}
-  >
-    <option value="">--Select Product--</option>
-    {products.map((p) => (
-      <option key={p.id} value={p.id}>
-        {p.product_name}
-      </option>
-    ))}
-  </select>
+        {/* Filter by Product */}
+        <select
+          className="w-full border border-gray-300 rounded-sm px-4 py-[6px]"
+          value={filterProduct}
+          onChange={(e) => setFilterProduct(e.target.value)}
+        >
+          <option value="">--Select Product--</option>
+          {products.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.product_name}
+            </option>
+          ))}
+        </select>
 
-  <button className="w-1/2 text-sm bg-emerald-600 text-white rounded-sm px-4 py-[6px]">
-    Export To Excel
-  </button>
-</div>
-
+        <button className="w-1/2 text-sm bg-emerald-600 text-white rounded-sm px-4 py-[6px]">
+          Export To Excel
+        </button>
+      </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
@@ -135,7 +160,7 @@ const [filterProduct, setFilterProduct] = useState("");
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((item, idx) => (
+            {currentItems.map((item, idx) => (
               <tr
                 key={item.id}
                 className="border text-center border-slate-400 "
@@ -198,6 +223,38 @@ const [filterProduct, setFilterProduct] = useState("");
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="flex justify-center mt-4 gap-2">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="px-3 py-1 text-xs border rounded disabled:opacity-50"
+        >
+          <MdNavigateBefore />
+        </button>
+
+        {[...Array(totalPages)].map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setCurrentPage(idx + 1)}
+            className={`px-3 py-1 border rounded-full ${
+              currentPage === idx + 1 ? "bg-sky-950 text-sm text-white" : ""
+            }`}
+          >
+            {idx + 1}
+          </button>
+        ))}
+
+        <button
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 border rounded disabled:opacity-50"
+        >
+          <MdNavigateNext />
+        </button>
       </div>
     </div>
   );
