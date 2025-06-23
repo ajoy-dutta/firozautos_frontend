@@ -1,47 +1,50 @@
 "use client";
+import AxiosInstance from "@/app/components/AxiosInstance";
 import { useEffect, useState } from "react";
+import { MdModeEdit } from "react-icons/md";
+import { RiDeleteBin6Line } from "react-icons/ri";
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
 
+  const fetchProducts = async () => {
+    try {
+      const response = await AxiosInstance.get("products/"); // Adjust the API endpoint as needed
+      setProducts(response.data);
+      console.log("Fetched products:", response.data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
   useEffect(() => {
-    // Replace this with actual API call
-    setProducts([
-      {
-        id: 1,
-        image: null,
-        company: "Suzuki",
-        partNo: "12140-23J00-000",
-        name: "PISTON RING",
-        code: "PROD00066",
-        brand: "SUZUKI",
-        model: "HAYATE",
-        mrp: 244.0,
-        weight: 0.005,
-        date: "26/02/2022",
-        entryBy: "Admin",
-      },
-      {
-        id: 2,
-        image: null,
-        company: "Yamaha",
-        partNo: "2GSXF413J0P8",
-        name: "TANKSIDE COVER",
-        code: "PROD01010",
-        brand: "YAMAHA",
-        model: "FZ FI",
-        mrp: 1392.0,
-        weight: 0.0563,
-        date: "01/03/2022",
-        entryBy: "Admin",
-      },
-      // Add more dummy or fetched data
-    ]);
+    fetchProducts();
   }, []);
+
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this product?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const res = await AxiosInstance.delete(`/products/${id}/`);
+      if (res.status === 204) {
+        alert("Product deleted successfully.");
+        fetchProducts(); // refresh the list
+      } else {
+        alert("Failed to delete product.");
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Error deleting product.");
+    }
+  };
 
   return (
     <div className="p-4 max-w-screen-xl mx-auto">
-      <h1 className="text-slate-500 text-xl mb-6 pb-1 border-slate-500 border-b-[1px]">Product List</h1>
+      <h1 className="text-slate-500 text-xl mb-6 pb-1 border-slate-500 border-b-[1px]">
+        Product List
+      </h1>
 
       {/* Filter Form */}
       <div className=" mt-10 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -78,17 +81,22 @@ export default function ProductList() {
               <th className="p-2  border border-slate-400 ">Brand</th>
               <th className="p-2  border border-slate-400 ">Model</th>
               <th className="p-2  border border-slate-400 ">MRP</th>
+              <th className="p-2  border border-slate-400 ">Percentage</th>
+              <th className="p-2  border border-slate-400 ">BDT</th>
               <th className="p-2  border border-slate-400 ">Weight</th>
-              <th className="p-2  border border-slate-400 ">Date</th>
+              <th className="p-2  border border-slate-400 ">HS Code</th>
+              {/* <th className="p-2  border border-slate-400 ">Create Date</th> */}
               <th className="p-2  border border-slate-400 ">Entry By</th>
               <th className="p-2  border border-slate-400 ">Edit</th>
               <th className="p-2  border border-slate-400 ">Delete</th>
-            
             </tr>
           </thead>
           <tbody>
             {products.map((item, idx) => (
-              <tr key={item.id} className="border text-center border-slate-400 ">
+              <tr
+                key={item.id}
+                className="border text-center border-slate-400 "
+              >
                 <td className="p-2  border border-slate-400 ">{idx + 1}</td>
                 <td className="p-2  border border-slate-400 ">
                   <img
@@ -97,19 +105,52 @@ export default function ProductList() {
                     className="w-12 h-10 object-cover  border border-slate-400 "
                   />
                 </td>
-                <td className="p-2  border border-slate-400 ">{item.company}</td>
-                <td className="p-2  border border-slate-400 ">{item.partNo}</td>
-                <td className="p-2  border border-slate-400 ">{item.name}</td>
-                <td className="p-2  border border-slate-400 ">{item.code}</td>
-                <td className="p-2  border border-slate-400 ">{item.brand}</td>
-                <td className="p-2  border border-slate-400 ">{item.model}</td>
-                <td className="p-2  border border-slate-400 ">৳{item.mrp.toFixed(2)}</td>
-                <td className="p-2  border border-slate-400 ">{item.weight}</td>
-                <td className="p-2  border border-slate-400 ">{item.date}</td>
-                <td className="p-2  border border-slate-400 ">{item.entryBy}</td>
-                <td className="p-2  border border-slate-400  text-blue-600 cursor-pointer">✏️</td>
-                <td className="p-2  border border-slate-400  text-red-600 cursor-pointer">❌</td>
-               
+                <td className="p-2  border border-slate-400 ">
+                  {item.category_detail.company_detail.company_name}
+                </td>
+                <td className="p-2  border border-slate-400 ">
+                  {item.part_no}
+                </td>
+                <td className="p-2  border border-slate-400 ">
+                  {item.product_name}
+                </td>
+                <td className="p-2  border border-slate-400 ">
+                  {item.product_code}
+                </td>
+                <td className="p-2  border border-slate-400 ">
+                  {item.brand_name}
+                </td>
+                <td className="p-2  border border-slate-400 ">
+                  {item.model_no}
+                </td>
+                <td className="p-2  border border-slate-400 ">
+                  ৳{item.product_mrp}
+                </td>
+                <td className="p-2  border border-slate-400 ">
+                  ৳{item.percentage}
+                </td>
+                <td className="p-2  border border-slate-400 ">
+                  ৳{item.product_bdt}
+                </td>
+                <td className="p-2  border border-slate-400 ">
+                  {item.net_weight}
+                </td>
+                <td className="p-2  border border-slate-400 ">
+                  {item.hs_code}
+                </td>
+                <td className="p-2  border border-slate-400 ">
+                  {item.entryBy || "Admin"}
+                </td>
+                <td className="p-2 text-lg border border-slate-400  text-blue-600 cursor-pointer">
+                  <MdModeEdit />
+                </td>
+                <td
+                  className="p-2 text-lg border border-slate-400 text-red-600 cursor-pointer hover:text-red-800"
+                  onClick={() => handleDelete(item.id)}
+                  title="Delete Product"
+                >
+                  <RiDeleteBin6Line />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -118,4 +159,3 @@ export default function ProductList() {
     </div>
   );
 }
-

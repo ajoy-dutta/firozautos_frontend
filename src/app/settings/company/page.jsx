@@ -28,7 +28,6 @@ export default function CompanyPage() {
     fetchCompanies();
   }, []);
 
-  // Handle input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -84,12 +83,12 @@ export default function CompanyPage() {
   // Delete company
 
   return (
-    <div className="p-6">
+    <div className="">
       <h2 className="text-xl font-semibold mb-4">Company Master</h2>
 
       {/* Form */}
       <form onSubmit={handleSubmit}>
-  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
     <div>
       <label className="block text-sm font-semibold mb-1">
         Company Name:<span className="text-red-600">*</span>
@@ -174,7 +173,7 @@ export default function CompanyPage() {
     <div className="col-span-1 flex self-end">
       <button
         type="submit"
-        className="bg-blue-950 hover:bg-blue-700 text-white px-4 py-[6px] rounded-md w-1/2"
+        className="bg-blue-950 hover:bg-blue-700 text-white px-2 py-[6px] rounded-md w-1/3 cursor-pointer"
       >
         {editingId ? "Update" : "Save"}
       </button>
