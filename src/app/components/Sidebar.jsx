@@ -148,7 +148,7 @@ function SidebarContent() {
         { label: "Company Master", href: "/settings/company" },
         { label: "Product Category Master", href: "/settings/productcategory" },
         { label: "Cost Category Master", href: "/settings/cost-category" },
-        { label: "Sourse Category Master", href: "/settings/source-category" },
+        { label: "Source Category Master", href: "/settings/source-category" },
         { label: "Payment Mode Master", href: "/settings/payment-mode" },
         { label: "District Master", href: "/settings/district" },
         { label: "Country Master", href: "/settings/country" },
