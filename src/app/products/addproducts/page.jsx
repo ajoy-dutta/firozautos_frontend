@@ -1,8 +1,8 @@
 "use client";
 
 import AxiosInstance from "@/app/components/AxiosInstance";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-
 
 export default function ProductEntryForm() {
   const [categoryList, setCategoryList] = useState([]);
@@ -10,6 +10,9 @@ export default function ProductEntryForm() {
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editId, setEditId] = useState(null);
+
+  const searchParams = useSearchParams();
+  const productId = searchParams.get("id");
 
   const [formData, setFormData] = useState({
     company: "",
@@ -25,6 +28,7 @@ export default function ProductEntryForm() {
     product_mrp: "",
     percentage: "",
     product_bdt: "",
+    product_code: "",
   });
 
   const fetchCompanyNames = async () => {
@@ -45,17 +49,23 @@ export default function ProductEntryForm() {
     }
   };
 
-  useEffect(() => {
-    fetchCompanyNames();
-    fetchCategories();
+  const fetchProductForEdit = async (id) => {
+    try {
+      const res = await AxiosInstance.get(`/products/${id}/`);
+      const parsed = res.data;
+      console.log("Fetched product for edit:", parsed);
 
-    const storedProduct = localStorage.getItem("editProduct");
-    if (storedProduct) {
-      const parsed = JSON.parse(storedProduct);
       setEditId(parsed.id);
+
+      const filtered = categoryList.filter(
+        (cat) =>
+          cat.company_detail?.id === parsed.category_detail?.company_detail?.id
+      );
+      setFilteredCategories(filtered);
+
       setFormData({
-        company: parsed.category_detail?.company_detail?.id || "",
-        category: parsed.category_detail?.id || "",
+        company: parsed.company || "", // numeric id like 1
+        category: parsed.category || "", // numeric id like 1
         product_name: parsed.product_name || "",
         part_no: parsed.part_no || "",
         hs_code: parsed.hs_code || "",
@@ -67,9 +77,32 @@ export default function ProductEntryForm() {
         product_mrp: parsed.product_mrp || "",
         percentage: parsed.percentage || "",
         product_bdt: parsed.product_bdt || "",
+        product_code: parsed.product_code || "AUTO GENERATE",
       });
+    } catch (error) {
+      console.error("Failed to fetch product for edit:", error);
     }
-  }, []);
+  };
+
+  useEffect(() => {
+    if (formData.company) {
+      const filtered = categoryList.filter(
+        (cat) => cat.company_detail?.id === Number(formData.company)
+      );
+      setFilteredCategories(filtered);
+    } else {
+      setFilteredCategories([]);
+    }
+  }, [formData.company, categoryList]);
+
+  useEffect(() => {
+    fetchCompanyNames();
+    fetchCategories();
+
+    if (productId) {
+      fetchProductForEdit(productId);
+    }
+  }, [productId]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -120,8 +153,12 @@ export default function ProductEntryForm() {
 
     try {
       const submitData = new FormData();
+
+      // Append only if value is not null or undefined
       for (const key in formData) {
-        submitData.append(key, formData[key]);
+        if (formData[key] !== null && formData[key] !== undefined) {
+          submitData.append(key, formData[key]);
+        }
       }
 
       const res = editId
@@ -129,7 +166,11 @@ export default function ProductEntryForm() {
         : await AxiosInstance.post("/products/", submitData);
 
       if (res.status === 201 || res.status === 200) {
-        alert(editId ? "Product updated successfully!" : "Product submitted successfully!");
+        alert(
+          editId
+            ? "Product updated successfully!"
+            : "Product submitted successfully!"
+        );
 
         setFormData({
           company: "",
@@ -147,7 +188,6 @@ export default function ProductEntryForm() {
           product_bdt: "",
         });
         setEditId(null);
-        localStorage.removeItem("editProduct");
       } else {
         alert("Something went wrong during submission.");
       }
@@ -174,11 +214,12 @@ export default function ProductEntryForm() {
             <select
               name="company"
               onChange={handleChange}
+              value={formData.company || ""}
               className="w-[190px] border rounded px-2 py-[6px]"
             >
-              <option>--Select--</option>
-              {companyList.map((company, index) => (
-                <option key={index} value={company.id}>
+              <option value="">--Select--</option>
+              {companyList.map((company) => (
+                <option key={company.id} value={company.id}>
                   {company.company_name}
                 </option>
               ))}
@@ -191,6 +232,7 @@ export default function ProductEntryForm() {
             <select
               name="category"
               onChange={handleChange}
+              value={formData.category || ""}
               className="w-[190px] border rounded px-2 py-[6px]"
             >
               <option value="">--Select--</option>
@@ -208,6 +250,7 @@ export default function ProductEntryForm() {
             <input
               name="product_name"
               type="text"
+              value={formData.product_name || ""}
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
             />
@@ -219,6 +262,7 @@ export default function ProductEntryForm() {
             <input
               name="part_no"
               type="text"
+              value={formData.part_no || ""}
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
             />
@@ -226,7 +270,7 @@ export default function ProductEntryForm() {
           <div>
             <label className="block ">Product Code</label>
             <input
-              value="AUTO GENERATE"
+              value={formData.product_code || "AUTO GENERATE"}
               readOnly
               className="w-full border rounded px-2 py-1 bg-gray-100 text-gray-500"
             />
@@ -246,6 +290,7 @@ export default function ProductEntryForm() {
             <input
               name="brand_name"
               type="text"
+              value={formData.brand_name || ""}
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
             />
@@ -255,6 +300,7 @@ export default function ProductEntryForm() {
             <input
               name="model_no"
               type="text"
+              value={formData.model_no || ""}
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
             />
@@ -264,6 +310,7 @@ export default function ProductEntryForm() {
             <input
               name="net_weight"
               type="text"
+              value={formData.net_weight || ""}
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
             />
@@ -274,6 +321,7 @@ export default function ProductEntryForm() {
             <label className="block ">Remarks:</label>
             <textarea
               name="remarks"
+              value={formData.remarks || ""}
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
               rows="1"
@@ -284,6 +332,7 @@ export default function ProductEntryForm() {
             <label className="block ">MRP:</label>
             <input
               name="product_mrp"
+              value={formData.product_mrp || ""}
               type="text"
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
@@ -294,8 +343,9 @@ export default function ProductEntryForm() {
             <label className="block ">Percentage:</label>
             <input
               name="percentage"
+              value={formData.percentage}
               type="text"
-              onChange={handleChange}
+              onChange={handleChange || ""}
               className="w-full border rounded px-2 py-1"
             />
           </div>
@@ -306,7 +356,7 @@ export default function ProductEntryForm() {
               name="product_bdt"
               type="text"
               onChange={handleChange}
-              value={formData.product_bdt}
+              value={formData.product_bdt || ""}
               readOnly
               className="w-full border rounded px-2 py-1"
             />
@@ -321,6 +371,7 @@ export default function ProductEntryForm() {
               name="hs_code"
               type="number"
               placeholder="HS Code"
+              value={formData.hs_code || ""}
               required
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
@@ -328,7 +379,7 @@ export default function ProductEntryForm() {
           </div>
         </div>
         {/* Buttons */}
-         {loading ? (
+        {loading ? (
           <div className="flex items-center justify-center">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-l-0 border-r-0 border-double border-b-sky-400 border-t-sky-700"></div>
           </div>

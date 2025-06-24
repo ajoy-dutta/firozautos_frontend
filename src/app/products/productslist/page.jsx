@@ -5,6 +5,8 @@ import { MdModeEdit } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { MdNavigateBefore } from "react-icons/md";
 import { MdNavigateNext } from "react-icons/md";
+import { useRouter } from "next/navigation";
+
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
@@ -12,6 +14,8 @@ export default function ProductList() {
   const [filterCompany, setFilterCompany] = useState("");
   const [filterPartNo, setFilterPartNo] = useState("");
   const [filterProduct, setFilterProduct] = useState("");
+  const router = useRouter();
+
 
   const filteredProducts = products.filter((item) => {
     const matchCompany = filterCompany
@@ -36,6 +40,11 @@ export default function ProductList() {
     indexOfFirstItem,
     indexOfLastItem
   );
+
+  const handleEdit = (id) => {
+  router.push(`/products/addproducts?id=${id}`);
+};
+
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
@@ -209,9 +218,14 @@ export default function ProductList() {
                 <td className="p-2  border border-slate-400 ">
                   {item.entryBy || "Admin"}
                 </td>
-                <td className="p-2 text-lg border border-slate-400  text-blue-600 cursor-pointer">
+                <td
+                  className="p-2 text-lg border border-slate-400 text-blue-600 cursor-pointer hover:text-blue-800"
+                  onClick={() => handleEdit(item.id)}
+                  title="Edit Product"
+                >
                   <MdModeEdit />
                 </td>
+
                 <td
                   className="p-2 text-lg border border-slate-400 text-red-600 cursor-pointer hover:text-red-800"
                   onClick={() => handleDelete(item.id)}
