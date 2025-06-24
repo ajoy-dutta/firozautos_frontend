@@ -67,6 +67,8 @@ export default function ProductCategoryPage() {
   };
 
   const handleDelete = async (id) => {
+        if (!confirm("Are you sure you want to delete?")) return;
+
     try {
       await AxiosInstance.delete(`product-categories/${id}/`);
       fetchCategories();

@@ -68,6 +68,7 @@ export default function CompanyPage() {
     try {
       await AxiosInstance.delete(`/companies/${id}/`);
       fetchCompanies();
+      
     } catch (err) {
       console.error("Delete failed:", err);
       alert("Delete failed.");
