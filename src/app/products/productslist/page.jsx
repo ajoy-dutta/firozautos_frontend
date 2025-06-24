@@ -50,7 +50,7 @@ export default function ProductList() {
 
   const fetchProducts = async () => {
     try {
-      const response = await AxiosInstance.get("products/"); // Adjust the API endpoint as needed
+      const response = await AxiosInstance.get("products/"); 
       setProducts(response.data);
       console.log("Fetched products:", response.data);
     } catch (error) {

@@ -147,14 +147,14 @@ function SidebarContent() {
       children: [
         { label: "Company Master", href: "/settings/company" },
         { label: "Product Category Master", href: "/settings/productcategory" },
-        { label: "Cost Category Master", href: "/settings/cost-category" },
-        { label: "Source Category Master", href: "/settings/source-category" },
-        { label: "Payment Mode Master", href: "/settings/payment-mode" },
+        { label: "Cost Category Master", href: "/settings/costcategory" },
+        { label: "Source Category Master", href: "/settings/sourcecategory" },
+        { label: "Payment Mode Master", href: "/settings/paymentmode" },
         { label: "District Master", href: "/settings/district" },
         { label: "Country Master", href: "/settings/country" },
-        { label: "Supplier Type Master", href: "/settings/supplier-type" },
-        { label: "Bank Category Master", href: "/settings/bank-category" },
-        { label: "Bank Master", href: "/settings/bank-master" }
+        { label: "Supplier Type Master", href: "/settings/suppliertype" },
+        { label: "Bank Category Master", href: "/settings/bankcategory" },
+        { label: "Bank Master", href: "/settings/bank" }
       ]
     }
   ];
