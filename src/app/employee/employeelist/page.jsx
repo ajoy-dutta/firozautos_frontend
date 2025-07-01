@@ -61,22 +61,19 @@ export default function EmployeeList() {
     setFilteredList(filtered);
   };
 
-  const handleDelete = async (id) => {
+ const handleDelete = async (id) => {
   if (!confirm("Are you sure you want to delete this employee?")) return;
 
   try {
     await AxiosInstance.delete(`/employees/${id}/`);
     alert("Employee deleted successfully.");
-
-    // Update local state
-    const updated = employees.filter((emp) => emp.id !== id);
-    setEmployees(updated);
-    applyFilters(filters); // re-apply filters after deletion
+    fetchEmployees();  // re-fetch from server
   } catch (error) {
     console.error("Failed to delete employee", error);
     alert("Error deleting employee.");
   }
 };
+
 
 
   return (

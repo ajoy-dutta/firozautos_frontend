@@ -54,37 +54,39 @@ export default function EmployeeForm() {
     reference_by: "",
     reference_mobile: "",
     reference_address: "",
-    education: [],
   });
 
- // General input change handler
-const handleChange = (e) => {
-  const { name, value, type } = e.target;
+  // ✅ General input change
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    let parsedValue = value;
 
-  // Handle number fields specifically
-  const numberFields = ["age", "salary_amount"];
-  const parsedValue =
-    numberFields.includes(name) && value !== "" ? parseFloat(value) : value;
+    // Convert "select" placeholder to empty string
+    if (value === "select") {
+      parsedValue = "";
+    }
 
-  setFormData((prev) => ({
-    ...prev,
-    [name]: parsedValue,
-  }));
-};
+    // Handle integer fields
+    if (["age", "salary_amount"].includes(name)) {
+      parsedValue = value ? parseInt(value) : "";
+    }
 
-// Photo input handler
-const handlePhotoChange = (e) => {
-  const file = e.target.files?.[0] || null;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: parsedValue,
+    }));
+  };
 
-  if (file) {
+  // ✅ File input
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0] || null;
     setFormData((prev) => ({
       ...prev,
       photo: file,
     }));
-  }
-};
+  };
 
-
+  // ✅ Education input
   const handleEduChange = (e) => {
     const { name, value } = e.target;
     setEduInput((prev) => ({ ...prev, [name]: value }));
@@ -92,7 +94,7 @@ const handlePhotoChange = (e) => {
 
   const handleAddEducation = () => {
     if (eduInput.exam && eduInput.institute) {
-      setEducation([...education, eduInput]);
+      setEducation((prev) => [...prev, eduInput]);
       setEduInput({
         exam: "",
         institute: "",
@@ -101,63 +103,74 @@ const handlePhotoChange = (e) => {
         gpa: "",
         board: "",
       });
+    } else {
+      alert("Please fill Exam and Institute fields before adding.");
     }
   };
 
   const handleDeleteEducation = (index) => {
-    const updated = [...education];
-    updated.splice(index, 1);
-    setEducation(updated);
+    setEducation((prev) => prev.filter((_, i) => i !== index));
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  // ✅ Submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const formDataToSend = new FormData();
-
-  // Append all fields from formData except photo
-  Object.entries(formData).forEach(([key, value]) => {
-    if (key !== "photo") {
-      formDataToSend.append(key, value || "");
+    if (education.length === 0) {
+      alert("Please add at least one education record!");
+      return;
     }
-  });
 
-  // Append photo file if it exists
-  if (formData.photo instanceof File) {
-    formDataToSend.append("photo", formData.photo);
-  }
+    const formDataToSend = new FormData();
 
-  // Append education as JSON string
-  const formattedEducation = education.map((item) => ({
-    exam_name: item.exam,
-    institute_name: item.institute,
-    passing_year: item.passingYear,
-    group_or_subject: item.group,
-    gpa_or_dvision: item.gpa,
-    board_or_university: item.board,
-  }));
-
-  formDataToSend.append("education", JSON.stringify(formattedEducation));
-    console.log("📤 Submitting employee form...",formDataToSend);
-
-  try {
-    const res = await AxiosInstance.post("/employees/", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+    // Append all fields except photo
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key !== "photo") {
+        formDataToSend.append(key, value ?? "");
+      }
     });
 
-    console.log("✅ Submit success:", res.data);
-    alert("✅ Employee created successfully!");
+    // Append photo if any
+    if (formData.photo instanceof File) {
+      formDataToSend.append("photo", formData.photo);
+    }
 
-    // Reset form if needed
-    // setFormData({...})
-    // setEducation([])
-  } catch (error) {
-    console.error("❌ Submit error:", error.response?.data || error);
-    alert("❌ Failed to submit employee form.");
-  }
-};
+
+    // ✅ Append education as JSON string
+    const formattedEducation = education.map((item) => ({
+      exam_name: item.exam,
+      institute_name: item.institute,
+      passing_year: item.passingYear,
+      group_or_subject: item.group,
+      gpa_or_dvision: item.gpa,
+      board_or_university: item.board,
+    }));
+
+    formDataToSend.append("education", JSON.stringify(formattedEducation));
+
+    for (let [key, value] of formDataToSend.entries()) {
+      console.log("hi", key, value);
+    }
+    try {
+      const res = await AxiosInstance.post("/employees/", formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("✅ Submit success:", res.data);
+      alert("✅ Employee created successfully!");
+    } catch (error) {
+      console.error("❌ Submit error:", error.response?.data || error);
+      alert(
+        `❌ Failed to submit employee form.\n\nError: ${error.response?.data
+          ? JSON.stringify(error.response.data)
+          : "Check console for details."
+        }`
+      );
+    }
+  };
+
 
 
 
@@ -238,17 +251,23 @@ const handleSubmit = async (e) => {
           </div>
           <div>
             <label className="font-medium">Blood Group</label>
-            <select
-              name="blood_group"
-              value={formData.blood_group}
-              onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
-            >
-              <option>select</option>
-              <option>A+</option>
-              <option>B+</option>
-              <option>O+</option>
-            </select>
+       <select
+            name="blood_group"
+            value={formData.blood_group}
+            onChange={handleChange}
+            className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+          >
+            <option value="">Select</option>
+            <option value="A+">A+</option>
+            <option value="A-">A−</option>
+            <option value="B+">B+</option>
+            <option value="B-">B−</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB−</option>
+            <option value="O+">O+</option>
+            <option value="O-">O−</option>
+          </select>
+
           </div>
           <div>
             <label className="font-medium">
@@ -301,12 +320,13 @@ const handleSubmit = async (e) => {
               onChange={handleChange}
               className="w-full border border-slate-400 py-1 px-2 rounded-xs"
             >
-              <option>select</option>
-              <option>Islam</option>
-              <option>Hinduism</option>
-              <option>Christianity</option>
-              <option>Other</option>
+              <option value="">select</option>
+              <option value="Islam">Islam</option>
+              <option value="Hinduism">Hinduism</option>
+              <option value="Christianity">Christianity</option>
+              <option value="Other">Other</option>
             </select>
+
           </div>
           <div>
             <label className="font-medium">Birth ID No.</label>
@@ -402,7 +422,7 @@ const handleSubmit = async (e) => {
           <div>
             <label className="font-medium">Salary Amount</label>
             <input
-              type="text"
+              type="number"
               name="salary_amount"
               value={formData.salary_amount}
               onChange={handleChange}
@@ -413,97 +433,97 @@ const handleSubmit = async (e) => {
 
 
         <h3 className="text-xl italic font-medium text-slate-700 mt-10 mb-4">
-        Education Qualification
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-        <input
-          name="exam"
-          placeholder="Exam Name"
-          value={eduInput.exam}
-          onChange={handleEduChange}
-          className="border border-slate-400 py-1 px-2 rounded-xs"
-        />
-        <input
-          name="institute"
-          placeholder="Institute Name"
-          value={eduInput.institute}
-          onChange={handleEduChange}
-          className="border border-slate-400 py-1 px-2 rounded-xs"
-        />
-        <input
-          name="passingYear"
-          placeholder="Passing Year"
-          value={eduInput.passingYear}
-          onChange={handleEduChange}
-          className="border border-slate-400 py-1 px-2 rounded-xs"
-        />
-        <input
-          name="group"
-          placeholder="Group"
-          value={eduInput.group}
-          onChange={handleEduChange}
-          className="border border-slate-400 py-1 px-2 rounded-xs"
-        />
-        <input
-          name="gpa"
-          placeholder="GPA/Grade"
-          value={eduInput.gpa}
-          onChange={handleEduChange}
-          className="border border-slate-400 py-1 px-2 rounded-xs"
-        />
-        <input
-          name="board"
-          placeholder="Board/University"
-          value={eduInput.board}
-          onChange={handleEduChange}
-          className="border border-slate-400 py-1 px-2 rounded-xs"
-        />
-      </div>
-      <button
-        onClick={handleAddEducation}
-        type="button"
-        className="bg-sky-900 text-white px-4 py-1 rounded-xs hover:bg-sky-700 mb-4"
-      >
-        Add
-      </button>
+          Education Qualification
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <input
+            name="exam"
+            placeholder="Exam Name"
+            value={eduInput.exam}
+            onChange={handleEduChange}
+            className="border border-slate-400 py-1 px-2 rounded-xs"
+          />
+          <input
+            name="institute"
+            placeholder="Institute Name"
+            value={eduInput.institute}
+            onChange={handleEduChange}
+            className="border border-slate-400 py-1 px-2 rounded-xs"
+          />
+          <input
+            name="passingYear"
+            placeholder="Passing Year"
+            value={eduInput.passingYear}
+            onChange={handleEduChange}
+            className="border border-slate-400 py-1 px-2 rounded-xs"
+          />
+          <input
+            name="group"
+            placeholder="Group"
+            value={eduInput.group}
+            onChange={handleEduChange}
+            className="border border-slate-400 py-1 px-2 rounded-xs"
+          />
+          <input
+            name="gpa"
+            placeholder="GPA/Grade"
+            value={eduInput.gpa}
+            onChange={handleEduChange}
+            className="border border-slate-400 py-1 px-2 rounded-xs"
+          />
+          <input
+            name="board"
+            placeholder="Board/University"
+            value={eduInput.board}
+            onChange={handleEduChange}
+            className="border border-slate-400 py-1 px-2 rounded-xs"
+          />
+        </div>
+        <button
+          onClick={handleAddEducation}
+          type="button"
+          className="bg-sky-900 text-white px-4 py-1 rounded-xs hover:bg-sky-700 mb-4"
+        >
+          Add
+        </button>
 
-      {education.length === 0 ? (
-        <p className="text-slate-500 italic">No Education Qualification Found</p>
-      ) : (
-        <table className="w-full border border-slate-400 mt-4">
-          <thead>
-            <tr className="bg-slate-100">
-              <th className="border border-slate-400 py-1 px-2">Exam</th>
-              <th className="border border-slate-400 py-1 px-2">Institute</th>
-              <th className="border border-slate-400 py-1 px-2">Year</th>
-              <th className="border border-slate-400 py-1 px-2">Group</th>
-              <th className="border border-slate-400 py-1 px-2">GPA</th>
-              <th className="border border-slate-400 py-1 px-2">Board</th>
-              <th className="border border-slate-400 py-1 px-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {education.map((edu, idx) => (
-              <tr key={idx} className="text-center">
-                <td className="border border-slate-400 py-1 px-2">{edu.exam}</td>
-                <td className="border border-slate-400 py-1 px-2">{edu.institute}</td>
-                <td className="border border-slate-400 py-1 px-2">{edu.passingYear}</td>
-                <td className="border border-slate-400 py-1 px-2">{edu.group}</td>
-                <td className="border border-slate-400 py-1 px-2">{edu.gpa}</td>
-                <td className="border border-slate-400 py-1 px-2">{edu.board}</td>
-                <td className="border border-slate-400 py-1 px-2">
-                  <button
-                    className="bg-red-500 text-white px-3 py-1 rounded-xs"
-                    onClick={() => handleDeleteEducation(idx)}
-                  >
-                    Delete
-                  </button>
-                </td>
+        {education.length === 0 ? (
+          <p className="text-slate-500 italic">No Education Qualification Found</p>
+        ) : (
+          <table className="w-full border border-slate-400 mt-4">
+            <thead>
+              <tr className="bg-slate-100">
+                <th className="border border-slate-400 py-1 px-2">Exam</th>
+                <th className="border border-slate-400 py-1 px-2">Institute</th>
+                <th className="border border-slate-400 py-1 px-2">Year</th>
+                <th className="border border-slate-400 py-1 px-2">Group</th>
+                <th className="border border-slate-400 py-1 px-2">GPA</th>
+                <th className="border border-slate-400 py-1 px-2">Board</th>
+                <th className="border border-slate-400 py-1 px-2">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            </thead>
+            <tbody>
+              {education.map((edu, idx) => (
+                <tr key={idx} className="text-center">
+                  <td className="border border-slate-400 py-1 px-2">{edu.exam}</td>
+                  <td className="border border-slate-400 py-1 px-2">{edu.institute}</td>
+                  <td className="border border-slate-400 py-1 px-2">{edu.passingYear}</td>
+                  <td className="border border-slate-400 py-1 px-2">{edu.group}</td>
+                  <td className="border border-slate-400 py-1 px-2">{edu.gpa}</td>
+                  <td className="border border-slate-400 py-1 px-2">{edu.board}</td>
+                  <td className="border border-slate-400 py-1 px-2">
+                    <button
+                      className="bg-red-500 text-white px-3 py-1 rounded-xs"
+                      onClick={() => handleDeleteEducation(idx)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
 
         <h3 className="text-xl italic font-medium text-slate-700 mt-8 mb-4">

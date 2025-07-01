@@ -29,6 +29,7 @@ export default function ProductEntryForm() {
     percentage: "",
     product_bdt: "",
     product_code: "",
+    
   });
 
   const fetchCompanyNames = async () => {
@@ -369,7 +370,7 @@ export default function ProductEntryForm() {
 
             <input
               name="hs_code"
-              type="number"
+              type="text"
               placeholder="HS Code"
               value={formData.hs_code || ""}
               required
