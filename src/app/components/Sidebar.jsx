@@ -71,7 +71,7 @@ function SidebarContent() {
       label: "Customer",
       icon: "⚙️",
       children: [
-        { label: "Add Customer", href: "/customer/add" },
+        { label: "Add Customer", href: "/customer/addEditCustomer" },
         { label: "Customer List", href: "/customer/customerList" }
       ]
     },

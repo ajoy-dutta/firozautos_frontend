@@ -49,6 +49,26 @@ export default function CustomerListPage() {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this customer?")) return;
+
+    try {
+      await axiosInstance.delete(`/customers/${id}/`);
+      toast.success("Customer deleted successfully!");
+      fetchData(); // Refresh the list
+    } catch (error) {
+      console.error("Delete failed:", error);
+      toast.error("Failed to delete customer");
+    }
+  };
+
+  const handleEdit = (customer) => {
+    // Store customer data in localStorage to pass to edit page
+    localStorage.setItem("editCustomerData", JSON.stringify(customer));
+    // Navigate to addEditCustomer page with edit mode
+    router.push("/customer/addEditCustomer");
+  };
+
   // Filtered data logic
   const filtered = customers.filter((c) => {
     const matchesDistrict = selectedDistrict
@@ -81,6 +101,16 @@ export default function CustomerListPage() {
   return (
     <div className=" max-w-6xl mx-auto">
       <h2 className="text-2xl font-semibold mb-4 text-center">Customer List</h2>
+
+      {/* Add Customer Button */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => router.push("/customer/addEditCustomer")}
+          className="bg-sky-800 text-white px-4 py-2 rounded hover:bg-sky-700 transition-colors"
+        >
+          Add New Customer
+        </button>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-4 justify-center">
@@ -159,24 +189,14 @@ export default function CustomerListPage() {
                       </td>
                       <td className="p-2 border space-x-2">
                         <button
-                          onClick={() => router.push(`/customers/edit/${c.id}`)}
+                          onClick={() => handleEdit(c)}
                           className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
                         >
                           Edit
                         </button>
                         <button
                           className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                          onClick={() => {
-                            if (
-                              confirm(
-                                "Are you sure you want to delete this customer?"
-                              )
-                            ) {
-                              // call delete API here and refresh
-                              // or pass handler via props
-                              toast("Delete clicked!");
-                            }
-                          }}
+                          onClick={() => handleDelete(c.id)}
                         >
                           Delete
                         </button>
