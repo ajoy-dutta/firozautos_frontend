@@ -1,8 +1,9 @@
 "use client";
 
+
 import { useState, useEffect } from "react";
 import Select from "react-select";
-import axiosInstance from "../../components/AxiosInstance"; // তোমার axios instance
+import axiosInstance from "../components/AxiosInstance"; // তোমার axios instance
 import toast from "react-hot-toast";
 
 export default function AddEditCustomerPage({ initialData, onSubmit }) {

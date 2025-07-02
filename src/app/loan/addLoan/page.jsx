@@ -159,7 +159,7 @@ export default function AddLoanPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded shadow ">
+    <div className="max-w-6xl mx-auto  ">
       <h2 className="text-xl font-semibold mb-4 text-center">Add Loan</h2>
       <form
         onSubmit={handleSubmit}
