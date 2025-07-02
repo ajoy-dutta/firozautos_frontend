@@ -25,21 +25,21 @@ export default function AddLoanPage() {
   const [sourceCategories, setSourceCategories] = useState([]);
   const [bankCategories, setBankCategories] = useState([]);
   const [banks, setBanks] = useState([]);
+  const [paymentModes, setPaymentModes] = useState([]);
   const [filteredBanks, setFilteredBanks] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loanTypes = ["CC", "CD"];
-  const transactionTypes = ["Cash", "Cheque", "Due", "Bkash"];
-
   // Fetch all dropdown data on mount
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const [srcRes, bankCatRes, bankRes] = await Promise.all([
-          axiosInstance.get("/source-categories/"),
-          axiosInstance.get("/bank-categories/"),
-          axiosInstance.get("/banks/"),
-        ]);
+    const [srcRes, bankCatRes, bankRes, paymentModeRes] = await Promise.all([
+  axiosInstance.get("/source-categories/"),
+  axiosInstance.get("/bank-categories/"),
+  axiosInstance.get("/banks/"),
+  axiosInstance.get("/payment-mode/"),
+]);
 
         setSourceCategories(
           srcRes.data.map((item) => ({
@@ -51,6 +51,14 @@ export default function AddLoanPage() {
           bankCatRes.data.map((item) => ({ label: item.name, value: item.id }))
         );
         setBanks(bankRes.data); // keep raw data for filter
+
+       
+setPaymentModes(
+  paymentModeRes.data.map((item) => ({
+    label: item.name,
+    value: item.name,   
+  }))
+);
       } catch (error) {
         console.error("Error fetching dropdown options:", error);
         toast.error("Failed to load dropdown options");
@@ -262,21 +270,17 @@ export default function AddLoanPage() {
           <label className="block text-sm mb-1 font-medium">
             Transaction Type *
           </label>
-          <Select
-            options={transactionTypes.map((v) => ({ label: v, value: v }))}
-            value={
-              transactionTypes.find((v) => v === formData.transactionType)
-                ? {
-                    label: formData.transactionType,
-                    value: formData.transactionType,
-                  }
-                : null
-            }
-            onChange={(selected) =>
-              handleSelectChange("transactionType", selected)
-            }
-            placeholder="Select"
-          />
+ <Select
+  options={paymentModes}
+  value={
+    formData.transactionType
+      ? { label: formData.transactionType, value: formData.transactionType }
+      : null
+  }
+  onChange={(selected) => handleSelectChange("transactionType", selected)}
+  placeholder="Select"
+/>
+
         </div>
 
         <div>
