@@ -9,11 +9,10 @@ export default function LoanListPage() {
   const [loans, setLoans] = useState([]);
   const [banks, setBanks] = useState([]);
   const [bankCategories, setBankCategories] = useState([]);
-
   const [loading, setLoading] = useState(true);
 
-  const [selectedBankCategoryId, setSelectedBankCategoryId] = useState(null);
-  const [selectedBankId, setSelectedBankId] = useState(null);
+  const [selectedBankCategoryName, setSelectedBankCategoryName] = useState(null);
+  const [selectedBankName, setSelectedBankName] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -41,6 +40,19 @@ export default function LoanListPage() {
     }
   };
 
+
+    // Helper to get bank name by id (from banks array)
+  const getBankNameById = (id) => {
+    const bank = banks.find((b) => b.id === Number(id));
+    return bank ? bank.name : "-";
+  };
+
+  // Helper to get bank category name by id
+  const getBankCategoryNameById = (id) => {
+    const cat = bankCategories.find((c) => c.id === Number(id));
+    return cat ? cat.name : "-";
+  }; 
+
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this loan?")) return;
     try {
@@ -53,41 +65,34 @@ export default function LoanListPage() {
     }
   };
 
-  // Filter banks by selected bank category
-  const filteredBanks = selectedBankCategoryId
-    ? banks.filter((b) => b.bank_category === Number(selectedBankCategoryId))
+  // Filter banks based on selected bank category name (not id)
+  const filteredBanks = selectedBankCategoryName
+    ? banks.filter(
+        (b) =>
+          getBankCategoryNameById(b.bank_category) === selectedBankCategoryName
+      )
     : banks;
 
-  // Filter loans by bank category first
-  const filteredLoansByCategory = selectedBankCategoryId
+  // Filter loans: first by bank category name if selected
+  let filteredLoans = selectedBankCategoryName
     ? loans.filter(
-        (loan) => Number(loan.bank_category) === Number(selectedBankCategoryId)
+        (loan) => loan.bank_category === selectedBankCategoryName
       )
     : loans;
 
-  // Then filter loans by bank name if selected
-  const filteredLoans = selectedBankId
-    ? filteredLoansByCategory.filter(
-        (loan) => Number(loan.bank_name) === Number(selectedBankId)
-      )
-    : filteredLoansByCategory;
+  // Then by bank name if selected
+  if (selectedBankName) {
+    filteredLoans = filteredLoans.filter(
+      (loan) => loan.bank_name === selectedBankName
+    );
+  }
 
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentLoans = filteredLoans.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Helper to get bank name from id
-  const getBankNameById = (id) => {
-    const bank = banks.find((b) => b.id === Number(id));
-    return bank ? bank.name : "-";
-  };
 
-  // Helper to get bank category name from id
-  const getBankCategoryNameById = (id) => {
-    const cat = bankCategories.find((c) => c.id === Number(id));
-    return cat ? cat.name : "-";
-  };
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -100,19 +105,16 @@ export default function LoanListPage() {
           <Select
             options={bankCategories.map((cat) => ({
               label: cat.name,
-              value: cat.id,
+              value: cat.name,
             }))}
             value={
-              selectedBankCategoryId
-                ? {
-                    label: getBankCategoryNameById(selectedBankCategoryId),
-                    value: selectedBankCategoryId,
-                  }
+              selectedBankCategoryName
+                ? { label: selectedBankCategoryName, value: selectedBankCategoryName }
                 : null
             }
             onChange={(selected) => {
-              setSelectedBankCategoryId(selected ? selected.value : null);
-              setSelectedBankId(null); // reset bank name on category change
+              setSelectedBankCategoryName(selected ? selected.value : null);
+              setSelectedBankName(null); // reset bank name on category change
               setCurrentPage(1);
             }}
             isClearable
@@ -126,23 +128,19 @@ export default function LoanListPage() {
           <Select
             options={filteredBanks.map((bank) => ({
               label: bank.name,
-              value: bank.id,
+              value: bank.name,
             }))}
             value={
-              selectedBankId
-                ? {
-                    label: getBankNameById(selectedBankId),
-                    value: selectedBankId,
-                  }
+              selectedBankName
+                ? { label: selectedBankName, value: selectedBankName }
                 : null
             }
             onChange={(selected) => {
-              setSelectedBankId(selected ? selected.value : null);
+              setSelectedBankName(selected ? selected.value : null);
               setCurrentPage(1);
             }}
             isClearable
             placeholder="Select Bank Name"
-            isDisabled={!selectedBankCategoryId}
           />
         </div>
       </div>
@@ -171,20 +169,14 @@ export default function LoanListPage() {
                   <tr key={loan.id} className="text-center">
                     <td className="p-2 border">{indexOfFirstItem + idx + 1}</td>
                     <td className="p-2 border">{loan.date}</td>
-                    <td className="p-2 border">
-                      {getBankCategoryNameById(loan.bank_category)}
-                    </td>
-                    <td className="p-2 border">
-                      {getBankNameById(loan.bank_name)}
-                    </td>
+                    <td className="p-2 border">{loan.bank_category}</td>
+                    <td className="p-2 border">{loan.bank_name}</td>
                     <td className="p-2 border">{loan.principal_amount}</td>
                     <td className="p-2 border">{loan.total_payable_amount}</td>
                     <td className="p-2 border space-x-2">
-                      <button className="text-blue-600 hover:underline">
-                        Edit
-                      </button>
+                      <button  className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600">Edit</button>
                       <button
-                        className="text-red-600 hover:underline"
+                       className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                         onClick={() => handleDelete(loan.id)}
                       >
                         Delete
@@ -250,18 +242,14 @@ export default function LoanListPage() {
             {/* Next */}
             <li>
               <button
-                disabled={
-                  currentPage === Math.ceil(filteredLoans.length / itemsPerPage)
-                }
+                disabled={currentPage === Math.ceil(filteredLoans.length / itemsPerPage)}
                 onClick={() => setCurrentPage(currentPage + 1)}
                 className={`px-3 py-1 border rounded-r-md ${
                   currentPage === Math.ceil(filteredLoans.length / itemsPerPage)
                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                     : "bg-white text-blue-600 hover:bg-blue-100"
                 }`}
-                aria-disabled={
-                  currentPage === Math.ceil(filteredLoans.length / itemsPerPage)
-                }
+                aria-disabled={currentPage === Math.ceil(filteredLoans.length / itemsPerPage)}
               >
                 Next
               </button>

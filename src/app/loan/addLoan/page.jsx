@@ -25,21 +25,21 @@ export default function AddLoanPage() {
   const [sourceCategories, setSourceCategories] = useState([]);
   const [bankCategories, setBankCategories] = useState([]);
   const [banks, setBanks] = useState([]);
+  const [paymentModes, setPaymentModes] = useState([]);
   const [filteredBanks, setFilteredBanks] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loanTypes = ["Short Term", "Long Term"];
-  const transactionTypes = ["Cash", "Transfer"];
-
+  const loanTypes = ["CC", "CD"];
   // Fetch all dropdown data on mount
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const [srcRes, bankCatRes, bankRes] = await Promise.all([
-          axiosInstance.get("/source-categories/"),
-          axiosInstance.get("/bank-categories/"),
-          axiosInstance.get("/banks/"),
-        ]);
+    const [srcRes, bankCatRes, bankRes, paymentModeRes] = await Promise.all([
+  axiosInstance.get("/source-categories/"),
+  axiosInstance.get("/bank-categories/"),
+  axiosInstance.get("/banks/"),
+  axiosInstance.get("/payment-mode/"),
+]);
 
         setSourceCategories(
           srcRes.data.map((item) => ({
@@ -51,6 +51,14 @@ export default function AddLoanPage() {
           bankCatRes.data.map((item) => ({ label: item.name, value: item.id }))
         );
         setBanks(bankRes.data); // keep raw data for filter
+
+       
+setPaymentModes(
+  paymentModeRes.data.map((item) => ({
+    label: item.name,
+    value: item.name,   
+  }))
+);
       } catch (error) {
         console.error("Error fetching dropdown options:", error);
         toast.error("Failed to load dropdown options");
@@ -111,52 +119,65 @@ export default function AddLoanPage() {
     setFormData({ ...formData, [name]: selected ? selected.value : "" });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        date: formData.date,
-        source_category: formData.sourceCategory,
-        bank_category: formData.bankCategory,
-        bank_name: formData.bankName,
-        loan_type: formData.loanType,
-        transaction_type: formData.transactionType,
-        principal_amount: parseFloat(formData.principalAmount),
-        rate_percent: parseFloat(formData.ratePercent),
-        number_of_months: parseInt(formData.numberOfMonths),
-        interest_amount: parseFloat(formData.interestAmount),
-        total_payable_amount: parseFloat(formData.totalPayableAmount),
-        installment_per_month: parseFloat(formData.installmentPerMonth),
-        remarks: formData.remarks,
-      };
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  try {
+    const sourceCategoryLabel = sourceCategories.find(
+      (opt) => opt.value === formData.sourceCategory
+    )?.label || "";
 
-      await axiosInstance.post("/loans/", payload);
-      toast.success("Loan added successfully!");
+    const bankCategoryLabel = bankCategories.find(
+      (opt) => opt.value === formData.bankCategory
+    )?.label || "";
 
-      // Reset form
-      setFormData({
-        date: new Date().toISOString().split("T")[0],
-        sourceCategory: "",
-        bankCategory: "",
-        bankName: "",
-        loanType: "",
-        transactionType: "",
-        principalAmount: "",
-        ratePercent: "",
-        numberOfMonths: "",
-        interestAmount: "",
-        totalPayableAmount: "",
-        installmentPerMonth: "",
-        remarks: "",
-      });
-    } catch (error) {
-      console.error(error);
-      toast.error("Error adding loan. Please check your data.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    const bankNameLabel = filteredBanks.find(
+      (opt) => opt.value === formData.bankName
+    )?.label || "";
+
+    const payload = {
+      date: formData.date,
+      source_category: sourceCategoryLabel,       // ✅ label পাঠাচ্ছি
+      bank_category: bankCategoryLabel,           // ✅ label পাঠাচ্ছি
+      bank_name: bankNameLabel,                   // ✅ label পাঠাচ্ছি
+      loan_type: formData.loanType,
+      transaction_type: formData.transactionType,
+      principal_amount: parseFloat(formData.principalAmount),
+      rate_percent: parseFloat(formData.ratePercent),
+      number_of_months: parseInt(formData.numberOfMonths),
+      interest_amount: parseFloat(formData.interestAmount),
+      total_payable_amount: parseFloat(formData.totalPayableAmount),
+      installment_per_month: parseFloat(formData.installmentPerMonth),
+      remarks: formData.remarks,
+    };
+
+    await axiosInstance.post("/loans/", payload);
+    toast.success("Loan added successfully!");
+
+    // Reset form
+    setFormData({
+      date: new Date().toISOString().split("T")[0],
+      sourceCategory: "",
+      bankCategory: "",
+      bankName: "",
+      loanType: "",
+      transactionType: "",
+      principalAmount: "",
+      ratePercent: "",
+      numberOfMonths: "",
+      interestAmount: "",
+      totalPayableAmount: "",
+      installmentPerMonth: "",
+      remarks: "",
+    });
+  } catch (error) {
+    console.error(error);
+    toast.error("Error adding loan. Please check your data.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   return (
     <div className="max-w-6xl mx-auto  ">
@@ -249,21 +270,17 @@ export default function AddLoanPage() {
           <label className="block text-sm mb-1 font-medium">
             Transaction Type *
           </label>
-          <Select
-            options={transactionTypes.map((v) => ({ label: v, value: v }))}
-            value={
-              transactionTypes.find((v) => v === formData.transactionType)
-                ? {
-                    label: formData.transactionType,
-                    value: formData.transactionType,
-                  }
-                : null
-            }
-            onChange={(selected) =>
-              handleSelectChange("transactionType", selected)
-            }
-            placeholder="Select"
-          />
+ <Select
+  options={paymentModes}
+  value={
+    formData.transactionType
+      ? { label: formData.transactionType, value: formData.transactionType }
+      : null
+  }
+  onChange={(selected) => handleSelectChange("transactionType", selected)}
+  placeholder="Select"
+/>
+
         </div>
 
         <div>
