@@ -79,8 +79,8 @@ function SidebarContent() {
       label: "Supplier",
       icon: "⚙️",
       children: [
-        { label: "Add Supplier", href: "/supplier/add" },
-        { label: "Supplier List", href: "/supplier/list" }
+        { label: "Add Supplier", href: "/supplier/addEditSupplier" },
+        { label: "Supplier List", href: "/supplier/supplierList" }
       ]
     },
     {
