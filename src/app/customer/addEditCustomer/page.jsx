@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Select from "react-select";
-import axiosInstance from "../../components/AxiosInstance"; // আপনার axios instance path অনুযায়ী adjust করুন
+import axiosInstance from "../../components/AxiosInstance"; 
 import toast from "react-hot-toast";
 
 export default function AddEditCustomerPage() {
@@ -163,7 +163,7 @@ export default function AddEditCustomerPage() {
       }
 
       // Navigate back to customer list
-      router.push('/'); // বা আপনার customer list page এর path
+      router.push('/customer/customerList'); 
 
     } catch (error) {
       console.error("Error submitting form:", error);
