@@ -179,7 +179,7 @@ export default function SupplierListPage() {
                     </td>
                     <td className="p-2 border space-x-2 text-center">
                       <button
-                        onClick={() => router.push(`addEditSupplier/${s.id}`)}
+                        onClick={() => router.push(`/addEditSupplier?id=${s.id}`)}
                         className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs"
                       >
                         Edit
