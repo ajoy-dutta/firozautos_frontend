@@ -1,5 +1,4 @@
 "use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import { FaCarAlt, FaTruckPickup, FaSearch, FaShippingFast, FaShieldAlt, FaClock } from "react-icons/fa";

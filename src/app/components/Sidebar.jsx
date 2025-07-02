@@ -71,8 +71,8 @@ function SidebarContent() {
       label: "Customer",
       icon: "⚙️",
       children: [
-        { label: "Add Customer", href: "/customer/add" },
-        { label: "Customer List", href: "/customer/list" }
+        { label: "Add Customer", href: "/customer/addEditCustomer" },
+        { label: "Customer List", href: "/customer/customerList" }
       ]
     },
     {
@@ -111,7 +111,7 @@ function SidebarContent() {
       label: "Loan",
       icon: "⚙️",
       children: [
-        { label: "Add Loan", href: "/loan/add" },
+        { label: "Add Loan", href: "/loan/addLoan" },
         { label: "Loan List", href: "/loan/list" },
         { label: "Loan Statement", href: "/loan/statement" }
       ]
