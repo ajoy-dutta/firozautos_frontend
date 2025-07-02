@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Select from "react-select";
-import axiosInstance from "../../components/AxiosInstance"; // তোমার axios instance
+import axiosInstance from "../../components/AxiosInstance"; 
 import toast from "react-hot-toast";
 
-export default function AddEditCustomerPage({ initialData, onSubmit }) {
-  const isEditMode = Boolean(initialData);
+export default function AddEditCustomerPage() {
+  const router = useRouter();
+  const [initialData, setInitialData] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const [formData, setFormData] = useState({
     customerName: "",
-    district: null,   // district এখন object হবে {value: id, label: name}
+    district: null,
     customerType: "",
     shopName: "",
     phone1: "",
@@ -26,17 +29,39 @@ export default function AddEditCustomerPage({ initialData, onSubmit }) {
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [districts, setDistricts] = useState([]);  // district options state
+  const [districts, setDistricts] = useState([]);
   const customerTypes = ["Buyer", "Seller", "Wholeseller"];
 
-  // API থেকে districts লোড করো
+  // Check for edit data from localStorage
+  useEffect(() => {
+    const editData = localStorage.getItem('editCustomerData');
+    if (editData) {
+      const customerData = JSON.parse(editData);
+      setInitialData(customerData);
+      setIsEditMode(true);
+      // Clear localStorage after getting data
+      localStorage.removeItem('editCustomerData');
+    }
+  }, []);
+
+  // Load districts from API
   useEffect(() => {
     const fetchDistricts = async () => {
       try {
         const res = await axiosInstance.get("/districts/");
-        // API থেকে name ও id নিয়ে options বানাও
         const options = res.data.map(d => ({ value: d.id, label: d.name }));
         setDistricts(options);
+        
+        // যদি edit mode এ থাকি এবং initialData আছে, তাহলে district set করি
+        if (isEditMode && initialData) {
+          const selectedDistrict = options.find(d => d.value === initialData.district);
+          if (selectedDistrict) {
+            setFormData(prev => ({
+              ...prev,
+              district: selectedDistrict
+            }));
+          }
+        }
       } catch (error) {
         console.error("Failed to fetch districts", error);
         toast.error("Failed to load districts");
@@ -44,17 +69,25 @@ export default function AddEditCustomerPage({ initialData, onSubmit }) {
     };
 
     fetchDistricts();
-  }, []);
+  }, [isEditMode, initialData]);
 
-  // Edit mode এ initialData থেকে district সেট করো (id,label)
+  // Set form data when edit mode and districts are loaded
   useEffect(() => {
-    if (isEditMode && initialData) {
-      setFormData((prev) => ({
-        ...prev,
+    if (isEditMode && initialData && districts.length > 0) {
+      console.log("Setting form data:", initialData.district);
+      console.log("Available districts:", districts);
+      
+      // Find district by matching ID (handle both string and number)
+      const selectedDistrict = districts.find(d => 
+        d.value === initialData.district || 
+        d.value === String(initialData.district) ||
+        String(d.value) === String(initialData.district)
+      );
+      console.log("Selected district:", selectedDistrict);
+      
+      setFormData({
         customerName: initialData.customer_name || "",
-        district: initialData.district
-          ? districts.find(d => d.value === initialData.district) || { value: initialData.district, label: "" }
-          : null,
+        district: selectedDistrict || null,
         customerType: initialData.customer_type || "",
         shopName: initialData.shop_name || "",
         phone1: initialData.phone1 || "",
@@ -66,7 +99,7 @@ export default function AddEditCustomerPage({ initialData, onSubmit }) {
         courierName: initialData.courier_name || "",
         remarks: initialData.remarks || "",
         previousDue: initialData.previous_due_amount ? String(initialData.previous_due_amount) : "",
-      }));
+      });
     }
   }, [initialData, isEditMode, districts]);
 
@@ -107,7 +140,7 @@ export default function AddEditCustomerPage({ initialData, onSubmit }) {
     try {
       const payload = {
         customer_name: formData.customerName,
-        district: formData.district ? formData.district.value : null,  // id পাঠাও
+        district: formData.district ? formData.district.value : null,
         customer_type: formData.customerType,
         shop_name: formData.shopName,
         phone1: formData.phone1,
@@ -121,7 +154,7 @@ export default function AddEditCustomerPage({ initialData, onSubmit }) {
         previous_due_amount: formData.previousDue ? parseFloat(formData.previousDue) : null,
       };
 
-      if (isEditMode) {
+      if (isEditMode && initialData) {
         await axiosInstance.put(`/customers/${initialData.id}/`, payload);
         toast.success("Customer updated successfully!");
       } else {
@@ -129,15 +162,9 @@ export default function AddEditCustomerPage({ initialData, onSubmit }) {
         toast.success("Customer added successfully!");
       }
 
-      if (onSubmit) onSubmit(payload);
+      // Navigate back to customer list
+      router.push('/customer/customerList'); 
 
-      if (!isEditMode) {
-        setFormData({
-          customerName: "", district: null, customerType: "", shopName: "", phone1: "",
-          phone2: "", email: "", address: "", dob: "", nid: "", courierName: "",
-          remarks: "", previousDue: "",
-        });
-      }
     } catch (error) {
       console.error("Error submitting form:", error);
       toast.error("An error occurred. Please check your data and try again.");
@@ -155,6 +182,10 @@ export default function AddEditCustomerPage({ initialData, onSubmit }) {
       });
       setErrors({});
     }
+  };
+
+  const handleBack = () => {
+    router.back(); // বা router.push('/') customer list page এ ফিরে যেতে
   };
 
   const renderField = (name, label, type = "text", required = false, placeholder = "") => (
@@ -176,7 +207,8 @@ export default function AddEditCustomerPage({ initialData, onSubmit }) {
   );
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto p-4">
+  
       <div>
         <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
           {isEditMode ? "Edit Customer" : "Add Customer"}
