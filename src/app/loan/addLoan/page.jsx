@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Select from "react-select";
 import axiosInstance from "../../components/AxiosInstance";
 import { toast } from "react-hot-toast";
 
 export default function AddLoanPage() {
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split("T")[0], // default today
-    sourceCategory: "",
-    bankCategory: "",
-    bankName: "",
+    date: new Date().toISOString().split("T")[0],
+    sourceCategory: "", // id
+    bankCategory: "", // id
+    bankName: "", // id
     loanType: "",
     transactionType: "",
     principalAmount: "",
@@ -22,22 +22,71 @@ export default function AddLoanPage() {
     remarks: "",
   });
 
+  const [sourceCategories, setSourceCategories] = useState([]);
+  const [bankCategories, setBankCategories] = useState([]);
+  const [banks, setBanks] = useState([]);
+  const [filteredBanks, setFilteredBanks] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const sourceCategories = ["Own Fund", "External Fund"];
-  const bankCategories = ["Public", "Private"];
   const loanTypes = ["Short Term", "Long Term"];
   const transactionTypes = ["Cash", "Transfer"];
 
-  // Auto calculate when principalAmount, ratePercent, or numberOfMonths change
+  // Fetch all dropdown data on mount
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const [srcRes, bankCatRes, bankRes] = await Promise.all([
+          axiosInstance.get("/source-categories/"),
+          axiosInstance.get("/bank-categories/"),
+          axiosInstance.get("/banks/"),
+        ]);
+
+        setSourceCategories(
+          srcRes.data.map((item) => ({
+            label: item.category_name,
+            value: item.id,
+          }))
+        );
+        setBankCategories(
+          bankCatRes.data.map((item) => ({ label: item.name, value: item.id }))
+        );
+        setBanks(bankRes.data); // keep raw data for filter
+      } catch (error) {
+        console.error("Error fetching dropdown options:", error);
+        toast.error("Failed to load dropdown options");
+      }
+    };
+    fetchOptions();
+  }, []);
+
+  // Filter banks based on selected bankCategory
+  useEffect(() => {
+    if (formData.bankCategory) {
+      const filtered = banks
+        .filter((bank) => bank.bank_category === formData.bankCategory)
+        .map((bank) => ({ value: bank.id, label: bank.name }));
+      setFilteredBanks(filtered);
+    } else {
+      setFilteredBanks([]);
+    }
+    // Reset selected bank when category changes
+    setFormData((prev) => ({ ...prev, bankName: "" }));
+  }, [formData.bankCategory, banks]);
+
+  // Auto calculate
   const autoCalculate = (updated) => {
     const principal = parseFloat(updated.principalAmount) || 0;
     const rate = parseFloat(updated.ratePercent) || 0;
     const months = parseInt(updated.numberOfMonths) || 0;
 
-    const interestAmount = ((principal * rate * months) / (12 * 100)).toFixed(2);
-    const totalPayableAmount = (principal + parseFloat(interestAmount)).toFixed(2);
-    const installmentPerMonth = months > 0 ? (totalPayableAmount / months).toFixed(2) : "0.00";
+    const interestAmount = ((principal * rate * months) / (12 * 100)).toFixed(
+      2
+    );
+    const totalPayableAmount = (principal + parseFloat(interestAmount)).toFixed(
+      2
+    );
+    const installmentPerMonth =
+      months > 0 ? (totalPayableAmount / months).toFixed(2) : "0.00";
 
     return {
       ...updated,
@@ -59,12 +108,11 @@ export default function AddLoanPage() {
   };
 
   const handleSelectChange = (name, selected) => {
-    setFormData({ ...formData, [name]: selected?.value || "" });
+    setFormData({ ...formData, [name]: selected ? selected.value : "" });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setIsSubmitting(true);
     try {
       const payload = {
@@ -86,6 +134,7 @@ export default function AddLoanPage() {
       await axiosInstance.post("/loans/", payload);
       toast.success("Loan added successfully!");
 
+      // Reset form
       setFormData({
         date: new Date().toISOString().split("T")[0],
         sourceCategory: "",
@@ -110,11 +159,14 @@ export default function AddLoanPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded shadow mt-6">
+    <div className="max-w-6xl mx-auto p-6 bg-white rounded shadow ">
       <h2 className="text-xl font-semibold mb-4 text-center">Add Loan</h2>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 md:grid-cols-5 gap-4"
+      >
         <div>
-          <label className="block text-sm font-medium mb-1">Date</label>
+          <label className="block text-sm mb-1 font-medium">Date</label>
           <input
             type="date"
             name="date"
@@ -125,59 +177,99 @@ export default function AddLoanPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Source Category *</label>
+          <label className="block text-sm mb-1 font-medium">
+            Source Category *
+          </label>
           <Select
-            options={sourceCategories.map((v) => ({ label: v, value: v }))}
-            value={formData.sourceCategory ? { label: formData.sourceCategory, value: formData.sourceCategory } : null}
-            onChange={(selected) => handleSelectChange("sourceCategory", selected)}
+            options={sourceCategories}
+            value={
+              sourceCategories.find(
+                (opt) => opt.value === formData.sourceCategory
+              ) || null
+            }
+            onChange={(selected) =>
+              handleSelectChange("sourceCategory", selected)
+            }
             placeholder="Select"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Bank Category *</label>
+          <label className="block text-sm mb-1 font-medium">
+            Bank Category *
+          </label>
           <Select
-            options={bankCategories.map((v) => ({ label: v, value: v }))}
-            value={formData.bankCategory ? { label: formData.bankCategory, value: formData.bankCategory } : null}
-            onChange={(selected) => handleSelectChange("bankCategory", selected)}
+            options={bankCategories}
+            value={
+              bankCategories.find(
+                (opt) => opt.value === formData.bankCategory
+              ) || null
+            }
+            onChange={(selected) =>
+              handleSelectChange("bankCategory", selected)
+            }
             placeholder="Select"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Bank Name</label>
-          <input
-            type="text"
-            name="bankName"
-            value={formData.bankName}
-            onChange={handleChange}
-            placeholder="Enter bank name"
-            className="w-full border px-2 py-1 rounded"
+          <label className="block text-sm mb-1 font-medium">Bank Name *</label>
+          <Select
+            options={filteredBanks}
+            value={
+              filteredBanks.find((opt) => opt.value === formData.bankName) ||
+              null
+            }
+            onChange={(selected) =>
+              setFormData({
+                ...formData,
+                bankName: selected ? selected.value : "",
+              })
+            }
+            placeholder="Select bank"
+            isDisabled={!formData.bankCategory}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Loan Type *</label>
+          <label className="block text-sm mb-1 font-medium">Loan Type *</label>
           <Select
             options={loanTypes.map((v) => ({ label: v, value: v }))}
-            value={formData.loanType ? { label: formData.loanType, value: formData.loanType } : null}
+            value={
+              loanTypes.find((v) => v === formData.loanType)
+                ? { label: formData.loanType, value: formData.loanType }
+                : null
+            }
             onChange={(selected) => handleSelectChange("loanType", selected)}
             placeholder="Select"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Transaction Type *</label>
+          <label className="block text-sm mb-1 font-medium">
+            Transaction Type *
+          </label>
           <Select
             options={transactionTypes.map((v) => ({ label: v, value: v }))}
-            value={formData.transactionType ? { label: formData.transactionType, value: formData.transactionType } : null}
-            onChange={(selected) => handleSelectChange("transactionType", selected)}
+            value={
+              transactionTypes.find((v) => v === formData.transactionType)
+                ? {
+                    label: formData.transactionType,
+                    value: formData.transactionType,
+                  }
+                : null
+            }
+            onChange={(selected) =>
+              handleSelectChange("transactionType", selected)
+            }
             placeholder="Select"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Principal Amount *</label>
+          <label className="block text-sm mb-1 font-medium">
+            Principal Amount *
+          </label>
           <input
             type="number"
             name="principalAmount"
@@ -189,7 +281,7 @@ export default function AddLoanPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Rate in % *</label>
+          <label className="block text-sm mb-1 font-medium">Rate in % *</label>
           <input
             type="number"
             name="ratePercent"
@@ -201,7 +293,9 @@ export default function AddLoanPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Number of Months *</label>
+          <label className="block text-sm mb-1 font-medium">
+            Number of Months *
+          </label>
           <input
             type="number"
             name="numberOfMonths"
@@ -213,7 +307,9 @@ export default function AddLoanPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Interest Amount</label>
+          <label className="block text-sm mb-1 font-medium">
+            Interest Amount
+          </label>
           <input
             type="text"
             name="interestAmount"
@@ -224,7 +320,9 @@ export default function AddLoanPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Total Payable Amount</label>
+          <label className="block text-sm mb-1 font-medium">
+            Total Payable Amount
+          </label>
           <input
             type="text"
             name="totalPayableAmount"
@@ -235,7 +333,9 @@ export default function AddLoanPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Installment per month</label>
+          <label className="block text-sm mb-1 font-medium">
+            Installment per month
+          </label>
           <input
             type="text"
             name="installmentPerMonth"
@@ -245,8 +345,8 @@ export default function AddLoanPage() {
           />
         </div>
 
-        <div className="">
-          <label className="block text-sm font-medium mb-1">Remarks</label>
+        <div className="md:col-span-1">
+          <label className="block text-sm mb-1 font-medium">Remarks</label>
           <input
             name="remarks"
             value={formData.remarks}
@@ -256,10 +356,14 @@ export default function AddLoanPage() {
           />
         </div>
 
-        <div className="2x\ flex justify-center mt-4">
+        <div className=" flex justify-center mt-4">
           <button
             type="submit"
-            className={`px-6 py-2 rounded text-white transition-colors ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+            className={`px-6 py-2 rounded text-white transition-colors ${
+              isSubmitting
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
             disabled={isSubmitting}
           >
             {isSubmitting ? "Processing..." : "Submit"}
