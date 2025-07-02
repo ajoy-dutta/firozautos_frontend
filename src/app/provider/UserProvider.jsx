@@ -58,7 +58,7 @@ export const UserProvider = ({ children }) => {
 
   const refreshUser = () => {
     const storedToken = localStorage.getItem("access_token");
-    setToken(storedToken); // this will retrigger fetchUserData via useEffect
+    setToken(storedToken); 
   };
 
   const signOut = () => {
@@ -74,7 +74,7 @@ export const UserProvider = ({ children }) => {
     if (token && !user) {
       fetchUserData();
     }
-  }, [token]); // 👈 token is now reactive
+  }, [token]); 
 
   return (
     <UserContext.Provider value={{ user, loading, error, refreshUser, signOut }}>

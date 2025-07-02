@@ -22,9 +22,13 @@ const ProtectedRoute = ({ children }) => {
   }, [user, router]);
 
   // Show loading state while checking user
-  if (isLoading) {
-    return <div>Loading...</div>; // Or you can use a spinner or loading indicator
-  }
+ if (isLoading) {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+  );
+}
 
   return children;
 };

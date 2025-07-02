@@ -42,7 +42,7 @@ export default function ClientLayout({ children }) {
       return (
         <div className="flex h-screen">
           <SidebarContent />
-          <div className="flex-1 bg-slate-200 p-10 overflow-y-auto">
+          <div className="flex-1 -10 overflow-y-auto">
             {children}
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function ClientLayout({ children }) {
       <ProtectedRoute>
         <div className="flex h-screen">
           <SidebarContent />
-          <div className="flex-1 bg-slate-200 p-10 overflow-y-auto">
+          <div className="flex-1  p-10 overflow-y-auto">
             {children}
           </div>
         </div>

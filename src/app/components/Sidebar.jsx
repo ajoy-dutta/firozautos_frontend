@@ -71,16 +71,16 @@ function SidebarContent() {
       label: "Customer",
       icon: "⚙️",
       children: [
-        { label: "Add Customer", href: "/customer/add" },
-        { label: "Customer List", href: "/customer/list" }
+        { label: "Add Customer", href: "/customer/addEditCustomer" },
+        { label: "Customer List", href: "/customer/customerList" }
       ]
     },
     {
       label: "Supplier",
       icon: "⚙️",
       children: [
-        { label: "Add Supplier", href: "/supplier/add" },
-        { label: "Supplier List", href: "/supplier/list" }
+        { label: "Add Supplier", href: "/supplier/addEditSupplier" },
+        { label: "Supplier List", href: "/supplier/supplierList" }
       ]
     },
     {
@@ -111,7 +111,7 @@ function SidebarContent() {
       label: "Loan",
       icon: "⚙️",
       children: [
-        { label: "Add Loan", href: "/loan/add" },
+        { label: "Add Loan", href: "/loan/addLoan" },
         { label: "Loan List", href: "/loan/list" },
         { label: "Loan Statement", href: "/loan/statement" }
       ]
