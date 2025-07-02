@@ -12,7 +12,7 @@ export default function CustomerListPage() {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
-  const [selectedDistrict, setSelectedDistrict] = useState(null); // object {value, label}
+  const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
 
   const router = useRouter();
@@ -38,8 +38,9 @@ export default function CustomerListPage() {
         axiosInstance.get("/districts/"),
       ]);
       setCustomers(custRes.data);
+      // value & label দুটোতেই name রাখছি
       setDistricts(
-        distRes.data.map((d) => ({ value: d.id.toString(), label: d.name }))
+        distRes.data.map((d) => ({ value: d.name, label: d.name }))
       );
     } catch (error) {
       console.error(error);
@@ -63,24 +64,21 @@ export default function CustomerListPage() {
   };
 
   const handleEdit = (customer) => {
-    // Store customer data in localStorage to pass to edit page
     localStorage.setItem("editCustomerData", JSON.stringify(customer));
-    // Navigate to addEditCustomer page with edit mode
     router.push("/customer/addEditCustomer");
   };
 
   // Filtered data logic
   const filtered = customers.filter((c) => {
     const matchesDistrict = selectedDistrict
-      ? c.district.toString() === selectedDistrict.value
+      ? c.district === selectedDistrict.value
       : true;
     const matchesType = selectedType
       ? c.customer_type === selectedType.value
       : true;
     const matchesSearch = search
       ? c.customer_name.toLowerCase().includes(search.toLowerCase()) ||
-        (c.shop_name &&
-          c.shop_name.toLowerCase().includes(search.toLowerCase()))
+      (c.shop_name && c.shop_name.toLowerCase().includes(search.toLowerCase()))
       : true;
 
     return matchesDistrict && matchesType && matchesSearch;
@@ -92,25 +90,19 @@ export default function CustomerListPage() {
     currentPage * pageSize
   );
 
-  // Helper to get district name by id
-  const getDistrictName = (id) => {
-    const dist = districts.find((d) => d.value === id.toString());
-    return dist ? dist.label : "-";
-  };
-
   return (
-    <div className=" max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <h2 className="text-2xl font-semibold mb-4 text-center">Customer List</h2>
 
       {/* Add Customer Button */}
-      <div className="flex justify-end mb-4">
+      {/* <div className="flex justify-end mb-4">
         <button
           onClick={() => router.push("/customer/addEditCustomer")}
           className="bg-sky-800 text-white px-4 py-2 rounded hover:bg-sky-700 transition-colors"
         >
           Add New Customer
         </button>
-      </div>
+      </div> */}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-4 justify-center">
@@ -133,7 +125,7 @@ export default function CustomerListPage() {
             setCurrentPage(1);
           }}
           isClearable
-          placeholder=" Customer Type"
+          placeholder="Customer Type"
           className="w-48"
         />
         <input
@@ -178,9 +170,7 @@ export default function CustomerListPage() {
                       <td className="p-2 border">{c.customer_name}</td>
                       <td className="p-2 border">{c.shop_name || "-"}</td>
                       <td className="p-2 border">{c.phone1}</td>
-                      <td className="p-2 border">
-                        {getDistrictName(c.district)}
-                      </td>
+                      <td className="p-2 border">{c.district || "-"}</td> {/* সরাসরি নাম দেখাচ্ছি */}
                       <td className="p-2 border">{c.customer_type}</td>
                       <td className="p-2 border">
                         {c.previous_due_amount
@@ -223,11 +213,10 @@ export default function CustomerListPage() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                 disabled={currentPage === 1}
-                className={`px-3 py-1 rounded border ${
-                  currentPage === 1
+                className={`px-3 py-1 rounded border ${currentPage === 1
                     ? "bg-gray-300 cursor-not-allowed"
                     : "bg-white hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 Previous
               </button>
@@ -235,11 +224,10 @@ export default function CustomerListPage() {
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 rounded border ${
-                    currentPage === i + 1
+                  className={`px-3 py-1 rounded border ${currentPage === i + 1
                       ? "bg-blue-600 text-white"
                       : "bg-white hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   {i + 1}
                 </button>
@@ -249,11 +237,10 @@ export default function CustomerListPage() {
                   setCurrentPage((p) => Math.min(p + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded border ${
-                  currentPage === totalPages
+                className={`px-3 py-1 rounded border ${currentPage === totalPages
                     ? "bg-gray-300 cursor-not-allowed"
                     : "bg-white hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 Next
               </button>

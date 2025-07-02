@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Select from "react-select";
-import axiosInstance from "../../components/AxiosInstance"; 
+import axiosInstance from "../../components/AxiosInstance";
 import toast from "react-hot-toast";
 
 export default function AddEditCustomerPage() {
@@ -32,15 +32,14 @@ export default function AddEditCustomerPage() {
   const [districts, setDistricts] = useState([]);
   const customerTypes = ["Buyer", "Seller", "Wholeseller"];
 
-  // Check for edit data from localStorage
+  // Load edit data from localStorage
   useEffect(() => {
-    const editData = localStorage.getItem('editCustomerData');
+    const editData = localStorage.getItem("editCustomerData");
     if (editData) {
       const customerData = JSON.parse(editData);
       setInitialData(customerData);
       setIsEditMode(true);
-      // Clear localStorage after getting data
-      localStorage.removeItem('editCustomerData');
+      localStorage.removeItem("editCustomerData");
     }
   }, []);
 
@@ -51,17 +50,6 @@ export default function AddEditCustomerPage() {
         const res = await axiosInstance.get("/districts/");
         const options = res.data.map(d => ({ value: d.id, label: d.name }));
         setDistricts(options);
-        
-        // যদি edit mode এ থাকি এবং initialData আছে, তাহলে district set করি
-        if (isEditMode && initialData) {
-          const selectedDistrict = options.find(d => d.value === initialData.district);
-          if (selectedDistrict) {
-            setFormData(prev => ({
-              ...prev,
-              district: selectedDistrict
-            }));
-          }
-        }
       } catch (error) {
         console.error("Failed to fetch districts", error);
         toast.error("Failed to load districts");
@@ -69,22 +57,15 @@ export default function AddEditCustomerPage() {
     };
 
     fetchDistricts();
-  }, [isEditMode, initialData]);
+  }, []);
 
   // Set form data when edit mode and districts are loaded
   useEffect(() => {
     if (isEditMode && initialData && districts.length > 0) {
-      console.log("Setting form data:", initialData.district);
-      console.log("Available districts:", districts);
-      
-      // Find district by matching ID (handle both string and number)
-      const selectedDistrict = districts.find(d => 
-        d.value === initialData.district || 
-        d.value === String(initialData.district) ||
-        String(d.value) === String(initialData.district)
+      const selectedDistrict = districts.find(
+        d => d.label === initialData.district
       );
-      console.log("Selected district:", selectedDistrict);
-      
+
       setFormData({
         customerName: initialData.customer_name || "",
         district: selectedDistrict || null,
@@ -140,7 +121,7 @@ export default function AddEditCustomerPage() {
     try {
       const payload = {
         customer_name: formData.customerName,
-        district: formData.district ? formData.district.value : null,
+        district: formData.district ? formData.district.label : null, // send name, not id
         customer_type: formData.customerType,
         shop_name: formData.shopName,
         phone1: formData.phone1,
@@ -162,9 +143,7 @@ export default function AddEditCustomerPage() {
         toast.success("Customer added successfully!");
       }
 
-      // Navigate back to customer list
-      router.push('/customer/customerList'); 
-
+      router.push("/customer/customerList");
     } catch (error) {
       console.error("Error submitting form:", error);
       toast.error("An error occurred. Please check your data and try again.");
@@ -185,7 +164,7 @@ export default function AddEditCustomerPage() {
   };
 
   const handleBack = () => {
-    router.back(); // বা router.push('/') customer list page এ ফিরে যেতে
+    router.back();
   };
 
   const renderField = (name, label, type = "text", required = false, placeholder = "") => (
@@ -208,85 +187,82 @@ export default function AddEditCustomerPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-4">
-  
-      <div>
-        <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
-          {isEditMode ? "Edit Customer" : "Add Customer"}
-        </h2>
+      <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
+        {isEditMode ? "Edit Customer" : "Add Customer"}
+      </h2>
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {renderField("customerName", "Customer Name", "text", true)}
-            {renderField("dob", "Date of Birth", "date")}
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {renderField("customerName", "Customer Name", "text", true)}
+          {renderField("dob", "Date of Birth", "date")}
 
-            <div className="flex flex-col">
-              <label className="text-sm mb-1 font-medium">
-                District <span className="text-red-500">*</span>
-              </label>
-              <Select
-                name="district"
-                value={formData.district}
-                onChange={(selected) => {
-                  setFormData(prev => ({ ...prev, district: selected }));
-                  if (errors.district) setErrors(prev => ({ ...prev, district: "" }));
-                }}
-                options={districts}
-                isClearable
-                placeholder="Select district"
-              />
-              {errors.district && <span className="text-red-500 text-xs mt-1">{errors.district}</span>}
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm mb-1 font-medium">
-                Customer Type <span className="text-red-500">*</span>
-              </label>
-              <Select
-                name="customerType"
-                value={formData.customerType ? { label: formData.customerType, value: formData.customerType } : null}
-                onChange={(selected) => {
-                  setFormData(prev => ({ ...prev, customerType: selected?.value || "" }));
-                  if (errors.customerType) setErrors(prev => ({ ...prev, customerType: "" }));
-                }}
-                options={customerTypes.map(t => ({ value: t, label: t }))}
-                isClearable
-                placeholder="Select type"
-              />
-              {errors.customerType && <span className="text-red-500 text-xs mt-1">{errors.customerType}</span>}
-            </div>
-
-            {renderField("shopName", "Shop Name")}
-            {renderField("phone1", "Phone 1", "tel", true)}
-            {renderField("phone2", "Phone 2", "tel")}
-            {renderField("email", "E-mail Id", "email")}
-            {renderField("address", "Address", "text", true)}
-            {renderField("nid", "NID No")}
-            {renderField("courierName", "Courier Name")}
-            {renderField("previousDue", "Previous Due Amount", "number", false, "0.00")}
-            {renderField("remarks", "Remarks")}
+          <div className="flex flex-col">
+            <label className="text-sm mb-1 font-medium">
+              District <span className="text-red-500">*</span>
+            </label>
+            <Select
+              name="district"
+              value={formData.district}
+              onChange={(selected) => {
+                setFormData(prev => ({ ...prev, district: selected }));
+                if (errors.district) setErrors(prev => ({ ...prev, district: "" }));
+              }}
+              options={districts}
+              isClearable
+              placeholder="Select district"
+            />
+            {errors.district && <span className="text-red-500 text-xs mt-1">{errors.district}</span>}
           </div>
 
-          <div className="flex justify-center mt-8 gap-4">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors"
-              disabled={isSubmitting}
-            >
-              Reset
-            </button>
-            <button
-              type="submit"
-              className={`px-6 py-2 rounded text-white transition-colors ${
-                isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-sky-800 hover:bg-sky-700"
-              }`}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Processing..." : isEditMode ? "Update" : "Submit"}
-            </button>
+          <div className="flex flex-col">
+            <label className="text-sm mb-1 font-medium">
+              Customer Type <span className="text-red-500">*</span>
+            </label>
+            <Select
+              name="customerType"
+              value={formData.customerType ? { label: formData.customerType, value: formData.customerType } : null}
+              onChange={(selected) => {
+                setFormData(prev => ({ ...prev, customerType: selected?.value || "" }));
+                if (errors.customerType) setErrors(prev => ({ ...prev, customerType: "" }));
+              }}
+              options={customerTypes.map(t => ({ value: t, label: t }))}
+              isClearable
+              placeholder="Select type"
+            />
+            {errors.customerType && <span className="text-red-500 text-xs mt-1">{errors.customerType}</span>}
           </div>
-        </form>
-      </div>
+
+          {renderField("shopName", "Shop Name")}
+          {renderField("phone1", "Phone 1", "tel", true)}
+          {renderField("phone2", "Phone 2", "tel")}
+          {renderField("email", "E-mail Id", "email")}
+          {renderField("address", "Address", "text", true)}
+          {renderField("nid", "NID No")}
+          {renderField("courierName", "Courier Name")}
+          {renderField("previousDue", "Previous Due Amount", "number", false, "0.00")}
+          {renderField("remarks", "Remarks")}
+        </div>
+
+        <div className="flex justify-center mt-8 gap-4">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors"
+            disabled={isSubmitting}
+          >
+            Reset
+          </button>
+          <button
+            type="submit"
+            className={`px-6 py-2 rounded text-white transition-colors ${
+              isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-sky-800 hover:bg-sky-700"
+            }`}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Processing..." : isEditMode ? "Update" : "Submit"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
