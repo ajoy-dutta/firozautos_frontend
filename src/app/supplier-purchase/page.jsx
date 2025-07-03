@@ -324,9 +324,12 @@ export default function SupplierProductPurchase() {
     });
   };
 
-  const isCheque =
-    paymentModes.find((pm) => pm.value === paymentData.paymentMode)?.label ===
-    "Cheque";
+  const selectedPaymentModeLabel = paymentModes.find(
+    (pm) => pm.value === paymentData.paymentMode
+  )?.label;
+
+  const isCheque = selectedPaymentModeLabel === "Cheque";
+  const isBank = selectedPaymentModeLabel === "Bank";
 
   const handleRemovePayment = (index) => {
     setPayments((prev) => prev.filter((_, i) => i !== index));
@@ -369,7 +372,7 @@ export default function SupplierProductPurchase() {
 
     // Prepare the payload
     const payload = {
-      supplier: selectedSupplier.value,
+      supplier_id: selectedSupplier.value,
       company_name: selectedCompany ? selectedCompany.value : null,
       purchase_date: purchaseDate,
       total_amount: totalAmount,
@@ -377,7 +380,7 @@ export default function SupplierProductPurchase() {
       total_payable_amount: totalPayableAmount,
       total_paid_amount: totalPaidAmount,
       products: addedProducts.map((product) => ({
-        product: product.id,
+        product_id: product.id,
         part_no: product.partNumber,
         purchase_quantity: parseInt(product.purchaseQuantity),
         purchase_price: parseFloat(product.purchasePrice),
@@ -470,21 +473,6 @@ export default function SupplierProductPurchase() {
               placeholder="Select supplier"
             />
           </div>
-
-          {/* <div>
-            <label className="block mb-1 font-medium text-sm">
-              Supplier Name
-            </label>
-            <input
-              type="text"
-              name="supplierName"
-              value={supplierData.supplierName}
-              onChange={handleSupplierChange}
-              className="w-full border rounded px-2 py-1"
-              placeholder="Supplier name"
-              required
-            />
-          </div> */}
 
           <div>
             <label className="block mb-1 font-medium text-sm">District</label>
@@ -897,8 +885,7 @@ export default function SupplierProductPurchase() {
               }
               placeholder="Select"
               isClearable
-              isDisabled={!isCheque}
-              classNamePrefix={isCheque ? "" : "disabled-select"}
+              isDisabled={!isBank}
             />
           </div>
 
@@ -909,9 +896,9 @@ export default function SupplierProductPurchase() {
               type="text"
               value={paymentData.accountNo}
               onChange={(e) => handlePaymentChange("accountNo", e.target.value)}
-              disabled={!isCheque}
+              disabled={!isBank}
               className={`w-full border px-2 py-1 rounded ${
-                !isCheque ? "bg-gray-100 text-gray-500" : ""
+                !isBank ? "bg-gray-100 text-gray-500" : ""
               }`}
               placeholder="Account No"
             />
