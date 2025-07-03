@@ -8,8 +8,9 @@ export default function SupplierForm() {
   const [supplierTypes, setSupplierTypes] = useState([]);
   const [districts, setDistricts] = useState([]);
 
-const searchParams = useSearchParams();
-  const editingId = searchParams.get("id");  // will be null if not provided
+  const searchParams = useSearchParams();
+  const editingId = searchParams.get("id"); // will be null if not provided
+  console.log("Editing ID:", editingId);
 
   const [formData, setFormData] = useState({
     supplier_name: "",
