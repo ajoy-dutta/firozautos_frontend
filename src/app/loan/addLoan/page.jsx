@@ -34,12 +34,14 @@ export default function AddLoanPage() {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-    const [srcRes, bankCatRes, bankRes, paymentModeRes] = await Promise.all([
-  axiosInstance.get("/source-categories/"),
-  axiosInstance.get("/bank-categories/"),
-  axiosInstance.get("/banks/"),
-  axiosInstance.get("/payment-mode/"),
-]);
+        const [srcRes, bankCatRes, bankRes, paymentModeRes] = await Promise.all(
+          [
+            axiosInstance.get("/source-categories/"),
+            axiosInstance.get("/bank-categories/"),
+            axiosInstance.get("/banks/"),
+            axiosInstance.get("/payment-mode/"),
+          ]
+        );
 
         setSourceCategories(
           srcRes.data.map((item) => ({
@@ -52,13 +54,12 @@ export default function AddLoanPage() {
         );
         setBanks(bankRes.data); // keep raw data for filter
 
-       
-setPaymentModes(
-  paymentModeRes.data.map((item) => ({
-    label: item.name,
-    value: item.name,   
-  }))
-);
+        setPaymentModes(
+          paymentModeRes.data.map((item) => ({
+            label: item.name,
+            value: item.name,
+          }))
+        );
       } catch (error) {
         console.error("Error fetching dropdown options:", error);
         toast.error("Failed to load dropdown options");
@@ -119,65 +120,64 @@ setPaymentModes(
     setFormData({ ...formData, [name]: selected ? selected.value : "" });
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  try {
-    const sourceCategoryLabel = sourceCategories.find(
-      (opt) => opt.value === formData.sourceCategory
-    )?.label || "";
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const sourceCategoryLabel =
+        sourceCategories.find((opt) => opt.value === formData.sourceCategory)
+          ?.label || "";
 
-    const bankCategoryLabel = bankCategories.find(
-      (opt) => opt.value === formData.bankCategory
-    )?.label || "";
+      const bankCategoryLabel =
+        bankCategories.find((opt) => opt.value === formData.bankCategory)
+          ?.label || "";
 
-    const bankNameLabel = filteredBanks.find(
-      (opt) => opt.value === formData.bankName
-    )?.label || "";
+      const bankNameLabel =
+        filteredBanks.find((opt) => opt.value === formData.bankName)?.label ||
+        "";
 
-    const payload = {
-      date: formData.date,
-      source_category: sourceCategoryLabel,       // ✅ label পাঠাচ্ছি
-      bank_category: bankCategoryLabel,           // ✅ label পাঠাচ্ছি
-      bank_name: bankNameLabel,                   // ✅ label পাঠাচ্ছি
-      loan_type: formData.loanType,
-      transaction_type: formData.transactionType,
-      principal_amount: parseFloat(formData.principalAmount),
-      rate_percent: parseFloat(formData.ratePercent),
-      number_of_months: parseInt(formData.numberOfMonths),
-      interest_amount: parseFloat(formData.interestAmount),
-      total_payable_amount: parseFloat(formData.totalPayableAmount),
-      installment_per_month: parseFloat(formData.installmentPerMonth),
-      remarks: formData.remarks,
-    };
+      const payload = {
+        date: formData.date,
+        source_category: sourceCategoryLabel, // ✅ label পাঠাচ্ছি
+        bank_category: bankCategoryLabel, // ✅ label পাঠাচ্ছি
+        bank_name: bankNameLabel, // ✅ label পাঠাচ্ছি
+        loan_type: formData.loanType,
+        transaction_type: formData.transactionType,
+        principal_amount: parseFloat(formData.principalAmount),
+        rate_percent: parseFloat(formData.ratePercent),
+        number_of_months: parseInt(formData.numberOfMonths),
+        interest_amount: parseFloat(formData.interestAmount),
+        total_payable_amount: parseFloat(formData.totalPayableAmount),
+        installment_per_month: parseFloat(formData.installmentPerMonth),
+        remarks: formData.remarks,
+      };
 
-    await axiosInstance.post("/loans/", payload);
-    toast.success("Loan added successfully!");
+      await axiosInstance.post("/loans/", payload);
+      toast.success("Loan added successfully!");
 
-    // Reset form
-    setFormData({
-      date: new Date().toISOString().split("T")[0],
-      sourceCategory: "",
-      bankCategory: "",
-      bankName: "",
-      loanType: "",
-      transactionType: "",
-      principalAmount: "",
-      ratePercent: "",
-      numberOfMonths: "",
-      interestAmount: "",
-      totalPayableAmount: "",
-      installmentPerMonth: "",
-      remarks: "",
-    });
-  } catch (error) {
-    console.error(error);
-    toast.error("Error adding loan. Please check your data.");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
+      // Reset form
+      setFormData({
+        date: new Date().toISOString().split("T")[0],
+        sourceCategory: "",
+        bankCategory: "",
+        bankName: "",
+        loanType: "",
+        transactionType: "",
+        principalAmount: "",
+        ratePercent: "",
+        numberOfMonths: "",
+        interestAmount: "",
+        totalPayableAmount: "",
+        installmentPerMonth: "",
+        remarks: "",
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Error adding loan. Please check your data.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto  ">
@@ -270,17 +270,21 @@ setPaymentModes(
           <label className="block text-sm mb-1 font-medium">
             Transaction Type *
           </label>
- <Select
-  options={paymentModes}
-  value={
-    formData.transactionType
-      ? { label: formData.transactionType, value: formData.transactionType }
-      : null
-  }
-  onChange={(selected) => handleSelectChange("transactionType", selected)}
-  placeholder="Select"
-/>
-
+          <Select
+            options={paymentModes}
+            value={
+              formData.transactionType
+                ? {
+                    label: formData.transactionType,
+                    value: formData.transactionType,
+                  }
+                : null
+            }
+            onChange={(selected) =>
+              handleSelectChange("transactionType", selected)
+            }
+            placeholder="Select"
+          />
         </div>
 
         <div>
