@@ -5,6 +5,8 @@ import axiosInstance from "../../components/AxiosInstance";
 import Select from "react-select";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { AiFillEdit } from "react-icons/ai";
+import { RiDeleteBin6Fill } from "react-icons/ri";
 
 export default function SupplierListPage() {
   const [suppliers, setSuppliers] = useState([]);
@@ -51,7 +53,10 @@ export default function SupplierListPage() {
       );
 
       setSupplierTypes(
-        supplierTypeRes.data.map((t) => ({ value: t.id.toString(), label: t.name }))
+        supplierTypeRes.data.map((t) => ({
+          value: t.id.toString(),
+          label: t.name,
+        }))
       );
 
       setCountries([
@@ -88,7 +93,9 @@ export default function SupplierListPage() {
       ? s.supplier_type_detail?.id.toString() === selectedType.value
       : true;
     const matchName = supplierNameSearch
-      ? s.supplier_name?.toLowerCase().includes(supplierNameSearch.toLowerCase())
+      ? s.supplier_name
+          ?.toLowerCase()
+          .includes(supplierNameSearch.toLowerCase())
       : true;
 
     return matchDistrict && matchCountry && matchType && matchName;
@@ -96,7 +103,9 @@ export default function SupplierListPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-4">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Supplier List</h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">
+        Supplier List
+      </h2>
 
       {/* FILTERS */}
       <div className="bg-white border border-gray-300 p-4 rounded-lg shadow-sm mb-6 flex flex-wrap gap-4 justify-center">
@@ -138,57 +147,83 @@ export default function SupplierListPage() {
           <span className="loading loading-ring loading-lg"></span>
         </div>
       ) : (
-        <div className="overflow-x-auto border border-gray-300 rounded-lg shadow-sm">
-          <table className="min-w-full border-collapse text-sm">
+        <div className="overflow-x-auto border border-gray-300 shadow-sm">
+          <table className="table table-xs border border-slate-400 min-w-full border-collapse text-sm">
             <thead className="bg-sky-900 text-white">
-              <tr>
-                <th className="p-2 border">#</th>
-                <th className="p-2 border">Supplier Name</th>
-                <th className="p-2 border">District</th>
-                <th className="p-2 border">Country</th>
-                <th className="p-2 border">Supplier Type</th>
-                <th className="p-2 border">Shop Name</th>
-                <th className="p-2 border">Phone 1</th>
-                <th className="p-2 border">Phone 2</th>
-                <th className="p-2 border">Email</th>
-                <th className="p-2 border">Address</th>
-                <th className="p-2 border">Due</th>
-                <th className="p-2 border">Date</th>
-                <th className="p-2 border">Actions</th>
+              <tr className="font-light text-center">
+                <th className="p-2  border border-slate-400">SL</th>
+                <th className="p-2  border border-slate-400">Supplier Name</th>
+                <th className="p-2  border border-slate-400">District</th>
+                <th className="p-2  border border-slate-400">Country</th>
+                <th className="p-2  border border-slate-400">Supplier Type</th>
+                <th className="p-2  border border-slate-400">Shop Name</th>
+                <th className="p-2  border border-slate-400">Phone 1</th>
+                <th className="p-2  border border-slate-400">Phone 2</th>
+                <th className="p-2  border border-slate-400">DOB</th>
+                <th className="p-2  border border-slate-400">Email</th>
+                <th className="p-2  border border-slate-400">Address</th>
+                <th className="p-2  border border-slate-400">Due</th>
+                <th className="p-2  border border-slate-400">Created Date</th>
+                <th className="p-2  border border-slate-400">NID</th>
+                <th className="p-2  border border-slate-400">Remarks</th>
+                <th className="p-2  border border-slate-400">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredSuppliers.length > 0 ? (
                 filteredSuppliers.map((s, i) => (
-                  <tr key={s.id} className="odd:bg-white even:bg-sky-50">
-                    <td className="p-2 border text-center">{i + 1}</td>
-                    <td className="p-2 border">{s.supplier_name}</td>
-                    <td className="p-2 border">{s.district_detail?.name}</td>
-                    <td className="p-2 border">{s.country}</td>
-                    <td className="p-2 border">{s.supplier_type_detail?.name}</td>
-                    <td className="p-2 border">{s.shop_name || "-"}</td>
-                    <td className="p-2 border">{s.phone1}</td>
-                    <td className="p-2 border">{s.phone2}</td>
-                    <td className="p-2 border">{s.email}</td>
-                    <td className="p-2 border">{s.address}</td>
-                    <td className="p-2 border text-right">
+                  <tr key={s.id} className="odd:bg-white text-sm text-center even:bg-sky-50">
+                    <td className="p-2  border border-slate-400 text-center">
+                      {i + 1}
+                    </td>
+                    <td className="p-2  border border-slate-400">
+                      {s.supplier_name}
+                    </td>
+                    <td className="p-2  border border-slate-400">
+                      {s.district_detail?.name}
+                    </td>
+                    <td className="p-2  border border-slate-400">
+                      {s.country}
+                    </td>
+                    <td className="p-2  border border-slate-400">
+                      {s.supplier_type_detail?.name}
+                    </td>
+                    <td className="p-2  border border-slate-400">
+                      {s.shop_name || "-"}
+                    </td>
+                    <td className="p-2  border border-slate-400">{s.phone1}</td>
+                    <td className="p-2  border border-slate-400">{s.phone2}</td>
+                    <td className="p-2  border border-slate-400">{s.date_of_birth}</td>
+                    <td className="p-2  border border-slate-400">{s.email}</td>
+                    <td className="p-2  border border-slate-400">
+                      {s.address}
+                    </td>
+                    <td className="p-2  border border-slate-400 text-right">
                       {s.previous_due_amount ?? "0.00"}
                     </td>
-                    <td className="p-2 border">
+                    <td className="p-2 border border-slate-400">
                       {s.created_at?.split("T")[0] ?? "-"}
                     </td>
-                    <td className="p-2 border space-x-2 text-center">
+                    <td className="p-2 border border-slate-400">
+                      {s.nid_no ?? "-"}
+                    </td>
+                    <td className="p-2 border border-slate-400">
+                      {s.remarks ?? "-"}
+                    </td>
+                    <td className=" flex items-center justify-center  gap-2 text-center">
                       <button
-                        onClick={() => router.push(`/addEditSupplier?id=${s.id}`)}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs"
+                        onClick={() =>
+                          router.push(`/supplier/addEditSupplier?id=${s.id}`)
+                        }
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white p-1 rounded text-xs"
                       >
-                        Edit
+                        <AiFillEdit className="text-black" />
                       </button>
                       <button
                         onClick={() => handleDelete(s.id)}
-                        className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
+                        className="bg-red-600 hover:bg-red-700 text-white p-1 rounded text-xs"
                       >
-                        Delete
+                        <RiDeleteBin6Fill className="" />
                       </button>
                     </td>
                   </tr>

@@ -114,16 +114,15 @@ export default function EmployeeList() {
       <table className="w-full border border-slate-400">
         <thead className="bg-slate-100 text-center">
           <tr>
-            <th className="border py-1 px-2">SL</th>
-            <th className="border py-1 px-2">Name</th>
-            <th className="border py-1 px-2">Employee Code</th>
-            <th className="border py-1 px-2">Father's Name</th>
-            <th className="border py-1 px-2">Mother's Name</th>
-            <th className="border py-1 px-2">Mobile No</th>
-            <th className="border py-1 px-2">Print</th>
-            <th className="border py-1 px-2">Salary Statement</th>
-            <th className="border py-1 px-2">Edit</th>
-            <th className="border py-1 px-2">Delete</th>
+            <th className="border border-slate-300 py-1 px-2">SL</th>
+            <th className="border border-slate-300 py-1 px-2">Name</th>
+            <th className="border border-slate-300 py-1 px-2">Employee Code</th>
+            <th className="border border-slate-300 py-1 px-2">Father's Name</th>
+            <th className="border border-slate-300 py-1 px-2">Mother's Name</th>
+            <th className="border border-slate-300 py-1 px-2">Mobile No</th>
+            <th className="border border-slate-300 py-1 px-2">Print</th>
+            <th className="border border-slate-300 py-1 px-2">Salary Statement</th>
+            <th colSpan={2} className="border border-slate-300 py-1 px-2">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -136,22 +135,22 @@ export default function EmployeeList() {
           ) : (
             filteredList.map((emp, index) => (
               <tr key={emp.id} className="text-center">
-                <td className="border py-1 px-2">{index + 1}</td>
-                <td className="border py-1 px-2">{emp.employee_name}</td>
-                <td className="border py-1 px-2">{emp.employee_code}</td>
-                <td className="border py-1 px-2">{emp.father_name}</td>
-                <td className="border py-1 px-2">{emp.mother_name}</td>
-                <td className="border py-1 px-2">{emp.mobile_no}</td>
-                <td className="border py-1 px-2">
+                <td className="border border-slate-300 py-1 px-2">{index + 1}</td>
+                <td className="border border-slate-300 py-1 px-2">{emp.employee_name}</td>
+                <td className="border border-slate-300 py-1 px-2">{emp.employee_code}</td>
+                <td className="border border-slate-300 py-1 px-2">{emp.father_name}</td>
+                <td className="border border-slate-300 py-1 px-2">{emp.mother_name}</td>
+                <td className="border border-slate-300 py-1 px-2">{emp.mobile_no}</td>
+                <td className="border border-slate-300 py-1 px-2">
                   <FaFilePdf className="text-red-600 mx-auto cursor-pointer" />
                 </td>
-                <td className="border py-1 px-2">
+                <td className="border border-slate-300 py-1 px-2">
                   <FaFilePdf className="text-red-600 mx-auto cursor-pointer" />
                 </td>
-                <td className="border py-1 px-2">
+                <td className="border border-slate-300 py-1 px-2">
                   <FaEdit className="text-yellow-600 mx-auto cursor-pointer" />
                 </td>
-                <td className="border py-1 px-2">
+                <td className="border border-slate-300 py-1 px-2">
                   <FaTrash onClick={() => handleDelete(emp.id)} className="text-red-600 mx-auto cursor-pointer" />
                 </td>
               </tr>
