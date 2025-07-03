@@ -471,7 +471,7 @@ export default function SupplierProductPurchase() {
             />
           </div>
 
-          <div>
+          {/* <div>
             <label className="block mb-1 font-medium text-sm">
               Supplier Name
             </label>
@@ -484,7 +484,7 @@ export default function SupplierProductPurchase() {
               placeholder="Supplier name"
               required
             />
-          </div>
+          </div> */}
 
           <div>
             <label className="block mb-1 font-medium text-sm">District</label>
