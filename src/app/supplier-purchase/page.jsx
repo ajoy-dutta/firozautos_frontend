@@ -920,7 +920,7 @@ export default function SupplierProductPurchase() {
               </label>
               <input
                 type="text"
-                value={Number(totalAmount).toFixed(2)}
+                value={isNaN(Number(totalAmount)) ? "0.00" : Number(totalAmount).toFixed(2)}
                 readOnly
                 className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               />
@@ -952,7 +952,7 @@ export default function SupplierProductPurchase() {
               </label>
               <input
                 type="text"
-                value={Number(totalPayableAmount).toFixed(2)}
+                value={isNaN(Number(totalPayableAmount)) ? "0.00" : Number(totalPayableAmount).toFixed(2)}
                 readOnly
                 className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               />
@@ -1113,7 +1113,7 @@ export default function SupplierProductPurchase() {
         </label>
         <input
           type="number"
-          value={Number(totalPaidAmount).toFixed(2)}
+         value={isNaN(Number(totalPaidAmount)) ? "0.00" : Number(totalPaidAmount).toFixed(2)}
           readOnly
           className="border rounded px-2 py-1 text-sm placeholder-gray-400"
         />
