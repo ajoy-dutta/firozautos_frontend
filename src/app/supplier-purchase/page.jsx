@@ -6,6 +6,129 @@ import axiosInstance from "../components/AxiosInstance";
 import { toast } from "react-hot-toast";
 
 export default function SupplierProductPurchase() {
+  // Custom styles for react-select with vertical centering
+  const customSelectStyles = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: "30px",
+      height: "30px",
+      fontSize: "0.875rem",
+      border: "1px solid #000000",
+      borderRadius: "0.275rem",
+      borderColor: state.isFocused ? "#000000" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 0 1px #000000" : "none",
+      // Remove default padding
+      paddingTop: "0px",
+      paddingBottom: "0px",
+      // Ensure flex alignment
+      display: "flex",
+      alignItems: "center",
+    }),
+
+    valueContainer: (base) => ({
+      ...base,
+      height: "30px",
+      padding: "0 6px",
+      display: "flex",
+      alignItems: "center",
+      flexWrap: "nowrap",
+    }),
+
+    placeholder: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#9ca3af",
+      margin: "0",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    singleValue: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#000000",
+      margin: "0",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    input: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      margin: "0",
+      padding: "0",
+      color: "#000000",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: "30px",
+      display: "flex",
+      alignItems: "center",
+    }),
+
+    indicatorSeparator: (base) => ({
+      ...base,
+      backgroundColor: "#d1d5db",
+      height: "16px", // Shorter separator
+      marginTop: "auto",
+      marginBottom: "auto",
+    }),
+
+    dropdownIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      "&:hover": {
+        color: "#000000",
+      },
+    }),
+
+    clearIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      "&:hover": {
+        color: "#000000",
+      },
+    }),
+
+    option: (base, state) => ({
+      ...base,
+      fontSize: "0.875rem",
+      backgroundColor: state.isSelected
+        ? "#000000"
+        : state.isFocused
+        ? "#f3f4f6"
+        : "white",
+      color: state.isSelected ? "white" : "#000000",
+      "&:hover": {
+        backgroundColor: state.isSelected ? "#000000" : "#f3f4f6",
+      },
+    }),
+
+    menu: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+    }),
+
+    menuList: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+    }),
+  };
+
   // Supplier section states
   const [suppliers, setSuppliers] = useState([]);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
@@ -345,199 +468,105 @@ export default function SupplierProductPurchase() {
     setTotalPaidAmount(total);
   }, [payments]);
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   // Validate required fields
-  //   if (!selectedSupplier) {
-  //     toast.error("Please select a supplier");
-  //     return;
-  //   }
-
-  //   if (addedProducts.length === 0) {
-  //     toast.error("Please add at least one product");
-  //     return;
-  //   }
-
-  //   if (payments.length === 0) {
-  //     toast.error("Please add at least one payment");
-  //     return;
-  //   }
-
-  //   // Calculate total paid amount
-  //   const totalPaid = payments.reduce(
-  //     (sum, payment) => sum + parseFloat(payment.paidAmount || 0),
-  //     0
-  //   );
-
-  //   // Prepare the payload
-  //   const payload = {
-  //     supplier_id: selectedSupplier.value,
-  //     company_name: selectedCompany ? selectedCompany.value : null,
-  //     purchase_date: purchaseDate,
-  //     total_amount: totalAmount,
-  //     discount_amount: parseFloat(discountAmount) || 0,
-  //     total_payable_amount: totalPayableAmount,
-  //     // total_paid_amount: totalPaidAmount,
-  //     products: addedProducts.map((product) => ({
-  //       product_id: product.id,
-  //       part_no: product.partNumber,
-  //       purchase_quantity: parseInt(product.purchaseQuantity),
-  //       purchase_price: parseFloat(product.purchasePrice),
-  //       percentage: parseFloat(product.percentage) || 0,
-  //       purchase_price_with_percentage: parseFloat(
-  //         product.purchasePriceWithPercentage
-  //       ),
-  //       total_price: parseFloat(product.totalPrice),
-  //     })),
-  //     payments: payments.map((payment) => ({
-  //       payment_mode: payment.paymentMode,
-  //       bank_name: payment.bankName || null,
-  //       account_no: payment.accountNo || null,
-  //       cheque_no: payment.chequeNo || null,
-  //       paid_amount: parseFloat(payment.paidAmount),
-  //     })),
-  //   };
-
-  //   console.log("Purchase Payload:", payload);
-  //   toast.success("Purchase submitted successfully!");
-
-  //   // Reset the entire form
-  //   resetForm();
-  // };
-
-  // Separate reset function for reusability
-  const resetForm = () => {
-    // Supplier section
-    setSelectedSupplier(null);
-    setSupplierData({
-      supplierName: "",
-      district: "",
-      country: "",
-      supplierType: "",
-      shopName: "",
-      phone1: "",
-      phone2: "",
-      email: "",
-      address: "",
-      dob: "",
-      nidNo: "",
-    });
-
-    // Product section
-    setSelectedCompany(null);
-    setSelectedProductName(null);
-    setSelectedPartNumber(null);
-    setCurrentStock(0);
-    setPurchaseQuantity("");
-    setPurchasePrice("");
-    setPercentage("");
-    setPurchasePriceWithPercentage("0.00");
-    setTotalPrice("0.00");
-    setAddedProducts([]);
-
-    // Amounts section
-    setTotalAmount(0);
-    setDiscountAmount("");
-    setTotalPayableAmount(0);
-
-    // Payment section
-    setPaymentData({
-      paymentMode: "",
-      bankName: "",
-      accountNo: "",
-      chequeNo: "",
-      paidAmount: "",
-    });
-    setPayments([]);
-
-    // Reset date to today
-    setPurchaseDate(new Date().toISOString().split("T")[0]);
-  };
-
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Validate required fields
-  if (!selectedSupplier) {
-    toast.error("Please select a supplier");
-    return;
-  }
+    // Validate required fields
+    if (!selectedSupplier) {
+      toast.error("Please select a supplier");
+      return;
+    }
 
-  if (addedProducts.length === 0) {
-    toast.error("Please add at least one product");
-    return;
-  }
+    if (addedProducts.length === 0) {
+      toast.error("Please add at least one product");
+      return;
+    }
 
-  if (payments.length === 0) {
-    toast.error("Please add at least one payment");
-    return;
-  }
+    if (payments.length === 0) {
+      toast.error("Please add at least one payment");
+      return;
+    }
 
-  // Calculate total paid amount
-  const totalPaid = payments.reduce(
-    (sum, payment) => sum + parseFloat(payment.paidAmount || 0),
-    0
-  );
+    // Calculate total paid amount
+    const totalPaid = payments.reduce(
+      (sum, payment) => sum + parseFloat(payment.paidAmount || 0),
+      0
+    );
 
-  // Prepare the payload
-  const payload = {
-    invoice_no:"10000",
-    supplier_id: selectedSupplier.value,
-    company_name: selectedCompany ? selectedCompany.value : null,
-    purchase_date: purchaseDate,
-    total_amount: totalAmount,
-    discount_amount: parseFloat(discountAmount) || 0,
-    total_payable_amount: totalPayableAmount,
-    total_paid_amount: totalPaid,
-    products: addedProducts.map((product) => ({
-      product_id: product.id,
-      part_no: product.partNumber,
-      purchase_quantity: parseInt(product.purchaseQuantity),
-      purchase_price: parseFloat(product.purchasePrice),
-      percentage: parseFloat(product.percentage) || 0,
-      purchase_price_with_percentage: parseFloat(product.purchasePriceWithPercentage),
-      total_price: parseFloat(product.totalPrice),
-    })),
-    payments: payments.map((payment) => ({
-      payment_mode: payment.paymentMode,
-      bank_name: payment.bankName || null,
-      account_no: payment.accountNo || null,
-      cheque_no: payment.chequeNo || null,
-      paid_amount: parseFloat(payment.paidAmount),
-    })),
+    // Prepare the payload
+    const payload = {
+      invoice_no: "1000",
+      supplier_id: selectedSupplier.value,
+      company_name: selectedCompany ? selectedCompany.value : null,
+      purchase_date: purchaseDate,
+      total_amount: totalAmount,
+      discount_amount: parseFloat(discountAmount) || 0,
+      total_payable_amount: totalPayableAmount,
+      total_paid_amount: totalPaid,
+      products: addedProducts.map((product) => ({
+        product_id: product.id,
+        part_no: product.partNumber,
+        purchase_quantity: parseInt(product.purchaseQuantity),
+        purchase_price: parseFloat(product.purchasePrice),
+        percentage: parseFloat(product.percentage) || 0,
+        purchase_price_with_percentage: parseFloat(
+          product.purchasePriceWithPercentage
+        ),
+        total_price: parseFloat(product.totalPrice),
+      })),
+      payments: payments.map((payment) => ({
+        payment_mode: payment.paymentMode,
+        bank_name: payment.bankName || null,
+        account_no: payment.accountNo || null,
+        cheque_no: payment.chequeNo || null,
+        paid_amount: parseFloat(payment.paidAmount),
+      })),
+    };
+    console.log(payload);
+
+    try {
+      const response = await axiosInstance.post(
+        "/supplier-purchases/",
+        payload
+      );
+      console.log("Response:", response.data);
+      toast.success("Purchase submitted successfully!");
+
+      // Reset fields here after successful post
+      setSelectedSupplier(null);
+      setSupplierData({
+        supplierName: "",
+        district: "",
+        country: "",
+        supplierType: "",
+        shopName: "",
+        phone1: "",
+        phone2: "",
+        email: "",
+        address: "",
+        dob: "",
+        nidNo: "",
+      });
+      setSelectedCompany(null);
+      setPurchaseDate("");
+      setTotalAmount("");
+      setDiscountAmount("");
+      setTotalPayableAmount("");
+      setAddedProducts([]);
+      setPayments([]);
+      setTotalPaidAmount(""); // যদি alada state থাকে
+    } catch (error) {
+      console.error("Error submitting purchase:", error);
+      toast.error("Failed to submit purchase");
+    }
   };
-  console.log(payload);
-
-  try {
-    const response = await axiosInstance.post('/supplier-purchases/', payload);
-    console.log('Response:', response.data);
-    toast.success("Purchase submitted successfully!");
-
-    // Reset fields here after successful post
-    setSelectedSupplier(null);
-    setSelectedCompany(null);
-    setPurchaseDate(""); 
-    setTotalAmount("");
-    setDiscountAmount("");
-    setTotalPayableAmount("");
-    setAddedProducts([]);
-    setPayments([]);
-    setTotalPaidAmount(""); // যদি alada state থাকে
-
-  } catch (error) {
-    console.error('Error submitting purchase:', error);
-    toast.error("Failed to submit purchase");
-  }
-};
-
 
   return (
     <div className="max-w-7xl mx-auto p-4 ">
       {/* Supplier Section */}
       <section>
         <h2 className="font-semibold text-lg my-2">Supplier Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
           <div>
             <label className="block mb-1 font-medium text-sm">
               Select Supplier
@@ -547,7 +576,9 @@ export default function SupplierProductPurchase() {
               value={selectedSupplier}
               onChange={handleSupplierSelect}
               isClearable
-              placeholder="Select supplier"
+              placeholder="Select..."
+              className="text-sm"
+              styles={customSelectStyles}
             />
           </div>
 
@@ -558,8 +589,8 @@ export default function SupplierProductPurchase() {
               name="district"
               value={supplierData.district}
               onChange={handleSupplierChange}
-              className="w-full border rounded px-2 py-1"
-              placeholder="District"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="District..."
             />
           </div>
 
@@ -570,8 +601,8 @@ export default function SupplierProductPurchase() {
               name="country"
               value={supplierData.country}
               onChange={handleSupplierChange}
-              className="w-full border rounded px-2 py-1"
-              placeholder="Country"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Country..."
             />
           </div>
 
@@ -584,8 +615,8 @@ export default function SupplierProductPurchase() {
               name="supplierType"
               value={supplierData.supplierType}
               onChange={handleSupplierChange}
-              className="w-full border rounded px-2 py-1"
-              placeholder="Supplier type"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Type..."
             />
           </div>
 
@@ -596,8 +627,8 @@ export default function SupplierProductPurchase() {
               name="shopName"
               value={supplierData.shopName}
               onChange={handleSupplierChange}
-              className="w-full border rounded px-2 py-1"
-              placeholder="Shop name"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Shop..."
             />
           </div>
 
@@ -608,8 +639,8 @@ export default function SupplierProductPurchase() {
               name="phone1"
               value={supplierData.phone1}
               onChange={handleSupplierChange}
-              className="w-full border rounded px-2 py-1"
-              placeholder="Phone 1"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Phone..."
             />
           </div>
 
@@ -620,20 +651,20 @@ export default function SupplierProductPurchase() {
               name="phone2"
               value={supplierData.phone2}
               onChange={handleSupplierChange}
-              className="w-full border rounded px-2 py-1"
-              placeholder="Phone 2"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Alt phone..."
             />
           </div>
 
           <div>
-            <label className="block mb-1 font-medium text-sm">E-mail Id</label>
+            <label className="block mb-1 font-medium text-sm">E-mail</label>
             <input
               type="email"
               name="email"
               value={supplierData.email}
               onChange={handleSupplierChange}
-              className="w-full border rounded px-2 py-1"
-              placeholder="Email"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Email..."
             />
           </div>
 
@@ -644,8 +675,8 @@ export default function SupplierProductPurchase() {
               name="address"
               value={supplierData.address}
               onChange={handleSupplierChange}
-              className="w-full border rounded px-2 py-1"
-              placeholder="Address"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Address..."
             />
           </div>
 
@@ -658,7 +689,7 @@ export default function SupplierProductPurchase() {
               name="dob"
               value={supplierData.dob}
               onChange={handleSupplierChange}
-              className="w-full border rounded px-2 py-1"
+              className="w-full border rounded px-2 py-1 text-sm"
             />
           </div>
 
@@ -669,8 +700,8 @@ export default function SupplierProductPurchase() {
               name="nidNo"
               value={supplierData.nidNo}
               onChange={handleSupplierChange}
-              className="w-full border rounded px-2 py-1"
-              placeholder="NID number"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="NID number..."
             />
           </div>
         </div>
@@ -680,7 +711,7 @@ export default function SupplierProductPurchase() {
       <section>
         <h2 className="font-semibold text-lg my-2">Product Purchase</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-2 mb-2">
           <div>
             <label className="block text-sm mb-1 font-medium">
               Purchase Date *
@@ -690,7 +721,7 @@ export default function SupplierProductPurchase() {
               name="purchaseDate"
               value={purchaseDate}
               onChange={(e) => setPurchaseDate(e.target.value)}
-              className="w-full border px-2 py-1 rounded"
+              className="w-full text-sm border px-2 py-1 rounded"
               required
             />
           </div>
@@ -708,6 +739,8 @@ export default function SupplierProductPurchase() {
               onChange={setSelectedCompany}
               isClearable
               placeholder="Select company"
+                  className="text-sm"
+              styles={customSelectStyles}
             />
           </div>
 
@@ -722,6 +755,8 @@ export default function SupplierProductPurchase() {
               isClearable
               placeholder="Select product name"
               isDisabled={!selectedCompany}
+                  className="text-sm"
+              styles={customSelectStyles}
             />
           </div>
 
@@ -736,6 +771,8 @@ export default function SupplierProductPurchase() {
               isClearable
               placeholder="Select part number"
               isDisabled={!selectedCompany}
+                  className="text-sm"
+              styles={customSelectStyles}
             />
           </div>
 
@@ -747,7 +784,7 @@ export default function SupplierProductPurchase() {
               type="number"
               value={currentStock}
               disabled
-              className="w-full border rounded px-2 py-1 bg-gray-100"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
             />
           </div>
 
@@ -759,7 +796,7 @@ export default function SupplierProductPurchase() {
               type="number"
               value={purchaseQuantity}
               onChange={(e) => setPurchaseQuantity(e.target.value)}
-              className="w-full border rounded px-2 py-1"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Enter purchase quantity"
             />
           </div>
@@ -772,7 +809,7 @@ export default function SupplierProductPurchase() {
               type="number"
               value={purchasePrice}
               onChange={(e) => setPurchasePrice(e.target.value)}
-              className="w-full border rounded px-2 py-1"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Enter purchase price"
             />
           </div>
@@ -785,7 +822,7 @@ export default function SupplierProductPurchase() {
               type="number"
               value={percentage}
               onChange={(e) => setPercentage(e.target.value)}
-              className="w-full border rounded px-2 py-1"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Enter percentage"
             />
           </div>
@@ -798,7 +835,7 @@ export default function SupplierProductPurchase() {
               type="text"
               value={purchasePriceWithPercentage}
               readOnly
-              className="w-full border rounded px-2 py-1 bg-gray-100"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
             />
           </div>
 
@@ -810,13 +847,13 @@ export default function SupplierProductPurchase() {
               type="text"
               value={totalPrice}
               readOnly
-              className="w-full border rounded px-2 py-1 bg-gray-100"
+             className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
             />
           </div>
 
           <div className="flex items-center ">
             <button
-              className="px-5 py-2 bg-sky-800 text-white rounded hover:bg-sky-700"
+              className="px-4 py-2 bg-sky-800 text-sm text-white rounded hover:bg-sky-700"
               onClick={(e) => {
                 e.preventDefault();
                 addProduct();
@@ -874,8 +911,8 @@ export default function SupplierProductPurchase() {
           </div>
         )}
 
-        <div className="mt-2 max-w-6xl mx-auto">
-          <div className="flex flex-wrap md:flex-nowrap justify-between gap-4">
+        <div className="mt-2 max-w-7xl mx-auto">
+          <div className="grid grid-cols-3 gap-2">
             {/* Total Amount */}
             <div className="flex items-center flex-1">
               <label className="block mb-1 font-medium text-sm">
@@ -883,9 +920,9 @@ export default function SupplierProductPurchase() {
               </label>
               <input
                 type="text"
-                value={totalAmount.toFixed(2)}
+                value={Number(totalAmount).toFixed(2)}
                 readOnly
-                className="border rounded px-2 py-1 w-full text-right bg-gray-100"
+                className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               />
             </div>
 
@@ -903,7 +940,7 @@ export default function SupplierProductPurchase() {
                 min={0}
                 value={discountAmount}
                 onChange={(e) => setDiscountAmount(e.target.value)}
-                className="border rounded px-2 py-1 w-full text-right"
+                className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
                 placeholder="0.00"
               />
             </div>
@@ -915,9 +952,9 @@ export default function SupplierProductPurchase() {
               </label>
               <input
                 type="text"
-                value={totalPayableAmount.toFixed(2)}
+                value={Number(totalPayableAmount).toFixed(2)}
                 readOnly
-                className="border rounded px-2 py-1 w-full text-right bg-gray-100"
+                className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               />
             </div>
           </div>
@@ -926,7 +963,7 @@ export default function SupplierProductPurchase() {
 
       <div className="">
         <h3 className="font-semibold text-lg my-2">Payment</h3>
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
           {/* Payment Mode */}
           <div>
             <label className="block text-sm mb-1 font-medium">
@@ -946,6 +983,8 @@ export default function SupplierProductPurchase() {
                 )
               }
               placeholder="Select"
+              className="text-sm"
+              styles={customSelectStyles}
             />
           </div>
 
@@ -963,6 +1002,8 @@ export default function SupplierProductPurchase() {
               placeholder="Select"
               isClearable
               isDisabled={!isBank}
+              className="text-sm"
+              styles={customSelectStyles}
             />
           </div>
 
@@ -974,7 +1015,7 @@ export default function SupplierProductPurchase() {
               value={paymentData.accountNo}
               onChange={(e) => handlePaymentChange("accountNo", e.target.value)}
               disabled={!isBank}
-              className={`w-full border px-2 py-1 rounded ${
+              className={`w-full border text-sm px-2 py-1 rounded ${
                 !isBank ? "bg-gray-100 text-gray-500" : ""
               }`}
               placeholder="Account No"
@@ -990,7 +1031,7 @@ export default function SupplierProductPurchase() {
               onChange={(e) => handlePaymentChange("chequeNo", e.target.value)}
               disabled={!isCheque}
               className={`w-full border px-2 py-1 rounded ${
-                !isCheque ? "bg-gray-100 text-gray-500" : ""
+                !isCheque ? "bg-gray-100 text-sm text-gray-400" : ""
               }`}
               placeholder="Cheque No"
             />
@@ -1007,7 +1048,7 @@ export default function SupplierProductPurchase() {
               onChange={(e) =>
                 handlePaymentChange("paidAmount", e.target.value)
               }
-              className="w-full border px-2 py-1 rounded"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="0.00"
             />
           </div>
@@ -1017,7 +1058,7 @@ export default function SupplierProductPurchase() {
             <button
               type="button"
               onClick={handleAddPayment}
-              className="px-4 py-2 bg-sky-800 text-white rounded hover:bg-sky-700"
+              className="px-4 py-2 bg-sky-800 text-sm text-white rounded hover:bg-sky-700"
             >
               Add
             </button>
@@ -1066,22 +1107,22 @@ export default function SupplierProductPurchase() {
         </div>
       )}
 
-      <div className="flex items-center gap-2 my-4">
+      <div className="flex items-center gap-2 mt-4">
         <label className="block text-sm mb-1 font-medium">
           Total Paid Amount:
         </label>
         <input
           type="number"
-          value={totalPaidAmount.toFixed(2)}
+          value={Number(totalPaidAmount).toFixed(2)}
           readOnly
-          className="border rounded px-2 py-1 bg-gray-100 text-right"
+          className="border rounded px-2 py-1 text-sm placeholder-gray-400"
         />
       </div>
 
       <div className=" flex justify-center">
         <button
           onClick={handleSubmit}
-          className="px-6 py-2 bg-sky-800 text-white rounded hover:bg-sky-700"
+          className="px-6 py-2 text-sm bg-sky-800 text-white rounded hover:bg-sky-700"
         >
           Submit
         </button>

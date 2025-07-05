@@ -53,7 +53,7 @@ function SidebarContent() {
     },
     { label: "Product Purchase", icon: "📈", href: "/purchase" },
     { label: "Product Purchase From Supplier", icon: "📈", href: "/supplier-purchase" },
-    { label: "Supplier Purchase List", icon: "📈", href: "/supplier-purchase/list" },
+    { label: "Supplier Purchase List", icon: "📈", href: "/purchase_list_from_supplier" },
     {
       label: "Stock",
       icon: "⚙️",
