@@ -345,66 +345,66 @@ export default function SupplierProductPurchase() {
     setTotalPaidAmount(total);
   }, [payments]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
 
-    // Validate required fields
-    if (!selectedSupplier) {
-      toast.error("Please select a supplier");
-      return;
-    }
+  //   // Validate required fields
+  //   if (!selectedSupplier) {
+  //     toast.error("Please select a supplier");
+  //     return;
+  //   }
 
-    if (addedProducts.length === 0) {
-      toast.error("Please add at least one product");
-      return;
-    }
+  //   if (addedProducts.length === 0) {
+  //     toast.error("Please add at least one product");
+  //     return;
+  //   }
 
-    if (payments.length === 0) {
-      toast.error("Please add at least one payment");
-      return;
-    }
+  //   if (payments.length === 0) {
+  //     toast.error("Please add at least one payment");
+  //     return;
+  //   }
 
-    // Calculate total paid amount
-    const totalPaid = payments.reduce(
-      (sum, payment) => sum + parseFloat(payment.paidAmount || 0),
-      0
-    );
+  //   // Calculate total paid amount
+  //   const totalPaid = payments.reduce(
+  //     (sum, payment) => sum + parseFloat(payment.paidAmount || 0),
+  //     0
+  //   );
 
-    // Prepare the payload
-    const payload = {
-      supplier_id: selectedSupplier.value,
-      company_name: selectedCompany ? selectedCompany.value : null,
-      purchase_date: purchaseDate,
-      total_amount: totalAmount,
-      discount_amount: parseFloat(discountAmount) || 0,
-      total_payable_amount: totalPayableAmount,
-      total_paid_amount: totalPaidAmount,
-      products: addedProducts.map((product) => ({
-        product_id: product.id,
-        part_no: product.partNumber,
-        purchase_quantity: parseInt(product.purchaseQuantity),
-        purchase_price: parseFloat(product.purchasePrice),
-        percentage: parseFloat(product.percentage) || 0,
-        purchase_price_with_percentage: parseFloat(
-          product.purchasePriceWithPercentage
-        ),
-        total_price: parseFloat(product.totalPrice),
-      })),
-      payments: payments.map((payment) => ({
-        payment_mode: payment.paymentMode,
-        bank_name: payment.bankName || null,
-        account_no: payment.accountNo || null,
-        cheque_no: payment.chequeNo || null,
-        paid_amount: parseFloat(payment.paidAmount),
-      })),
-    };
+  //   // Prepare the payload
+  //   const payload = {
+  //     supplier_id: selectedSupplier.value,
+  //     company_name: selectedCompany ? selectedCompany.value : null,
+  //     purchase_date: purchaseDate,
+  //     total_amount: totalAmount,
+  //     discount_amount: parseFloat(discountAmount) || 0,
+  //     total_payable_amount: totalPayableAmount,
+  //     // total_paid_amount: totalPaidAmount,
+  //     products: addedProducts.map((product) => ({
+  //       product_id: product.id,
+  //       part_no: product.partNumber,
+  //       purchase_quantity: parseInt(product.purchaseQuantity),
+  //       purchase_price: parseFloat(product.purchasePrice),
+  //       percentage: parseFloat(product.percentage) || 0,
+  //       purchase_price_with_percentage: parseFloat(
+  //         product.purchasePriceWithPercentage
+  //       ),
+  //       total_price: parseFloat(product.totalPrice),
+  //     })),
+  //     payments: payments.map((payment) => ({
+  //       payment_mode: payment.paymentMode,
+  //       bank_name: payment.bankName || null,
+  //       account_no: payment.accountNo || null,
+  //       cheque_no: payment.chequeNo || null,
+  //       paid_amount: parseFloat(payment.paidAmount),
+  //     })),
+  //   };
 
-    console.log("Purchase Payload:", payload);
-    toast.success("Purchase submitted successfully!");
+  //   console.log("Purchase Payload:", payload);
+  //   toast.success("Purchase submitted successfully!");
 
-    // Reset the entire form
-    resetForm();
-  };
+  //   // Reset the entire form
+  //   resetForm();
+  // };
 
   // Separate reset function for reusability
   const resetForm = () => {
@@ -455,11 +455,88 @@ export default function SupplierProductPurchase() {
     setPurchaseDate(new Date().toISOString().split("T")[0]);
   };
 
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // Validate required fields
+  if (!selectedSupplier) {
+    toast.error("Please select a supplier");
+    return;
+  }
+
+  if (addedProducts.length === 0) {
+    toast.error("Please add at least one product");
+    return;
+  }
+
+  if (payments.length === 0) {
+    toast.error("Please add at least one payment");
+    return;
+  }
+
+  // Calculate total paid amount
+  const totalPaid = payments.reduce(
+    (sum, payment) => sum + parseFloat(payment.paidAmount || 0),
+    0
+  );
+
+  // Prepare the payload
+  const payload = {
+    invoice_no:"10000",
+    supplier_id: selectedSupplier.value,
+    company_name: selectedCompany ? selectedCompany.value : null,
+    purchase_date: purchaseDate,
+    total_amount: totalAmount,
+    discount_amount: parseFloat(discountAmount) || 0,
+    total_payable_amount: totalPayableAmount,
+    total_paid_amount: totalPaid,
+    products: addedProducts.map((product) => ({
+      product_id: product.id,
+      part_no: product.partNumber,
+      purchase_quantity: parseInt(product.purchaseQuantity),
+      purchase_price: parseFloat(product.purchasePrice),
+      percentage: parseFloat(product.percentage) || 0,
+      purchase_price_with_percentage: parseFloat(product.purchasePriceWithPercentage),
+      total_price: parseFloat(product.totalPrice),
+    })),
+    payments: payments.map((payment) => ({
+      payment_mode: payment.paymentMode,
+      bank_name: payment.bankName || null,
+      account_no: payment.accountNo || null,
+      cheque_no: payment.chequeNo || null,
+      paid_amount: parseFloat(payment.paidAmount),
+    })),
+  };
+  console.log(payload);
+
+  try {
+    const response = await axiosInstance.post('/supplier-purchases/', payload);
+    console.log('Response:', response.data);
+    toast.success("Purchase submitted successfully!");
+
+    // Reset fields here after successful post
+    setSelectedSupplier(null);
+    setSelectedCompany(null);
+    setPurchaseDate(""); 
+    setTotalAmount("");
+    setDiscountAmount("");
+    setTotalPayableAmount("");
+    setAddedProducts([]);
+    setPayments([]);
+    setTotalPaidAmount(""); // যদি alada state থাকে
+
+  } catch (error) {
+    console.error('Error submitting purchase:', error);
+    toast.error("Failed to submit purchase");
+  }
+};
+
+
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-10">
+    <div className="max-w-7xl mx-auto p-4 ">
       {/* Supplier Section */}
       <section>
-        <h2 className="font-semibold text-lg">Supplier Details</h2>
+        <h2 className="font-semibold text-lg my-2">Supplier Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block mb-1 font-medium text-sm">
@@ -601,9 +678,9 @@ export default function SupplierProductPurchase() {
 
       {/* Product Purchase Section */}
       <section>
-        <h2 className="font-semibold text-lg">Product Purchase</h2>
+        <h2 className="font-semibold text-lg my-2">Product Purchase</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-2">
           <div>
             <label className="block text-sm mb-1 font-medium">
               Purchase Date *
@@ -797,7 +874,7 @@ export default function SupplierProductPurchase() {
           </div>
         )}
 
-        <div className="mt-6 max-w-6xl mx-auto">
+        <div className="mt-2 max-w-6xl mx-auto">
           <div className="flex flex-wrap md:flex-nowrap justify-between gap-4">
             {/* Total Amount */}
             <div className="flex items-center flex-1">
@@ -847,8 +924,8 @@ export default function SupplierProductPurchase() {
         </div>
       </section>
 
-      <div className="mt-8 space-y-4">
-        <h3 className="font-semibold text-lg">Payment</h3>
+      <div className="">
+        <h3 className="font-semibold text-lg my-2">Payment</h3>
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           {/* Payment Mode */}
           <div>
@@ -949,7 +1026,7 @@ export default function SupplierProductPurchase() {
       </div>
 
       {payments.length > 0 && (
-        <div className="mt-6 overflow-x-auto">
+        <div className="mt-2 overflow-x-auto">
           <table className="min-w-full border text-center text-sm">
             <thead className="bg-gray-100">
               <tr>
@@ -989,8 +1066,8 @@ export default function SupplierProductPurchase() {
         </div>
       )}
 
-      <div className="flex items-center mt-4">
-        <label className="font-semibold mr-2 whitespace-nowrap">
+      <div className="flex items-center gap-2 my-4">
+        <label className="block text-sm mb-1 font-medium">
           Total Paid Amount:
         </label>
         <input
@@ -1001,10 +1078,10 @@ export default function SupplierProductPurchase() {
         />
       </div>
 
-      <div className="mt-8 flex justify-center">
+      <div className=" flex justify-center">
         <button
           onClick={handleSubmit}
-          className="px-6 py-2 bg-sky-800 text-white rounded hover:bg-green-700"
+          className="px-6 py-2 bg-sky-800 text-white rounded hover:bg-sky-700"
         >
           Submit
         </button>
