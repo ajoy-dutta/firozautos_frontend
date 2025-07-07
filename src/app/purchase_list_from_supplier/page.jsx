@@ -22,7 +22,7 @@ export default function PurchaseList() {
     billNo: "",
   });
 
-  const itemsPerPage = 6;
+  const itemsPerPage = 5;
 
   // Load districts once
   useEffect(() => {
@@ -119,10 +119,6 @@ export default function PurchaseList() {
     setFilters((prev) => ({ ...prev, billNo: e.target.value }));
   };
 
-  const clearAllFilters = () => {
-    setFilters({ supplier: null, district: "", billNo: "" });
-  };
-
   const toggleRow = (id) => {
     setExpandedRows((prev) => {
       const newSet = new Set(prev);
@@ -132,38 +128,38 @@ export default function PurchaseList() {
     });
   };
 
-const handleGeneratePdf = (purchase) => {
-  // Calculate safely
-  const totalQty = purchase.products.reduce(
-    (sum, item) => sum + parseFloat(item.purchase_quantity || 0),
-    0
-  );
-  const totalAmount = parseFloat(purchase.total_amount || 0);
-  const discount = parseFloat(purchase.discount_amount || 0);
-  const grossTotal = totalAmount - discount;
-  const paidAmount =
-    purchase.payments?.reduce(
-      (sum, payment) => sum + parseFloat(payment.paid_amount || 0),
+  const handleGeneratePdf = (purchase) => {
+    // Calculate safely
+    const totalQty = purchase.products.reduce(
+      (sum, item) => sum + parseFloat(item.purchase_quantity || 0),
       0
-    ) || 0;
-  const dueBalance = grossTotal - paidAmount;
-  const previousBalance = parseFloat(
-    purchase.supplier?.previous_due_amount || 0
-  );
-  const totalDueBalance = previousBalance + dueBalance;
+    );
+    const totalAmount = parseFloat(purchase.total_amount || 0);
+    const discount = parseFloat(purchase.discount_amount || 0);
+    const grossTotal = totalAmount - discount;
+    const paidAmount =
+      purchase.payments?.reduce(
+        (sum, payment) => sum + parseFloat(payment.paid_amount || 0),
+        0
+      ) || 0;
+    const dueBalance = grossTotal - paidAmount;
+    const previousBalance = parseFloat(
+      purchase.supplier?.previous_due_amount || 0
+    );
+    const totalDueBalance = previousBalance + dueBalance;
 
-  // Current date/time for footer
-  const now = new Date();
-  const printDate = now.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
+    // Current date/time for footer
+    const now = new Date();
+    const printDate = now.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
 
-  const htmlContent = `
+    const htmlContent = `
   <html>
   <head>
     <style>
@@ -271,7 +267,9 @@ const handleGeneratePdf = (purchase) => {
           <div><strong>Supplier Name:</strong> ${
             purchase.supplier?.supplier_name || "N/A"
           }</div>
-          <div><strong>Address:</strong> ${purchase.supplier?.address || "N/A"}</div>
+          <div><strong>Address:</strong> ${
+            purchase.supplier?.address || "N/A"
+          }</div>
         </div>
         <div class="right-info">
           <div><strong>Bill Date:</strong> ${
@@ -282,7 +280,9 @@ const handleGeneratePdf = (purchase) => {
           <div><strong>Shop Name:</strong> ${
             purchase.supplier?.shop_name || "N/A"
           }</div>
-          <div><strong>Mobile No:</strong> ${purchase.supplier?.phone1 || "N/A"}</div>
+          <div><strong>Mobile No:</strong> ${
+            purchase.supplier?.phone1 || "N/A"
+          }</div>
         </div>
       </div>
 
@@ -392,10 +392,222 @@ const handleGeneratePdf = (purchase) => {
   </html>
 `;
 
-  const printWindow = window.open("", "_blank");
-  printWindow.document.write(htmlContent);
-  printWindow.document.close();
-};
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
+  const customSelectStyles = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: "30px",
+      height: "30px",
+      fontSize: "0.875rem",
+      border: "1px solid #000000",
+      borderRadius: "0.275rem",
+      borderColor: state.isFocused ? "#000000" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 0 1px #000000" : "none",
+      // Remove default padding
+      paddingTop: "0px",
+      paddingBottom: "0px",
+      // Ensure flex alignment
+      display: "flex",
+      alignItems: "center",
+    }),
+
+    valueContainer: (base) => ({
+      ...base,
+      height: "30px",
+      padding: "0 6px",
+      display: "flex",
+      alignItems: "center",
+      flexWrap: "nowrap",
+    }),
+
+    placeholder: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#9ca3af",
+      margin: "0",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    singleValue: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#000000",
+      margin: "0",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    input: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      margin: "0",
+      padding: "0",
+      color: "#000000",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: "30px",
+      display: "flex",
+      alignItems: "center",
+    }),
+
+    indicatorSeparator: (base) => ({
+      ...base,
+      backgroundColor: "#d1d5db",
+      height: "16px", // Shorter separator
+      marginTop: "auto",
+      marginBottom: "auto",
+    }),
+
+    dropdownIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      "&:hover": {
+        color: "#000000",
+      },
+    }),
+
+    clearIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      "&:hover": {
+        color: "#000000",
+      },
+    }),
+
+    option: (base, state) => ({
+      ...base,
+      fontSize: "0.875rem",
+      backgroundColor: state.isSelected
+        ? "#000000"
+        : state.isFocused
+        ? "#f3f4f6"
+        : "white",
+      color: state.isSelected ? "white" : "#000000",
+      "&:hover": {
+        backgroundColor: state.isSelected ? "#000000" : "#f3f4f6",
+      },
+    }),
+
+    menu: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+    }),
+
+    menuList: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+    }),
+  };
+
+  const [banks, setBanks] = useState([]);
+  const [paymentModes, setPaymentModes] = useState([]);
+
+  const [paymentData, setPaymentData] = useState({
+    paymentMode: "",
+    bankName: "",
+    accountNo: "",
+    chequeNo: "",
+    paidAmount: "",
+  });
+
+  const [isBank, setIsBank] = useState(false);
+  const [isCheque, setIsCheque] = useState(false);
+
+  useEffect(() => {
+    const fetchBanks = async () => {
+      try {
+        const res = await axiosInstance.get("/banks/"); // backend route: /banks
+        const options = res.data.map((bank) => ({
+          value: bank.id,
+          label: bank.bank_name, // যদি তোমার model–এ 'bank_name' ফিল্ড থাকে
+        }));
+        setBanks(options);
+      } catch (error) {
+        toast.error("Failed to load banks");
+      }
+    };
+
+    const fetchPaymentModes = async () => {
+      try {
+        const res = await axiosInstance.get("/payment-mode/"); // backend route: /payment-mode
+        const options = res.data.map((mode) => ({
+          value: mode.id,
+          label: mode.name, // যদি তোমার model–এ 'name' ফিল্ড থাকে
+        }));
+        setPaymentModes(options);
+      } catch (error) {
+        toast.error("Failed to load payment modes");
+      }
+    };
+
+    fetchBanks();
+    fetchPaymentModes();
+  }, []);
+
+  // Handle input changes
+  const handlePaymentChange = (field, value) => {
+    setPaymentData((prev) => ({ ...prev, [field]: value }));
+
+    if (field === "paymentMode") {
+      const selectedMode = paymentModes.find((opt) => opt.value === value);
+      const modeLabel = selectedMode ? selectedMode.label.toLowerCase() : "";
+
+      setIsBank(modeLabel === "bank");
+      setIsCheque(modeLabel === "cheque");
+    }
+  };
+
+  // Handle add/save click
+  const handleSavePayment = () => {
+    console.log("Payment data to save:", paymentData);
+    toast.success("Payment data logged to console!");
+  };
+
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    returnDate: new Date().toISOString().slice(0, 10),
+    productName: "",
+    purchaseQty: "",
+    currentQty: "",
+    price: "",
+    dueAmount: "",
+    alreadyReturnQty: "",
+    returnQty: "",
+    returnAmount: "",
+    returnRemarks: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // এখানে তোমার logic বসাবে, data পাঠাবে backend এ
+    console.log("Return Data:", formData);
+    setIsOpen(false); // form submit এর পর modal বন্ধ হবে
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4">
@@ -436,35 +648,26 @@ const handleGeneratePdf = (purchase) => {
             placeholder="Search bill no"
           />
         </div>
-        {/* 
-        <button
-          onClick={clearAllFilters}
-          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm"
-        >
-          Clear All
-        </button> */}
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-300 text-sm border-collapse">
-          <thead className="bg-sky-800 text-white top-0 ">
+      <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
+        <table className="table text-sm">
+          <thead className="bg-sky-800 text-white">
             <tr>
-              <th className="border px-3 py-2 w-12">#</th>
-              <th className="border px-3 py-2 w-12"></th>
-              <th className="border px-3 py-2 max-w-[250px]">
-                Supplier Details
-              </th>
-              <th className="border px-3 py-2">Bill No</th>
-              <th className="border px-3 py-2">Bill Date</th>
-              <th className="border px-3 py-2 text-right">Total</th>
-              <th className="border px-3 py-2 text-right">Discount</th>
-              <th className="border px-3 py-2 text-right">Payable</th>
-              <th className="border px-3 py-2 text-right">Paid</th>
-              <th className="border px-3 py-2 text-right">Due</th>
-              <th className="border px-3 py-2 text-center">Invoice</th>
-              <th className="border px-3 py-2 text-center">Pay Due</th>
-              <th className="border px-3 py-2 text-center">Return</th>
+              {/* <th className="w-12">#</th> */}
+              <th className="w-12"></th>
+              <th className="max-w-[200px]">Supplier Details</th>
+              <th>Bill No</th>
+              <th>Bill Date</th>
+              <th className="text-center">Total</th>
+              <th className="text-center">Discount</th>
+              <th className="text-center">Payable</th>
+              <th className="text-center">Paid</th>
+              <th className="text-center">Due</th>
+              <th className="text-center">Invoice</th>
+              <th className="text-center">Pay Due</th>
+              <th className="text-center">Return</th>
             </tr>
           </thead>
           <tbody>
@@ -489,24 +692,24 @@ const handleGeneratePdf = (purchase) => {
                 return (
                   <React.Fragment key={purchase.id}>
                     <tr className="hover:bg-gray-50">
-                      <td className="border px-3 py-2 text-center">
+                      {/* <td className="text-center">
                         {(currentPage - 1) * itemsPerPage + index + 1}
-                      </td>
+                      </td> */}
                       <td
-                        className="border px-3 py-2 text-center cursor-pointer select-none"
+                        className="text-center cursor-pointer select-none"
                         onClick={() => toggleRow(purchase.id)}
                       >
                         {isExpanded ? (
-                          <span className="inline-block w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center font-bold">
+                          <span className="inline-block w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center font-bold text-xs">
                             −
                           </span>
                         ) : (
-                          <span className="inline-block w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center font-bold">
+                          <span className="inline-block w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center font-bold text-xs">
                             +
                           </span>
                         )}
                       </td>
-                      <td className="border px-3 py-2 max-w-[250px]">
+                      <td className="max-w-[250px]">
                         <div className="font-medium">
                           {purchase.supplier?.supplier_name || "N/A"}
                         </div>
@@ -523,31 +726,22 @@ const handleGeneratePdf = (purchase) => {
                           {purchase.supplier?.district_detail?.name || "N/A"}
                         </div>
                       </td>
-                      <td className="border px-3 py-2">
-                        {purchase.invoice_no}
+                      <td>{purchase.invoice_no}</td>
+                      <td>{purchase.purchase_date}</td>
+                      <td className="text-center">
+                        {parseFloat(purchase.total_amount || 0).toFixed(2)}
                       </td>
-                      <td className="border px-3 py-2">
-                        {purchase.purchase_date}
+                      <td className="text-center">
+                        {parseFloat(purchase.discount_amount || 0).toFixed(2)}
                       </td>
-                      <td className="border px-3 py-2 text-right">
-                        ৳{parseFloat(purchase.total_amount || 0).toFixed(2)}
-                      </td>
-                      <td className="border px-3 py-2 text-right">
-                        ৳{parseFloat(purchase.discount_amount || 0).toFixed(2)}
-                      </td>
-                      <td className="border px-3 py-2 text-right">
-                        ৳
+                      <td className="text-center">
                         {parseFloat(purchase.total_payable_amount || 0).toFixed(
                           2
                         )}
                       </td>
-                      <td className="border px-3 py-2 text-right">
-                        ৳{paidAmount.toFixed(2)}
-                      </td>
-                      <td className="border px-3 py-2 text-right">
-                        ৳{dueAmount.toFixed(2)}
-                      </td>
-                      <td className="border px-3 py-2 text-center">
+                      <td className="text-center">{paidAmount.toFixed(2)}</td>
+                      <td className="text-center">{dueAmount.toFixed(2)}</td>
+                      <td className="text-center">
                         <button
                           className="text-blue-600 hover:underline text-sm"
                           onClick={() => handleGeneratePdf(purchase)}
@@ -555,7 +749,7 @@ const handleGeneratePdf = (purchase) => {
                           Invoice
                         </button>
                       </td>
-                      <td className="border px-3 py-2 text-center">
+                      <td className="text-center">
                         <button
                           className="text-blue-600 hover:underline text-sm"
                           onClick={() => setPayModalPurchase(purchase)}
@@ -563,80 +757,86 @@ const handleGeneratePdf = (purchase) => {
                           Pay
                         </button>
                       </td>
-                      <td className="border px-3 py-2 text-center">
-                        <button className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 text-sm">
+                      <td className="text-center">
+                        <button
+                          className="btn btn-md rounded-lg bg-red-500 text-sm text-white"
+                          onClick={() =>
+                            document.getElementById("return_modal").showModal()
+                          }
+                        >
                           Return
                         </button>
                       </td>
                     </tr>
 
                     {isExpanded && (
-                      <tr className="bg-gray-50 border border-gray-900">
-                        <td colSpan={14} className="">
-                          <table className="min-w-full text-sm border-collapse">
-                            <thead className="bg-sky-800 text-white">
-                              <tr>
-                                <th className="border px-2 py-1">Item</th>
-                                <th className="border px-2 py-1">Quantity</th>
-                                <th className="border px-2 py-1">Price</th>
-                                <th className="border px-2 py-1">%</th>
-                                <th className="border px-2 py-1">
-                                  Price with %
-                                </th>
-                                <th className="border px-2 py-1 text-center">
-                                  Total
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {purchase.products &&
-                              purchase.products.length > 0 ? (
-                                purchase.products.map((prod) => (
-                                  <tr key={prod.id}>
-                                    <td className="px-2 py-1 truncate">
-                                      {prod.product?.category_detail
-                                        ?.category_name || ""}{" "}
-                                      ({prod.product?.part_no || ""})
-                                    </td>
-                                    <td className="px-2 py-1 text-center">
-                                      {parseFloat(
-                                        prod.purchase_quantity || 0
-                                      ).toFixed(2)}
-                                    </td>
-                                    <td className="px-2 py-1 text-center">
-                                      {parseFloat(
-                                        prod.purchase_price || 0
-                                      ).toFixed(2)}
-                                    </td>
-                                    <td className="px-2 py-1 text-center">
-                                      {parseFloat(prod.percentage || 0).toFixed(
-                                        2
-                                      )}
-                                    </td>
-                                    <td className="px-2 py-1 text-center">
-                                      {parseFloat(
-                                        prod.purchase_price_with_percentage || 0
-                                      ).toFixed(2)}
-                                    </td>
-                                    <td className="px-2 py-1 text-center">
-                                      {parseFloat(
-                                        prod.total_price || 0
-                                      ).toFixed(2)}
-                                    </td>
+                      <tr className="bg-gray-50">
+                        <td colSpan={11} className="p-0">
+                          <div className="flex justify-start">
+                            <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 w-full max-w-6xl">
+                              <table className="table text-sm">
+                                <thead className="bg-sky-700 h-5 text-white">
+                                  <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>%</th>
+                                    <th>Price with %</th>
+                                    <th className="text-center">Total</th>
                                   </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td
-                                    colSpan={6}
-                                    className="text-center py-2 text-gray-500"
-                                  >
-                                    No products found
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
+                                </thead>
+                                <tbody>
+                                  {purchase.products &&
+                                  purchase.products.length > 0 ? (
+                                    purchase.products.map((prod) => (
+                                      <tr key={prod.id} className="bg-white">
+                                        <td className="truncate">
+                                          {prod.product?.category_detail
+                                            ?.category_name || ""}{" "}
+                                          ({prod.product?.part_no || ""})
+                                        </td>
+                                        <td className="text-center">
+                                          {parseFloat(
+                                            prod.purchase_quantity || 0
+                                          ).toFixed(2)}
+                                        </td>
+                                        <td className="text-center">
+                                          {parseFloat(
+                                            prod.purchase_price || 0
+                                          ).toFixed(2)}
+                                        </td>
+                                        <td className="text-center">
+                                          {parseFloat(
+                                            prod.percentage || 0
+                                          ).toFixed(2)}
+                                        </td>
+                                        <td className="text-center">
+                                          {parseFloat(
+                                            prod.purchase_price_with_percentage ||
+                                              0
+                                          ).toFixed(2)}
+                                        </td>
+                                        <td className="text-center">
+                                          {parseFloat(
+                                            prod.total_price || 0
+                                          ).toFixed(2)}
+                                        </td>
+                                      </tr>
+                                    ))
+                                  ) : (
+                                    <tr>
+                                      <td
+                                        colSpan={6}
+                                        className="text-center py-2 text-gray-500"
+                                      >
+                                        No products found
+                                      </td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -650,62 +850,167 @@ const handleGeneratePdf = (purchase) => {
 
       {payModalPurchase && (
         <dialog id="pay_modal" className="modal modal-open">
-          <div className="modal-box max-w-4xl">
+          <div className="modal-box max-w-4xl relative">
+            {/* Cross (✕) close button in top-right corner */}
+            <button
+              onClick={() => setPayModalPurchase(null)}
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+            >
+              ✕
+            </button>
+
             <h3 className="font-bold text-lg mb-4">
               Payment Details for Invoice: {payModalPurchase.invoice_no}
             </h3>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-300 text-sm border-collapse">
+            {/* Rest of your modal content remains exactly the same */}
+            <div className="mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
+                {/* Payment Mode */}
+                <div>
+                  <label className="block text-sm mb-1 font-medium">
+                    Payment Mode*
+                  </label>
+                  <Select
+                    options={paymentModes}
+                    value={
+                      paymentModes.find(
+                        (opt) => opt.value === paymentData.paymentMode
+                      ) || null
+                    }
+                    onChange={(selected) =>
+                      handlePaymentChange("paymentMode", selected?.value || "")
+                    }
+                    placeholder="Select"
+                    className="text-sm"
+                    styles={customSelectStyles}
+                  />
+                </div>
+
+                {/* Bank Name */}
+                <div>
+                  <label className="block text-sm mb-1 font-medium">
+                    Bank Name
+                  </label>
+                  <Select
+                    options={banks}
+                    value={
+                      banks.find((opt) => opt.value === paymentData.bankName) ||
+                      null
+                    }
+                    onChange={(selected) =>
+                      handlePaymentChange("bankName", selected?.value || "")
+                    }
+                    placeholder="Select"
+                    isClearable
+                    isDisabled={!isBank}
+                    className="text-sm"
+                    styles={customSelectStyles}
+                  />
+                </div>
+
+                {/* Account No */}
+                <div>
+                  <label className="block text-sm mb-1 font-medium">
+                    Account No
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentData.accountNo}
+                    onChange={(e) =>
+                      handlePaymentChange("accountNo", e.target.value)
+                    }
+                    disabled={!isBank}
+                    className={`w-full border text-sm px-2 py-1 rounded ${
+                      !isBank ? "bg-gray-100 text-gray-500" : ""
+                    }`}
+                    placeholder="Account No"
+                  />
+                </div>
+
+                {/* Cheque No */}
+                <div>
+                  <label className="block text-sm mb-1 font-medium">
+                    Cheque No
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentData.chequeNo}
+                    onChange={(e) =>
+                      handlePaymentChange("chequeNo", e.target.value)
+                    }
+                    disabled={!isCheque}
+                    className={`w-full border px-2 py-1 text-sm rounded ${
+                      !isCheque ? "bg-gray-100 text-gray-400" : ""
+                    }`}
+                    placeholder="Cheque No"
+                  />
+                </div>
+
+                {/* Paid Amount */}
+                <div>
+                  <label className="block text-sm mb-1 font-medium">
+                    Paid Amount*
+                  </label>
+                  <input
+                    type="number"
+                    value={paymentData.paidAmount}
+                    onChange={(e) =>
+                      handlePaymentChange("paidAmount", e.target.value)
+                    }
+                    className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                {/* Save Button */}
+                <div className="flex items-end justify-end">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      console.log("New payment data:", paymentData)
+                    }
+                    className="px-4 py-2 bg-sky-800 text-sm text-white rounded hover:bg-sky-700"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Existing payment table */}
+            <div className="overflow-x-auto rounded-box border border-base-content/5 mt-8 bg-base-100">
+              <table className="table text-sm">
                 <thead className="bg-sky-800 text-white">
                   <tr>
-                    <th className="border px-3 py-2">SL</th>
-                    <th className="border px-3 py-2">Due Date</th>
-                    <th className="border px-3 py-2">Payment Mode</th>
-                    <th className="border px-3 py-2">Bank Name</th>
-                    <th className="border px-3 py-2">Account Number</th>
-                    <th className="border px-3 py-2">Cheque Number</th>
-                    <th className="border px-3 py-2 text-right">
-                      Transaction Amount
-                    </th>
-                    <th className="border px-3 py-2">Create Date</th>
-                    <th className="border px-3 py-2">Due Invoice</th>
-                    <th className="border px-3 py-2">Edit</th>
+                    <th>SL</th>
+                    <th>Due Date</th>
+                    <th>Payment Mode</th>
+                    <th>Bank Name</th>
+                    <th>Account Number</th>
+                    <th>Cheque Number</th>
+                    <th className="text-right">Transaction Amount</th>
+                    <th>Create Date</th>
+                    <th>Due Invoice</th>
+                    <th>Edit</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {payModalPurchase.payments &&
-                  payModalPurchase.payments.length > 0 ? (
+                  {payModalPurchase.payments?.length > 0 ? (
                     payModalPurchase.payments.map((payment, idx) => (
                       <tr key={payment.id}>
-                        <td className="border px-3 py-2 text-center">
-                          {idx + 1}
-                        </td>
-                        <td className="border px-3 py-2">
-                          {payment.due_date || "N/A"}
-                        </td>
-                        <td className="border px-3 py-2">
-                          {payment.payment_mode || "N/A"}
-                        </td>
-                        <td className="border px-3 py-2">
-                          {payment.bank_name || "N/A"}
-                        </td>
-                        <td className="border px-3 py-2">
-                          {payment.account_number || "N/A"}
-                        </td>
-                        <td className="border px-3 py-2">
-                          {payment.cheque_number || "N/A"}
-                        </td>
-                        <td className="border px-3 py-2 text-right">
+                        <td className="text-center">{idx + 1}</td>
+                        <td>{payment.due_date || "N/A"}</td>
+                        <td>{payment.payment_mode || "N/A"}</td>
+                        <td>{payment.bank_name || "N/A"}</td>
+                        <td>{payment.account_number || "N/A"}</td>
+                        <td>{payment.cheque_number || "N/A"}</td>
+                        <td className="text-right">
                           ৳{parseFloat(payment.paid_amount || 0).toFixed(2)}
                         </td>
-                        <td className="border px-3 py-2">
-                          {payment.created_at?.slice(0, 10) || "N/A"}
-                        </td>
-                        <td className="border px-3 py-2">
-                          {payment.due_invoice || "N/A"}
-                        </td>
-                        <td className="border px-3 py-2 text-center">
+                        <td>{payment.created_at?.slice(0, 10) || "N/A"}</td>
+                        <td>{payment.due_invoice || "N/A"}</td>
+                        <td className="text-center">
                           <button className="text-blue-600 hover:underline">
                             EDIT
                           </button>
@@ -725,15 +1030,162 @@ const handleGeneratePdf = (purchase) => {
                 </tbody>
               </table>
             </div>
-
-            <div className="mt-4 flex justify-end">
-              <button className="btn" onClick={() => setPayModalPurchase(null)}>
-                Close
-              </button>
-            </div>
           </div>
+
+          {/* Click outside to close */}
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setPayModalPurchase(null)}>close</button>
+          </form>
         </dialog>
       )}
+
+      {/* Modal Dialog */}
+      <dialog id="return_modal" className="modal">
+        <div className="modal-box bg-white rounded-lg shadow-lg max-w-4xl w-full p-6">
+          <form method="dialog">
+            {/* Close button */}
+            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+              ✕
+            </button>
+          </form>
+
+          <h3 className="font-bold text-lg mb-4">Add Product Return</h3>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              // Save logic
+              console.log("Return form submitted");
+              document.getElementById("return_modal").close();
+            }}
+            className="space-y-3 text-sm grid gap-2 grid-cols-5"
+          >
+            <div>
+              <label className="block font-medium mb-1">Return Date:</label>
+              <input
+                type="date"
+                name="return_date"
+                className="w-full border rounded px-2 py-1"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">Product Name:</label>
+              <input
+                type="text"
+                name="product_name"
+                className="w-full border rounded px-2 py-1"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">Purchase Qty:</label>
+              <input
+                type="number"
+                name="purchase_qty"
+                className="w-full border rounded px-2 py-1"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">Current Qty:</label>
+              <input
+                type="number"
+                name="current_qty"
+                className="w-full border rounded px-2 py-1"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">Price:</label>
+              <input
+                type="number"
+                name="price"
+                step="0.01"
+                className="w-full border rounded px-2 py-1"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">Due Amount:</label>
+              <input
+                type="number"
+                name="due_amount"
+                step="0.01"
+                className="w-full border rounded px-2 py-1"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">
+                Already Return Qty:
+              </label>
+              <input
+                type="number"
+                name="already_return_qty"
+                className="w-full border rounded px-2 py-1"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">Return Qty:</label>
+              <input
+                type="number"
+                name="return_qty"
+                className="w-full border rounded px-2 py-1"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">Return Amount:</label>
+              <input
+                type="number"
+                name="return_amount"
+                step="0.01"
+                className="w-full border rounded px-2 py-1"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">Return Remarks:</label>
+              <input
+                name="return_remarks"
+                className="w-full border rounded px-2 py-1"
+              />
+            </div>
+
+            <div className="col-span-5 flex justify-end space-x-2 pt-3">
+              <button
+                type="button"
+                onClick={() => document.getElementById("return_modal").close()}
+                className="px-4 py-2 border rounded hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="bg-sky-800 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Click outside to close */}
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
 
       {/* Pagination */}
       {totalPages > 1 && (
