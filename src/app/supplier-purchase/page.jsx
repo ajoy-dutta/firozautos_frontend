@@ -153,6 +153,7 @@ export default function SupplierProductPurchase() {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedProductName, setSelectedProductName] = useState(null);
   const [selectedPartNumber, setSelectedPartNumber] = useState(null);
+  const [stockList, setStockList] = useState([]);
 
   const [purchaseDate, setPurchaseDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -204,6 +205,20 @@ export default function SupplierProductPurchase() {
     fetchSuppliers();
     fetchCompanies();
     fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    const fetchStocks = async () => {
+      try {
+        const res = await axiosInstance.get("/stocks/");
+        setStockList(res.data);
+        console.log(stockList);
+      } catch (err) {
+        toast.error("Failed to load stock data");
+      }
+    };
+
+    fetchStocks();
   }, []);
 
   // Supplier select options
@@ -288,7 +303,6 @@ export default function SupplierProductPurchase() {
     setTotalPrice("0.00");
   }, [selectedCompany]);
 
-  // Clear related fields when product name or part number clears
   const handleProductNameChange = (val) => {
     if (!val) {
       setSelectedProductName(null);
@@ -297,11 +311,14 @@ export default function SupplierProductPurchase() {
     } else {
       setSelectedProductName(val);
 
-      // যেহেতু এখন আর useEffect নাই, তাই এইখানে manually set করে দিব
       const prod = filteredProducts.find((p) => p.id === val.value);
       if (prod) {
         setSelectedPartNumber({ label: prod.part_no, value: prod.part_no });
-        setCurrentStock(prod.current_stock_quantity || 0);
+
+        // Find stock data by matching product ID
+        const stockItem = stockList.find((s) => s.product?.id === prod.id);
+
+        setCurrentStock(stockItem ? stockItem.current_stock_quantity : 0);
       }
     }
   };
@@ -317,12 +334,15 @@ export default function SupplierProductPurchase() {
       const prod = filteredProducts.find((p) => p.part_no === val.value);
       if (prod) {
         setSelectedProductName({ label: prod.product_name, value: prod.id });
-        setCurrentStock(prod.current_stock_quantity || 0);
+
+        // Find stock data by matching product ID
+        const stockItem = stockList.find((s) => s.product?.id === prod.id);
+
+        setCurrentStock(stockItem ? stockItem.current_stock_quantity : 0);
       }
     }
   };
 
-  // Auto calculate purchase price with percentage and total price
   useEffect(() => {
     const pPrice = parseFloat(purchasePrice) || 0;
     const perc = parseFloat(percentage) || 0;
@@ -495,7 +515,7 @@ export default function SupplierProductPurchase() {
 
     // Prepare the payload
     const payload = {
-      invoice_no: "1000",
+      invoice_no: "",
       supplier_id: selectedSupplier.value,
       company_name: selectedCompany ? selectedCompany.value : null,
       purchase_date: purchaseDate,
@@ -531,6 +551,19 @@ export default function SupplierProductPurchase() {
       );
       console.log("Response:", response.data);
       toast.success("Purchase submitted successfully!");
+
+      // Refetch stock data after successful purchase
+      const fetchStocks = async () => {
+        try {
+          const res = await axiosInstance.get("/stocks/");
+          setStockList(res.data);
+        } catch (err) {
+          console.error("Failed to reload stock data:", err);
+          toast.error("Failed to reload stock data");
+        }
+      };
+
+      await fetchStocks();
 
       // Reset fields here after successful post
       setSelectedSupplier(null);
@@ -739,7 +772,7 @@ export default function SupplierProductPurchase() {
               onChange={setSelectedCompany}
               isClearable
               placeholder="Select company"
-                  className="text-sm"
+              className="text-sm"
               styles={customSelectStyles}
             />
           </div>
@@ -755,7 +788,7 @@ export default function SupplierProductPurchase() {
               isClearable
               placeholder="Select product name"
               isDisabled={!selectedCompany}
-                  className="text-sm"
+              className="text-sm"
               styles={customSelectStyles}
             />
           </div>
@@ -771,7 +804,7 @@ export default function SupplierProductPurchase() {
               isClearable
               placeholder="Select part number"
               isDisabled={!selectedCompany}
-                  className="text-sm"
+              className="text-sm"
               styles={customSelectStyles}
             />
           </div>
@@ -784,6 +817,7 @@ export default function SupplierProductPurchase() {
               type="number"
               value={currentStock}
               disabled
+              placeholder="Current stock will appear here"
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
             />
           </div>
@@ -847,7 +881,7 @@ export default function SupplierProductPurchase() {
               type="text"
               value={totalPrice}
               readOnly
-             className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
             />
           </div>
 
@@ -920,7 +954,11 @@ export default function SupplierProductPurchase() {
               </label>
               <input
                 type="text"
-                value={isNaN(Number(totalAmount)) ? "0.00" : Number(totalAmount).toFixed(2)}
+                value={
+                  isNaN(Number(totalAmount))
+                    ? "0.00"
+                    : Number(totalAmount).toFixed(2)
+                }
                 readOnly
                 className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               />
@@ -952,7 +990,11 @@ export default function SupplierProductPurchase() {
               </label>
               <input
                 type="text"
-                value={isNaN(Number(totalPayableAmount)) ? "0.00" : Number(totalPayableAmount).toFixed(2)}
+                value={
+                  isNaN(Number(totalPayableAmount))
+                    ? "0.00"
+                    : Number(totalPayableAmount).toFixed(2)
+                }
                 readOnly
                 className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               />
@@ -1113,7 +1155,11 @@ export default function SupplierProductPurchase() {
         </label>
         <input
           type="number"
-         value={isNaN(Number(totalPaidAmount)) ? "0.00" : Number(totalPaidAmount).toFixed(2)}
+          value={
+            isNaN(Number(totalPaidAmount))
+              ? "0.00"
+              : Number(totalPaidAmount).toFixed(2)
+          }
           readOnly
           className="border rounded px-2 py-1 text-sm placeholder-gray-400"
         />
