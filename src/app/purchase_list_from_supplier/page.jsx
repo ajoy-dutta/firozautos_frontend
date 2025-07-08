@@ -522,6 +522,7 @@ export default function PurchaseList() {
 
   const [banks, setBanks] = useState([]);
   const [paymentModes, setPaymentModes] = useState([]);
+  const [editingPayment, setEditingPayment] = useState(null);
 
   const [paymentData, setPaymentData] = useState({
     paymentMode: "",
@@ -537,26 +538,29 @@ export default function PurchaseList() {
   useEffect(() => {
     const fetchBanks = async () => {
       try {
-        const res = await axiosInstance.get("/banks/"); // backend route: /banks
+        const res = await axiosInstance.get("/banks/");
         const options = res.data.map((bank) => ({
           value: bank.id,
-          label: bank.bank_name, // যদি তোমার model–এ 'bank_name' ফিল্ড থাকে
+          label: bank.name,
         }));
         setBanks(options);
+      
       } catch (error) {
+        console.error("Error fetching banks:", error);
         toast.error("Failed to load banks");
       }
     };
 
     const fetchPaymentModes = async () => {
       try {
-        const res = await axiosInstance.get("/payment-mode/"); // backend route: /payment-mode
+        const res = await axiosInstance.get("/payment-mode/");
         const options = res.data.map((mode) => ({
           value: mode.id,
-          label: mode.name, // যদি তোমার model–এ 'name' ফিল্ড থাকে
+          label: mode.name,
         }));
         setPaymentModes(options);
       } catch (error) {
+        console.error("Error fetching payment modes:", error);
         toast.error("Failed to load payment modes");
       }
     };
@@ -565,7 +569,13 @@ export default function PurchaseList() {
     fetchPaymentModes();
   }, []);
 
-  // Handle input changes
+  const getBankName = (bankId) => {
+    if (!bankId) return "N/A";
+    const bank = banks.find((b) => b.value === Number(bankId));
+    return bank?.label || "N/A";
+  };
+
+  // Handle input changes এ debug logs add করুন
   const handlePaymentChange = (field, value) => {
     setPaymentData((prev) => ({ ...prev, [field]: value }));
 
@@ -573,15 +583,109 @@ export default function PurchaseList() {
       const selectedMode = paymentModes.find((opt) => opt.value === value);
       const modeLabel = selectedMode ? selectedMode.label.toLowerCase() : "";
 
-      setIsBank(modeLabel === "bank");
-      setIsCheque(modeLabel === "cheque");
+      const bankStatus = modeLabel === "bank";
+      const chequeStatus = modeLabel === "cheque";
+
+      setIsBank(bankStatus);
+      setIsCheque(chequeStatus);
     }
   };
 
-  // Handle add/save click
   const handleSavePayment = () => {
-    console.log("Payment data to save:", paymentData);
-    toast.success("Payment data logged to console!");
+    const newPaymentData = {
+      payment_mode: paymentData.paymentMode || "",
+      bank_name: paymentData.bankName || "",
+      account_no: paymentData.accountNo || "",
+      cheque_no: paymentData.chequeNo || "",
+      paid_amount: paymentData.paidAmount || "0.00",
+    };
+
+    console.log("Payment data submitted:", newPaymentData);
+
+    // reset form data
+    setPaymentData({
+      paymentMode: "",
+      bankName: "",
+      accountNo: "",
+      chequeNo: "",
+      paidAmount: "",
+    });
+  };
+
+  const handleResetPaymentForm = () => {
+    setEditingPayment(null); 
+    setPaymentData({
+      paymentMode: "",
+      bankName: "",
+      accountNo: "",
+      chequeNo: "",
+      paidAmount: "",
+    });
+  };
+
+  // Updated handleEditClick function with debug logs
+  const handleEditClick = (payment) => {
+    console.log("Original payment data:", payment);
+
+    const editData = {
+      paymentMode: payment.payment_mode ? Number(payment.payment_mode) : "",
+      bankName: payment.bank_name ? Number(payment.bank_name) : "",
+      accountNo: payment.account_no || "",
+      chequeNo: payment.cheque_no || "",
+      paidAmount: payment.paid_amount ? String(payment.paid_amount) : "",
+    };
+
+    console.log("Setting form data:", editData);
+    setPaymentData(editData);
+
+    // payment mode এর label দেখে isBank, isCheque ঠিক করা
+    if (payment.payment_mode && paymentModes.length > 0) {
+      const selectedMode = paymentModes.find(
+        (opt) => opt.value === Number(payment.payment_mode)
+      );
+      if (selectedMode) {
+        const modeLabel = selectedMode.label.toLowerCase();
+        setIsBank(modeLabel === "bank");
+        setIsCheque(modeLabel === "cheque");
+      } else {
+        setIsBank(false);
+        setIsCheque(false);
+      }
+    } else {
+      setIsBank(false);
+      setIsCheque(false);
+    }
+
+    setEditingPayment(payment.id);
+    console.log("Edit mode set for payment ID:", payment.id);
+  };
+
+  const getPaymentModeName = (id) => {
+    const mode = paymentModes.find((pm) => pm.value === Number(id));
+    return mode?.label || "N/A";
+  };
+
+  const handleUpdatePayment = () => {
+    const updatedData = {
+      payment_mode: paymentData.paymentMode || "",
+      bank_name: paymentData.bankName || "",
+      account_no: paymentData.accountNo || "",
+      cheque_no: paymentData.chequeNo || "",
+      paid_amount: paymentData.paidAmount || "0.00",
+    };
+
+    console.log("Update Payment Data:", updatedData);
+    console.log("Editing Payment ID:", editingPayment);
+
+    // Reset state
+    setEditingPayment(null);
+    setPaymentData({
+      paymentMode: "",
+      bankName: "",
+      accountNo: "",
+      chequeNo: "",
+      paidAmount: "",
+    });
   };
 
   const [stockData, setStockData] = useState([]);
@@ -873,11 +977,13 @@ export default function PurchaseList() {
                               <table className="table text-sm">
                                 <thead className="bg-sky-700 h-5 text-white">
                                   <tr>
-                                    <th>Item</th>
-                                    <th>Quantity</th>
-                                    <th>Price</th>
-                                    <th>%</th>
-                                    <th>Price with %</th>
+                                    <th className="text-center">Item</th>
+                                    <th className="text-center">Quantity</th>
+                                    <th className="text-center">Price</th>
+                                    <th className="text-center">Percentage</th>
+                                    <th className="text-center">
+                                      Price with %
+                                    </th>
                                     <th className="text-center">Total</th>
                                   </tr>
                                 </thead>
@@ -959,10 +1065,10 @@ export default function PurchaseList() {
               Payment Details for Invoice: {payModalPurchase.invoice_no}
             </h3>
 
-            {/* Rest of your modal content remains exactly the same */}
             <div className="mb-4">
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
                 {/* Payment Mode */}
+
                 <div>
                   <label className="block text-sm mb-1 font-medium">
                     Payment Mode*
@@ -970,9 +1076,12 @@ export default function PurchaseList() {
                   <Select
                     options={paymentModes}
                     value={
-                      paymentModes.find(
-                        (opt) => opt.value === paymentData.paymentMode
-                      ) || null
+                      paymentData.paymentMode
+                        ? paymentModes.find(
+                            (opt) =>
+                              opt.value === Number(paymentData.paymentMode)
+                          ) || null
+                        : null
                     }
                     onChange={(selected) =>
                       handlePaymentChange("paymentMode", selected?.value || "")
@@ -983,25 +1092,36 @@ export default function PurchaseList() {
                   />
                 </div>
 
-                {/* Bank Name */}
                 <div>
                   <label className="block text-sm mb-1 font-medium">
                     Bank Name
                   </label>
+
                   <Select
                     options={banks}
                     value={
-                      banks.find((opt) => opt.value === paymentData.bankName) ||
-                      null
+                      paymentData.bankName
+                        ? banks.find(
+                            (opt) => opt.value === Number(paymentData.bankName)
+                          ) || null
+                        : null
                     }
-                    onChange={(selected) =>
-                      handlePaymentChange("bankName", selected?.value || "")
-                    }
+                    onChange={(selected) => {
+                      console.log("Bank selected:", selected); // Debug log
+                      handlePaymentChange(
+                        "bankName",
+                        selected ? selected.value : ""
+                      );
+                    }}
                     placeholder="Select"
                     isClearable
                     isDisabled={!isBank}
                     className="text-sm"
                     styles={customSelectStyles}
+                    // Add these props for better debugging
+                    onMenuOpen={() => console.log("Menu opened")}
+                    onMenuClose={() => console.log("Menu closed")}
+                    noOptionsMessage={() => "No banks found"}
                   />
                 </div>
 
@@ -1058,19 +1178,37 @@ export default function PurchaseList() {
                     placeholder="0.00"
                   />
                 </div>
+              </div>
 
-                {/* Save Button */}
-                <div className="flex items-end justify-end">
+              <div className="flex justify-center gap-5 mt-5">
+                {/* Reset Button */}
+                <button
+                  type="button"
+                  onClick={handleResetPaymentForm}
+                  className="px-4 py-2 border text-sm rounded hover:bg-gray-100"
+                >
+                  Reset
+                </button>
+
+                {editingPayment ? (
+                  // edit mode এ থাকলে Update button
                   <button
                     type="button"
-                    onClick={() =>
-                      console.log("New payment data:", paymentData)
-                    }
+                    onClick={handleUpdatePayment}
+                    className="px-4 py-2 bg-green-700 text-sm text-white rounded hover:bg-green-600"
+                  >
+                    Update
+                  </button>
+                ) : (
+                  // না থাকলে Save button
+                  <button
+                    type="button"
+                    onClick={handleSavePayment}
                     className="px-4 py-2 bg-sky-800 text-sm text-white rounded hover:bg-sky-700"
                   >
                     Save
                   </button>
-                </div>
+                )}
               </div>
             </div>
 
@@ -1079,16 +1217,16 @@ export default function PurchaseList() {
               <table className="table text-sm">
                 <thead className="bg-sky-800 text-white">
                   <tr>
-                    <th>SL</th>
-                    <th>Due Date</th>
-                    <th>Payment Mode</th>
-                    <th>Bank Name</th>
-                    <th>Account Number</th>
-                    <th>Cheque Number</th>
-                    <th className="text-right">Transaction Amount</th>
-                    <th>Create Date</th>
-                    <th>Due Invoice</th>
-                    <th>Edit</th>
+                    <th className="text-center">SL</th>
+                    <th className="text-center">Due Date</th>
+                    <th className="text-center">Payment Mode</th>
+                    <th className="text-center">Bank Name</th>
+                    <th className="text-center">Account Number</th>
+                    <th className="text-center">Cheque Number</th>
+                    <th className="text-center">Amount</th>
+                    <th className="text-center">Create Date</th>
+                    <th className="text-center">Due Invoice</th>
+                    <th className="text-center">Edit</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1096,18 +1234,34 @@ export default function PurchaseList() {
                     payModalPurchase.payments.map((payment, idx) => (
                       <tr key={payment.id}>
                         <td className="text-center">{idx + 1}</td>
-                        <td>{payment.due_date || "N/A"}</td>
-                        <td>{payment.payment_mode || "N/A"}</td>
-                        <td>{payment.bank_name || "N/A"}</td>
-                        <td>{payment.account_number || "N/A"}</td>
-                        <td>{payment.cheque_number || "N/A"}</td>
-                        <td className="text-right">
-                          ৳{parseFloat(payment.paid_amount || 0).toFixed(2)}
-                        </td>
-                        <td>{payment.created_at?.slice(0, 10) || "N/A"}</td>
-                        <td>{payment.due_invoice || "N/A"}</td>
                         <td className="text-center">
-                          <button className="text-blue-600 hover:underline">
+                          {payment.due_date || "N/A"}
+                        </td>
+                        <td>{getPaymentModeName(payment.payment_mode)}</td>
+
+                        <td className="text-center">
+                          {getBankName(payment.bank_name)}
+                        </td>
+                        <td className="text-center">
+                          {payment.account_no || "N/A"}
+                        </td>
+                        <td className="text-center">
+                          {payment.cheque_no || "N/A"}
+                        </td>
+                        <td className="text-center">
+                          {parseFloat(payment.paid_amount || 0).toFixed(2)}
+                        </td>
+                        <td className="text-center">
+                          {payment.created_at?.slice(0, 10) || "N/A"}
+                        </td>
+                        <td className="text-center">
+                          {payment.due_invoice || "N/A"}
+                        </td>
+                        <td className="text-center">
+                          <button
+                            className="text-blue-600 hover:underline"
+                            onClick={() => handleEditClick(payment)}
+                          >
                             EDIT
                           </button>
                         </td>
@@ -1289,7 +1443,9 @@ export default function PurchaseList() {
               </div>
 
               <div>
-                <label className="block font-medium mb-1">Return Quantity:</label>
+                <label className="block font-medium mb-1">
+                  Return Quantity:
+                </label>
                 <input
                   type="number"
                   name="returnQty"

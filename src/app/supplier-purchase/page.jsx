@@ -1126,8 +1126,14 @@ export default function SupplierProductPurchase() {
               {payments.map((pay, idx) => (
                 <tr key={idx}>
                   <td className="border px-2 py-1">{idx + 1}</td>
-                  <td className="border px-2 py-1">{pay.paymentMode}</td>
-                  <td className="border px-2 py-1">{pay.bankName}</td>
+                  <td className="border px-2 py-1">
+                    {paymentModes.find((mode) => mode.value === pay.paymentMode)
+                      ?.label || "N/A"}
+                  </td>
+                  <td className="border px-2 py-1">
+                    {banks.find((bank) => bank.value === pay.bankName)?.label ||
+                      "N/A"}
+                  </td>
                   <td className="border px-2 py-1">{pay.accountNo}</td>
                   <td className="border px-2 py-1">{pay.chequeNo}</td>
                   <td className="border px-2 py-1">
