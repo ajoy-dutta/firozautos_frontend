@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import axiosInstance from "../components/AxiosInstance";
 import Select from "react-select";
 import { jsPDF } from "jspdf";
+import AxiosInstance from "../components/AxiosInstance";
 
 export default function PurchaseList() {
   const [allPurchases, setAllPurchases] = useState([]);
@@ -583,7 +584,7 @@ export default function PurchaseList() {
     toast.success("Payment data logged to console!");
   };
 
-  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [stockData, setStockData] = useState([]);
   const [formData, setFormData] = useState({
     returnDate: new Date().toISOString().slice(0, 10),
     productName: "",
@@ -595,18 +596,107 @@ export default function PurchaseList() {
     returnQty: "",
     returnAmount: "",
     returnRemarks: "",
+    selectedProductIndex: 0,
   });
+  const [errors, setErrors] = useState({});
+  const [returnModalPurchase, setReturnModalPurchase] = useState(null);
+
+  useEffect(() => {
+    const fetchStockData = async () => {
+      try {
+        const response = await axiosInstance.get("/stocks/");
+        setStockData(response.data);
+      } catch (error) {
+        console.error("Error fetching stock data:", error);
+      }
+    };
+
+    fetchStockData();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleReturnQtyChange = (e) => {
+    const inputValue = e.target.value;
+    const price = parseFloat(formData.price) || 0;
+
+    const returnQty = isNaN(parseFloat(inputValue))
+      ? 0
+      : Math.max(0, parseFloat(inputValue));
+    const returnAmount = (returnQty * price).toFixed(2);
+
+    setFormData({
+      ...formData,
+      returnQty: inputValue,
+      returnAmount,
+    });
+
+    setErrors({ ...errors, returnQty: "" });
+  };
+
+  const handleProductSelect = (selectedProduct) => {
+    const matchedStock = stockData.find(
+      (stock) => stock.product?.id === selectedProduct.product?.id
+    );
+
+    setFormData({
+      ...formData,
+      productName: selectedProduct.product?.product_name || "",
+      purchaseQty: selectedProduct.purchase_quantity || "",
+      price: selectedProduct.purchase_price || "",
+      partNo: selectedProduct.part_no || "",
+      currentQty: matchedStock?.current_stock_quantity || "0",
+    });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // এখানে তোমার logic বসাবে, data পাঠাবে backend এ
-    console.log("Return Data:", formData);
-    setIsOpen(false); // form submit এর পর modal বন্ধ হবে
+
+    // Final validation
+    const finalReturnQty = parseFloat(formData.returnQty) || 0;
+    if (finalReturnQty <= 0) {
+      setErrors({ ...errors, returnQty: "Please enter a valid quantity" });
+      return;
+    }
+
+    // Calculate due amount with proper formatting
+    const due_amount = (
+      parseFloat(returnModalPurchase.total_payable_amount || 0) -
+      (returnModalPurchase.payments?.reduce(
+        (acc, p) => acc + parseFloat(p.paid_amount || 0),
+        0
+      ) || 0)
+    ).toFixed(2); // Ensures 2 decimal places
+
+    // Prepare complete form data to log
+    const formDataToLog = {
+      return_date: formData.returnDate, // Changed to snake_case
+      product_id:
+        returnModalPurchase.products[formData.selectedProductIndex]?.product
+          ?.id,
+      product_name: formData.productName,
+      purchase_quantity: formData.purchaseQty,
+      current_quantity: formData.currentQty,
+      price: formData.price,
+      due_amount: due_amount,
+      already_return_quantity: formData.alreadyReturnQty,
+      return_quantity: formData.returnQty,
+      return_amount: formData.returnAmount,
+      return_remarks: formData.returnRemarks,
+    };
+
+    // Log all form data to console
+    console.log("Form Data Submitted:", formDataToLog);
+
+    // Close the modal
+    document.getElementById("return_modal").close();
+    setReturnModalPurchase(null);
   };
 
   return (
@@ -758,11 +848,17 @@ export default function PurchaseList() {
                         </button>
                       </td>
                       <td className="text-center">
+                        {/* Your return button */}
                         <button
                           className="btn btn-md rounded-lg bg-red-500 text-sm text-white"
-                          onClick={() =>
-                            document.getElementById("return_modal").showModal()
-                          }
+                          onClick={() => {
+                            setReturnModalPurchase(purchase);
+                            setTimeout(() => {
+                              const modal =
+                                document.getElementById("return_modal");
+                              modal?.showModal();
+                            }, 0);
+                          }}
                         >
                           Return
                         </button>
@@ -1040,152 +1136,214 @@ export default function PurchaseList() {
       )}
 
       {/* Modal Dialog */}
-      <dialog id="return_modal" className="modal">
-        <div className="modal-box bg-white rounded-lg shadow-lg max-w-4xl w-full p-6">
-          <form method="dialog">
-            {/* Close button */}
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
-              ✕
-            </button>
-          </form>
-
-          <h3 className="font-bold text-lg mb-4">Add Product Return</h3>
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              // Save logic
-              console.log("Return form submitted");
-              document.getElementById("return_modal").close();
-            }}
-            className="space-y-3 text-sm grid gap-2 grid-cols-5"
-          >
-            <div>
-              <label className="block font-medium mb-1">Return Date:</label>
-              <input
-                type="date"
-                name="return_date"
-                className="w-full border rounded px-2 py-1"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Product Name:</label>
-              <input
-                type="text"
-                name="product_name"
-                className="w-full border rounded px-2 py-1"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Purchase Qty:</label>
-              <input
-                type="number"
-                name="purchase_qty"
-                className="w-full border rounded px-2 py-1"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Current Qty:</label>
-              <input
-                type="number"
-                name="current_qty"
-                className="w-full border rounded px-2 py-1"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Price:</label>
-              <input
-                type="number"
-                name="price"
-                step="0.01"
-                className="w-full border rounded px-2 py-1"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Due Amount:</label>
-              <input
-                type="number"
-                name="due_amount"
-                step="0.01"
-                className="w-full border rounded px-2 py-1"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">
-                Already Return Qty:
-              </label>
-              <input
-                type="number"
-                name="already_return_qty"
-                className="w-full border rounded px-2 py-1"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Return Qty:</label>
-              <input
-                type="number"
-                name="return_qty"
-                className="w-full border rounded px-2 py-1"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Return Amount:</label>
-              <input
-                type="number"
-                name="return_amount"
-                step="0.01"
-                className="w-full border rounded px-2 py-1"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Return Remarks:</label>
-              <input
-                name="return_remarks"
-                className="w-full border rounded px-2 py-1"
-              />
-            </div>
-
-            <div className="col-span-5 flex justify-end space-x-2 pt-3">
+      {returnModalPurchase && (
+        <dialog id="return_modal" className="modal">
+          <div className="modal-box bg-white rounded-lg shadow-lg max-w-4xl w-full p-6">
+            <form method="dialog">
+              {/* Close button */}
               <button
                 type="button"
-                onClick={() => document.getElementById("return_modal").close()}
-                className="px-4 py-2 border rounded hover:bg-gray-100"
+                onClick={() => setReturnModalPurchase(null)}
+                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
               >
-                Cancel
+                ✕
               </button>
-              <button
-                type="submit"
-                className="bg-sky-800 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Save
-              </button>
-            </div>
-          </form>
-        </div>
+            </form>
 
-        {/* Click outside to close */}
-        <form method="dialog" className="modal-backdrop">
-          <button>close</button>
-        </form>
-      </dialog>
+            <h3 className="font-bold text-lg mb-4">
+              Add Product Return for Invoice: {returnModalPurchase.invoice_no}
+            </h3>
+
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-3 text-sm grid gap-2 grid-cols-5"
+            >
+              <div>
+                <label className="block font-medium mb-1">Return Date:</label>
+                <input
+                  type="date"
+                  name="return_date"
+                  value={formData.returnDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, returnDate: e.target.value })
+                  }
+                  className="w-full border rounded px-2 py-1"
+                  required
+                />
+              </div>
+
+              {/* Product Selection - Updated */}
+              <div className="col-span-1">
+                <label className="block font-medium mb-1">Product Name:</label>
+                {returnModalPurchase.products.length > 1 ? (
+                  <select
+                    name="selectedProductIndex"
+                    className="w-full border rounded px-2 py-1"
+                    onChange={(e) => {
+                      const selectedIndex = e.target.value;
+                      const selectedProduct =
+                        returnModalPurchase.products[selectedIndex];
+                      handleProductSelect(selectedProduct);
+                      setFormData((prev) => ({
+                        ...prev,
+                        selectedProductIndex: parseInt(selectedIndex),
+                      }));
+                    }}
+                    required
+                  >
+                    <option value="">Select a product</option>
+                    {returnModalPurchase.products.map((product, index) => (
+                      <option key={index} value={index}>
+                        {product.product?.product_name || "Unknown Product"}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={
+                      returnModalPurchase.products[0]?.product?.product_name ||
+                      ""
+                    }
+                    readOnly
+                    className="w-full border rounded px-2 py-1 bg-gray-100"
+                  />
+                )}
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1">
+                  Purchase Quantity:
+                </label>
+                <input
+                  type="number"
+                  name="purchaseQty"
+                  value={
+                    formData.purchaseQty ||
+                    (returnModalPurchase.products.length === 1
+                      ? returnModalPurchase.products[0]?.purchase_quantity
+                      : "")
+                  }
+                  readOnly
+                  className="w-full border rounded px-2 py-1 bg-gray-100"
+                  required
+                />
+              </div>
+              {/* Current Stock Quantity - Fixed */}
+              <div>
+                <label className="block font-medium mb-1">Current Stock:</label>
+                <input
+                  type="number"
+                  name="currentQty"
+                  value={formData.currentQty || ""}
+                  readOnly
+                  className="w-full border rounded px-2 py-1 bg-gray-100"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1">Price:</label>
+                <input
+                  type="number"
+                  name="price"
+                  step="0.01"
+                  value={
+                    formData.price ||
+                    (returnModalPurchase.products.length === 1
+                      ? returnModalPurchase.products[0]?.purchase_price
+                      : "")
+                  }
+                  readOnly
+                  className="w-full border rounded px-2 py-1 bg-gray-100"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1">Due Amount:</label>
+                <input
+                  type="number"
+                  name="due_amount"
+                  step="0.01"
+                  defaultValue={
+                    parseFloat(returnModalPurchase.total_payable_amount || 0) -
+                    (returnModalPurchase.payments?.reduce(
+                      (acc, p) => acc + parseFloat(p.paid_amount || 0),
+                      0
+                    ) || 0)
+                  }
+                  className="w-full border rounded px-2 py-1"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1">
+                  Already Return Quantity:
+                </label>
+                <input
+                  type="number"
+                  name="already_return_qty"
+                  className="w-full border rounded px-2 py-1"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1">Return Quantity:</label>
+                <input
+                  type="number"
+                  name="returnQty"
+                  value={formData.returnQty}
+                  onChange={handleReturnQtyChange}
+                  className="w-full border rounded px-2 py-1"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1">Return Amount:</label>
+                <input
+                  type="text"
+                  name="returnAmount"
+                  value={formData.returnAmount}
+                  readOnly
+                  className="w-full border rounded px-2 py-1 bg-gray-100"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1">
+                  Return Remarks:
+                </label>
+                <input
+                  name="return_remarks"
+                  className="w-full border rounded px-2 py-1"
+                />
+              </div>
+
+              <div className="col-span-5 flex justify-end space-x-2 pt-3">
+                <button
+                  type="reset"
+                  className="px-4 py-2 border rounded hover:bg-gray-100"
+                >
+                  Reset
+                </button>
+                <button
+                  type="submit"
+                  className="bg-sky-800 text-white px-4 py-2 rounded hover:bg-sky-700"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <form method="dialog" className="modal-backdrop">
+            <button>close</button>
+          </form>
+        </dialog>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
