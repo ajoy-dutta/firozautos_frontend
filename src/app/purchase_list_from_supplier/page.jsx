@@ -5,6 +5,8 @@ import axiosInstance from "../components/AxiosInstance";
 import Select from "react-select";
 import { jsPDF } from "jspdf";
 import AxiosInstance from "../components/AxiosInstance";
+import { toast } from 'react-hot-toast';
+
 
 export default function PurchaseList() {
   const [allPurchases, setAllPurchases] = useState([]);
@@ -718,6 +720,21 @@ export default function PurchaseList() {
     fetchStockData();
   }, []);
 
+  useEffect(() => {
+  if (returnModalPurchase && returnModalPurchase.products.length === 1) {
+    const product = returnModalPurchase.products[0];
+    handleProductSelect(product);
+    setFormData((prev) => ({
+      ...prev,
+      selectedProductIndex: 0,
+      productName: product.product?.product_name || "",
+      purchaseQty: product.purchase_quantity || "",
+      price: product.purchase_price || "",
+    }));
+  }
+}, [returnModalPurchase]);
+
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -759,49 +776,45 @@ export default function PurchaseList() {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // Final validation
-    const finalReturnQty = parseFloat(formData.returnQty) || 0;
-    if (finalReturnQty <= 0) {
-      setErrors({ ...errors, returnQty: "Please enter a valid quantity" });
-      return;
-    }
+  // Final validation
+  const finalReturnQty = parseFloat(formData.returnQty) || 0;
+  if (finalReturnQty <= 0) {
+    setErrors({ ...errors, returnQty: "Please enter a valid quantity" });
+    return;
+  }
 
-    // Calculate due amount with proper formatting
-    const due_amount = (
-      parseFloat(returnModalPurchase.total_payable_amount || 0) -
-      (returnModalPurchase.payments?.reduce(
-        (acc, p) => acc + parseFloat(p.paid_amount || 0),
-        0
-      ) || 0)
-    ).toFixed(2); // Ensures 2 decimal places
+  // Get the purchase_product ID
+  const purchaseProductId = returnModalPurchase.products[formData.selectedProductIndex]?.id;
+  // 📝 এই id টা PurchaseProduct এর id, যা তোমার SupplierPurchaseReturn model এর purchase_product এর foreign key হিসেবে যাবে
 
-    // Prepare complete form data to log
-    const formDataToLog = {
-      return_date: formData.returnDate, // Changed to snake_case
-      product_id:
-        returnModalPurchase.products[formData.selectedProductIndex]?.product
-          ?.id,
-      product_name: formData.productName,
-      purchase_quantity: formData.purchaseQty,
-      current_quantity: formData.currentQty,
-      price: formData.price,
-      due_amount: due_amount,
-      already_return_quantity: formData.alreadyReturnQty,
-      return_quantity: formData.returnQty,
-      return_amount: formData.returnAmount,
-      return_remarks: formData.returnRemarks,
-    };
+  // Prepare data to POST
+  const dataToPost = {
+    purchase_product: purchaseProductId,
+    quantity: finalReturnQty,
+    // return_date লাগবে না, কারণ model এ auto_now_add আছে
+  };
 
-    // Log all form data to console
-    console.log("Form Data Submitted:", formDataToLog);
+  try {
+    // ✅ API call
+    const response = await axiosInstance.post('supplier-purchase-returns/', dataToPost);
+    console.log("Posted successfully:", response.data);
 
-    // Close the modal
+    // Optionally success message
+    toast.success("Return created successfully");
+
+    // Close modal
     document.getElementById("return_modal").close();
     setReturnModalPurchase(null);
-  };
+
+  } catch (error) {
+    console.error("Error posting return:", error);
+    toast.error("Failed to create return");
+  }
+};
+
 
   return (
     <div className="max-w-7xl mx-auto px-4">
@@ -1054,12 +1067,22 @@ export default function PurchaseList() {
         <dialog id="pay_modal" className="modal modal-open">
           <div className="modal-box max-w-4xl relative">
             {/* Cross (✕) close button in top-right corner */}
-            <button
-              onClick={() => setPayModalPurchase(null)}
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-            >
-              ✕
-            </button>
+          <button
+  onClick={() => {
+    setPayModalPurchase(null);
+    setPaymentData({
+      paymentMode: "",
+      bankName: "",
+      accountNo: "",
+      chequeNo: "",
+      paidAmount: "",
+    });
+  }}
+  className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+>
+  ✕
+</button>
+
 
             <h3 className="font-bold text-lg mb-4">
               Payment Details for Invoice: {payModalPurchase.invoice_no}
@@ -1295,13 +1318,30 @@ export default function PurchaseList() {
           <div className="modal-box bg-white rounded-lg shadow-lg max-w-4xl w-full p-6">
             <form method="dialog">
               {/* Close button */}
-              <button
-                type="button"
-                onClick={() => setReturnModalPurchase(null)}
-                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              >
-                ✕
-              </button>
+          <button
+  type="button"
+  onClick={() => {
+    setReturnModalPurchase(null);
+    setFormData({
+      returnDate: new Date().toISOString().slice(0, 10),
+      productName: "",
+      purchaseQty: "",
+      currentQty: "",
+      price: "",
+      dueAmount: "",
+      alreadyReturnQty: "",
+      returnQty: "",
+      returnAmount: "",
+      returnRemarks: "",
+      selectedProductIndex: 0,
+    });
+    setErrors({});
+  }}
+  className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+>
+  ✕
+</button>
+
             </form>
 
             <h3 className="font-bold text-lg mb-4">
