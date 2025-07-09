@@ -55,16 +55,21 @@ export default function PurchaseList() {
   }, []);
 
   // Initial load: load all purchases
-  useEffect(() => {
+  const fetchPurchases = async () => {
     setLoading(true);
-    axiosInstance
-      .get("/supplier-purchases/")
-      .then((res) => {
-        setAllPurchases(res.data);
-        setPurchases(res.data);
-      })
-      .catch((err) => console.error("Failed to load purchases:", err))
-      .finally(() => setLoading(false));
+    try {
+      const res = await axiosInstance.get("/supplier-purchases/");
+      setAllPurchases(res.data);
+      setPurchases(res.data);
+    } catch (err) {
+      console.error("Failed to load purchases:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPurchases();
   }, []);
 
   // Local filter logic
@@ -638,7 +643,6 @@ export default function PurchaseList() {
     console.log("Setting form data:", editData);
     setPaymentData(editData);
 
-    // payment mode এর label দেখে isBank, isCheque ঠিক করা
     if (payment.payment_mode && paymentModes.length > 0) {
       const selectedMode = paymentModes.find(
         (opt) => opt.value === Number(payment.payment_mode)
@@ -771,7 +775,7 @@ export default function PurchaseList() {
       price: selectedProduct.purchase_price || "",
       partNo: selectedProduct.part_no || "",
       currentQty: matchedStock?.current_stock_quantity || "0",
-      alreadyReturnQty: selectedProduct.total_returned_quantity || "0",
+      alreadyReturnQty: selectedProduct.returned_quantity || "0",
     }));
   };
 
@@ -819,8 +823,9 @@ export default function PurchaseList() {
       console.log("Posted successfully:", response.data);
 
       toast.success("Return created successfully");
-      // ✅ Post এর পর stock refresh
+
       await fetchStockData();
+      await fetchPurchases();
 
       // Reset modal & form
       document.getElementById("return_modal").close();
@@ -844,6 +849,25 @@ export default function PurchaseList() {
       toast.error("Failed to create return");
     }
   };
+
+  const [returnData, setReturnData] = useState(null);
+  useEffect(() => {
+    const fetchReturnData = async () => {
+      if (returnModalPurchase?.invoice_no) {
+        try {
+          const response = await axiosInstance.get(
+            `/supplier-purchase-returns/?invoice_no=${returnModalPurchase.invoice_no}`
+          );
+          console.log("Return data:", response.data);
+          setReturnData(response.data); // optional: use it in UI
+        } catch (error) {
+          console.error("Error fetching return data:", error);
+        }
+      }
+    };
+
+    fetchReturnData();
+  }, [returnModalPurchase?.invoice_no]);
 
   return (
     <div className="max-w-7xl mx-auto px-4">
@@ -1343,8 +1367,7 @@ export default function PurchaseList() {
       {/* Modal Dialog */}
       {returnModalPurchase && (
         <dialog id="return_modal" className="modal">
-         
-          <div className="modal-box bg-white rounded-lg shadow-lg max-w-4xl w-full p-6">
+          <div className="modal-box bg-white rounded-lg shadow-lg max-w-4xl w-full p-4">
             <form method="dialog">
               {/* Close button */}
               <button
@@ -1548,7 +1571,7 @@ export default function PurchaseList() {
                 />
               </div>
 
-              <div className="col-span-5 flex justify-end space-x-2 pt-3">
+              <div className="col-span-5 flex justify-center space-x-2 pt-3">
                 <button
                   type="reset"
                   className="px-4 py-2 border rounded hover:bg-gray-100"
@@ -1562,6 +1585,79 @@ export default function PurchaseList() {
                   Save
                 </button>
               </div>
+
+              <table className="table w-full border text-sm mt-4">
+                <thead className="bg-sky-800 text-white ">
+                  <tr className="text-sm  whitespace-nowrap">
+                    <th className="border px-2 py-2 text-center">SL</th>
+                    <th className="border px-2 py-2 text-center">
+                      Return Date
+                    </th>
+                    <th className="border px-2 py-2 text-center">
+                      Product Name
+                    </th>
+                    <th className="border px-2 py-2 text-center">Part No</th>
+                    <th className="border px-2 py-2 text-center">
+                      Company Name
+                    </th>
+                    <th className="border px-2 py-2 text-center">
+                      Purchased Qty
+                    </th>
+                    <th className="border px-2 py-2 text-center">
+                      Returned Qty
+                    </th>
+                    <th className="border px-2 py-2 text-center">
+                      Returned Amount
+                    </th>
+                    <th className="border px-2 py-2 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {returnData.map((item, index) => (
+                    <tr key={item.id} className="hover:bg-gray-50">
+                      <td className="border px-3 py-2 text-center">
+                        {index + 1}
+                      </td>
+                      <td className="border text-center px-3 py-2">
+                        {new Date(item.return_date).toLocaleString("en-GB", {
+                          dateStyle: "short",
+                        })}
+                      </td>
+                      <td className="border text-center px-3 py-2">
+                        {item.purchase_product?.product?.product_name || "N/A"}
+                      </td>
+                      <td className="border text-center px-3 py-2">
+                        {item.purchase_product?.product?.part_no || "N/A"}
+                      </td>
+                      <td className="border text-center px-3 py-2">
+                        {item.purchase_product?.product?.category_detail
+                          ?.company_detail?.company_name || "N/A"}
+                      </td>
+                      <td className="border  px-3 py-2 text-center">
+                        {item.purchase_product?.purchase_quantity || 0}
+                      </td>
+                      <td className="border  px-3 py-2 text-center">
+                        {item.quantity || 0}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {(
+                          parseFloat(
+                            item.purchase_product?.purchase_price || 0
+                          ) * parseFloat(item.quantity || 0)
+                        ).toFixed(2)}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        <button
+                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                          onClick={() => handleEditReturn(item)}
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </form>
           </div>
 

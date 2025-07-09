@@ -2,6 +2,11 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../../components/AxiosInstance";
 import Select from "react-select";
+import { Toaster } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
+
+
+
 
 export default function StockList() {
   const customSelectStyles = {
@@ -183,13 +188,31 @@ export default function StockList() {
     setCurrentPage(1); // Reset to first page after filter change
   }, [filters, allStocks]);
 
-  const handleDamageSave = () => {
-    console.log("Damage Entry:", {
-      stockId: selectedStock?.id,
-      damageQty,
-    });
+
+
+const handleDamageSave = async () => {
+  if (!selectedStock?.id || damageQty == null) {
+    toast.error("Stock ID or damage quantity missing");
+    return;
+  }
+
+  try {
+    const response = await axiosInstance.patch(
+      `/stocks/${selectedStock.id}/set-damage-quantity/`,
+      {
+        damage_quantity: damageQty,
+      }
+    );
+
+    toast.success("Damage quantity updated successfully!");
+    console.log("Damage quantity updated:", response.data);
     document.getElementById("damage_modal").close();
-  };
+  } catch (error) {
+    console.error("Error updating damage quantity:", error);
+    toast.error("Failed to update damage quantity.");
+  }
+};
+
 
   const handleResetDamage = () => {
     setDamageQty("");

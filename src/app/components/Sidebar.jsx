@@ -47,7 +47,7 @@ function SidebarContent() {
       label: "Exporter",
       icon: "⚙️",
       children: [
-        { label: "Add Exporter", href: "/exporter/add" },
+        { label: "Add Exporter", href: "/exporter/addEdit" },
         { label: "Exporter List", href: "/exporter/list" }
       ]
     },
