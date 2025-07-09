@@ -5,8 +5,7 @@ import axiosInstance from "../components/AxiosInstance";
 import Select from "react-select";
 import { jsPDF } from "jspdf";
 import AxiosInstance from "../components/AxiosInstance";
-import { toast } from 'react-hot-toast';
-
+import { toast } from "react-hot-toast";
 
 export default function PurchaseList() {
   const [allPurchases, setAllPurchases] = useState([]);
@@ -62,7 +61,7 @@ export default function PurchaseList() {
       .get("/supplier-purchases/")
       .then((res) => {
         setAllPurchases(res.data);
-        setPurchases(res.data); // default দেখানোর জন্য
+        setPurchases(res.data);
       })
       .catch((err) => console.error("Failed to load purchases:", err))
       .finally(() => setLoading(false));
@@ -546,7 +545,6 @@ export default function PurchaseList() {
           label: bank.name,
         }));
         setBanks(options);
-      
       } catch (error) {
         console.error("Error fetching banks:", error);
         toast.error("Failed to load banks");
@@ -615,7 +613,7 @@ export default function PurchaseList() {
   };
 
   const handleResetPaymentForm = () => {
-    setEditingPayment(null); 
+    setEditingPayment(null);
     setPaymentData({
       paymentMode: "",
       bankName: "",
@@ -707,33 +705,32 @@ export default function PurchaseList() {
   const [errors, setErrors] = useState({});
   const [returnModalPurchase, setReturnModalPurchase] = useState(null);
 
-  useEffect(() => {
-    const fetchStockData = async () => {
-      try {
-        const response = await axiosInstance.get("/stocks/");
-        setStockData(response.data);
-      } catch (error) {
-        console.error("Error fetching stock data:", error);
-      }
-    };
+  const fetchStockData = async () => {
+    try {
+      const response = await axiosInstance.get("/stocks/");
+      setStockData(response.data);
+    } catch (error) {
+      console.error("Error fetching stock data:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchStockData();
   }, []);
 
   useEffect(() => {
-  if (returnModalPurchase && returnModalPurchase.products.length === 1) {
-    const product = returnModalPurchase.products[0];
-    handleProductSelect(product);
-    setFormData((prev) => ({
-      ...prev,
-      selectedProductIndex: 0,
-      productName: product.product?.product_name || "",
-      purchaseQty: product.purchase_quantity || "",
-      price: product.purchase_price || "",
-    }));
-  }
-}, [returnModalPurchase]);
-
+    if (returnModalPurchase && returnModalPurchase.products.length === 1) {
+      const product = returnModalPurchase.products[0];
+      handleProductSelect(product);
+      setFormData((prev) => ({
+        ...prev,
+        selectedProductIndex: 0,
+        productName: product.product?.product_name || "",
+        purchaseQty: product.purchase_quantity || "",
+        price: product.purchase_price || "",
+      }));
+    }
+  }, [returnModalPurchase]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -765,56 +762,88 @@ export default function PurchaseList() {
     const matchedStock = stockData.find(
       (stock) => stock.product?.id === selectedProduct.product?.id
     );
+    console.log(selectedProduct);
 
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       productName: selectedProduct.product?.product_name || "",
       purchaseQty: selectedProduct.purchase_quantity || "",
       price: selectedProduct.purchase_price || "",
       partNo: selectedProduct.part_no || "",
       currentQty: matchedStock?.current_stock_quantity || "0",
-    });
+      alreadyReturnQty: selectedProduct.total_returned_quantity || "0",
+    }));
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  // Final validation
-  const finalReturnQty = parseFloat(formData.returnQty) || 0;
-  if (finalReturnQty <= 0) {
-    setErrors({ ...errors, returnQty: "Please enter a valid quantity" });
-    return;
-  }
+    // Parse numbers safely
+    const finalReturnQty = parseFloat(formData.returnQty) || 0;
+    const purchaseQty = parseFloat(formData.purchaseQty) || 0;
+    const alreadyReturnedQty =
+      parseFloat(returnModalPurchase.total_returned_quantity) || 0;
 
-  // Get the purchase_product ID
-  const purchaseProductId = returnModalPurchase.products[formData.selectedProductIndex]?.id;
-  // 📝 এই id টা PurchaseProduct এর id, যা তোমার SupplierPurchaseReturn model এর purchase_product এর foreign key হিসেবে যাবে
+    // Validation: return qty > 0
+    if (finalReturnQty <= 0) {
+      setErrors({ ...errors, returnQty: "Please enter a valid quantity" });
+      return;
+    }
 
-  // Prepare data to POST
-  const dataToPost = {
-    purchase_product: purchaseProductId,
-    quantity: finalReturnQty,
-    // return_date লাগবে না, কারণ model এ auto_now_add আছে
+    // Validation: total returned can't exceed purchase quantity
+    if (finalReturnQty + alreadyReturnedQty > purchaseQty) {
+      toast.error("Total return quantity cannot exceed purchase quantity!");
+      return;
+    }
+
+    // Get purchase_product id
+    const purchaseProductId =
+      returnModalPurchase.products[formData.selectedProductIndex]?.id;
+
+    if (!purchaseProductId) {
+      toast.error("Invalid product selected!");
+      return;
+    }
+
+    // Prepare data (exact field name as model expects)
+    const dataToPost = {
+      purchase_product_id: purchaseProductId,
+      quantity: finalReturnQty,
+    };
+
+    try {
+      const response = await axiosInstance.post(
+        "supplier-purchase-returns/",
+        dataToPost
+      );
+      console.log("Posted successfully:", response.data);
+
+      toast.success("Return created successfully");
+      // ✅ Post এর পর stock refresh
+      await fetchStockData();
+
+      // Reset modal & form
+      document.getElementById("return_modal").close();
+      setReturnModalPurchase(null);
+      setFormData({
+        returnDate: new Date().toISOString().slice(0, 10),
+        productName: "",
+        purchaseQty: "",
+        currentQty: "",
+        price: "",
+        dueAmount: "",
+        alreadyReturnQty: "",
+        returnQty: "",
+        returnAmount: "",
+        returnRemarks: "",
+        selectedProductIndex: 0,
+      });
+      setErrors({});
+    } catch (error) {
+      console.error("Error posting return:", error);
+      toast.error("Failed to create return");
+    }
   };
-
-  try {
-    // ✅ API call
-    const response = await axiosInstance.post('supplier-purchase-returns/', dataToPost);
-    console.log("Posted successfully:", response.data);
-
-    // Optionally success message
-    toast.success("Return created successfully");
-
-    // Close modal
-    document.getElementById("return_modal").close();
-    setReturnModalPurchase(null);
-
-  } catch (error) {
-    console.error("Error posting return:", error);
-    toast.error("Failed to create return");
-  }
-};
-
 
   return (
     <div className="max-w-7xl mx-auto px-4">
@@ -1067,22 +1096,21 @@ export default function PurchaseList() {
         <dialog id="pay_modal" className="modal modal-open">
           <div className="modal-box max-w-4xl relative">
             {/* Cross (✕) close button in top-right corner */}
-          <button
-  onClick={() => {
-    setPayModalPurchase(null);
-    setPaymentData({
-      paymentMode: "",
-      bankName: "",
-      accountNo: "",
-      chequeNo: "",
-      paidAmount: "",
-    });
-  }}
-  className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
->
-  ✕
-</button>
-
+            <button
+              onClick={() => {
+                setPayModalPurchase(null);
+                setPaymentData({
+                  paymentMode: "",
+                  bankName: "",
+                  accountNo: "",
+                  chequeNo: "",
+                  paidAmount: "",
+                });
+              }}
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+            >
+              ✕
+            </button>
 
             <h3 className="font-bold text-lg mb-4">
               Payment Details for Invoice: {payModalPurchase.invoice_no}
@@ -1315,33 +1343,33 @@ export default function PurchaseList() {
       {/* Modal Dialog */}
       {returnModalPurchase && (
         <dialog id="return_modal" className="modal">
+         
           <div className="modal-box bg-white rounded-lg shadow-lg max-w-4xl w-full p-6">
             <form method="dialog">
               {/* Close button */}
-          <button
-  type="button"
-  onClick={() => {
-    setReturnModalPurchase(null);
-    setFormData({
-      returnDate: new Date().toISOString().slice(0, 10),
-      productName: "",
-      purchaseQty: "",
-      currentQty: "",
-      price: "",
-      dueAmount: "",
-      alreadyReturnQty: "",
-      returnQty: "",
-      returnAmount: "",
-      returnRemarks: "",
-      selectedProductIndex: 0,
-    });
-    setErrors({});
-  }}
-  className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
->
-  ✕
-</button>
-
+              <button
+                type="button"
+                onClick={() => {
+                  setReturnModalPurchase(null);
+                  setFormData({
+                    returnDate: new Date().toISOString().slice(0, 10),
+                    productName: "",
+                    purchaseQty: "",
+                    currentQty: "",
+                    price: "",
+                    dueAmount: "",
+                    alreadyReturnQty: "",
+                    returnQty: "",
+                    returnAmount: "",
+                    returnRemarks: "",
+                    selectedProductIndex: 0,
+                  });
+                  setErrors({});
+                }}
+                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              >
+                ✕
+              </button>
             </form>
 
             <h3 className="font-bold text-lg mb-4">
@@ -1478,7 +1506,9 @@ export default function PurchaseList() {
                 <input
                   type="number"
                   name="already_return_qty"
-                  className="w-full border rounded px-2 py-1"
+                  value={formData.alreadyReturnQty || ""}
+                  readOnly
+                  className="w-full border rounded px-2 py-1 bg-gray-100"
                 />
               </div>
 
