@@ -63,6 +63,14 @@ export default function LoanPurchaseEntry() {
     setFormData({ ...formData, [name]: value });
   };
 
+  useEffect(() => {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  setFormData(prev => ({
+    ...prev,
+    purchaseDate: today,
+  }));
+}, []);
+
 
   const handlePartNoChange = (e) => {
     const value = e.target.value;
