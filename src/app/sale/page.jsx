@@ -270,238 +270,235 @@ export default function CustomerProductSale() {
   };
 
   const [saleMRP, setSaleMRP] = useState("");
-const [price, setPrice] = useState("");
-const [percentage, setPercentage] = useState("");
-const [saleQuantity, setSaleQuantity] = useState("");
-const [totalPrice, setTotalPrice] = useState("0.00");
-const [currentStock, setCurrentStock] = useState(0);
-const [selectedProductName, setSelectedProductName] = useState(null);
-const [selectedPartNumber, setSelectedPartNumber] = useState(null);
+  const [price, setPrice] = useState("");
+  const [percentage, setPercentage] = useState("");
+  const [saleQuantity, setSaleQuantity] = useState("");
+  const [totalPrice, setTotalPrice] = useState("0.00");
+  const [currentStock, setCurrentStock] = useState(0);
+  const [selectedProductName, setSelectedProductName] = useState(null);
+  const [selectedPartNumber, setSelectedPartNumber] = useState(null);
 
+  // Filter products by selected company
+  const filteredProducts = selectedCompany
+    ? productList.filter((p) => p.company === selectedCompany.value)
+    : [];
 
-// Filter products by selected company
-const filteredProducts = selectedCompany
-  ? productList.filter((p) => p.company === selectedCompany.value)
-  : [];
+  // Product name and part no options for selects
+  const productNameOptions = filteredProducts.map((p) => ({
+    label: p.product_name,
+    value: p.id,
+    part_no: p.part_no,
+    current_stock_quantity: p.current_stock_quantity || 0,
+  }));
 
-// Product name and part no options for selects
-const productNameOptions = filteredProducts.map((p) => ({
-  label: p.product_name,
-  value: p.id,
-  part_no: p.part_no,
-  current_stock_quantity: p.current_stock_quantity || 0,
-}));
+  const partNumberOptions = filteredProducts.map((p) => ({
+    label: p.part_no,
+    value: p.part_no,
+    product_id: p.id,
+    product_name: p.product_name,
+    current_stock_quantity: p.current_stock_quantity || 0,
+  }));
 
-const partNumberOptions = filteredProducts.map((p) => ({
-  label: p.part_no,
-  value: p.part_no,
-  product_id: p.id,
-  product_name: p.product_name,
-  current_stock_quantity: p.current_stock_quantity || 0,
-}));
-
-// When company changes, reset product selection and fields
-useEffect(() => {
-  setSelectedProductName(null);
-  setSelectedPartNumber(null);
-  setCurrentStock(0);
-  setSaleQuantity("");
-  setSaleMRP("");
-  setPrice("");
-  setPercentage("");
-  setTotalPrice("0.00");
-}, [selectedCompany]);
-
-// Debug version with console logs
-
-// Common function to set product data
-const setProductData = (product) => {
-  console.log("Setting product data:", product);
-  if (!product) return;
-
-  // Find stock data by matching product ID
-  const stockItem = stockList.find((s) => s.product?.id === product.id);
-  const stockQty = stockItem ? stockItem.current_stock_quantity : 0;
-  console.log("Stock quantity:", stockQty);
-  setCurrentStock(stockQty);
-
-  // Set MRP from product_mrp
-  const mrpValue = parseFloat(product.product_mrp || 0).toFixed(2);
-  console.log("MRP value:", mrpValue);
-  setSaleMRP(mrpValue);
-  
-  // Reset percentage to empty
-  setPercentage("");
-  
-  // Calculate initial price from product_bdt (without percentage)
-  const basePrice = parseFloat(product.product_bdt || 0);
-  console.log("Base price from product_bdt:", basePrice);
-  setPrice(basePrice.toFixed(2));
-  
-  // Reset total price
-  setTotalPrice("0.00");
-};
-
-// যখন প্রোডাক্ট নেম সিলেক্ট হবে
-const handleProductNameChange = (val) => {
-  console.log("Product name changed:", val);
-  if (!val) {
+  // When company changes, reset product selection and fields
+  useEffect(() => {
     setSelectedProductName(null);
     setSelectedPartNumber(null);
     setCurrentStock(0);
+    setSaleQuantity("");
     setSaleMRP("");
     setPrice("");
     setPercentage("");
     setTotalPrice("0.00");
-    setSaleQuantity("")
-  } else {
-    setSelectedProductName(val);
+  }, [selectedCompany]);
 
-    const prod = filteredProducts.find((p) => p.id === val.value);
-    console.log("Found product:", prod);
-    if (prod) {
-      // Set corresponding part number
-      setSelectedPartNumber({ label: prod.part_no, value: prod.part_no });
-      
-      // Set all product data
-      setProductData(prod);
-    }
-  }
-};
+  // Debug version with console logs
 
-// যখন পার্ট নাম্বার সিলেক্ট হবে
-const handlePartNumberChange = (val) => {
-  console.log("Part number changed:", val);
-  if (!val) {
-    setSelectedPartNumber(null);
-    setSelectedProductName(null);
-    setCurrentStock(0);
-    setSaleMRP("");
-    setPrice("");
+  // Common function to set product data
+  const setProductData = (product) => {
+    if (!product) return;
+
+    // Find stock data by matching product ID
+    const stockItem = stockList.find((s) => s.product?.id === product.id);
+    const stockQty = stockItem ? stockItem.current_stock_quantity : 0;
+    setCurrentStock(stockQty);
+
+    // Set MRP from product_mrp
+    const mrpValue = parseFloat(product.product_mrp || 0).toFixed(2);
+    setSaleMRP(mrpValue);
+
+    setSaleQuantity("");
+
+    // Reset percentage to empty
     setPercentage("");
+
+    // Calculate initial price from product_bdt (without percentage)
+    const basePrice = parseFloat(product.product_bdt || 0);
+    setPrice(basePrice.toFixed(2));
+
+    // Reset total price
     setTotalPrice("0.00");
-    setSaleQuantity("")
-  } else {
-    setSelectedPartNumber(val);
-
-    const prod = filteredProducts.find((p) => p.part_no === val.value);
-    console.log("Found product by part number:", prod);
-    if (prod) {
-      // Set corresponding product name
-      setSelectedProductName({ label: prod.product_name, value: prod.id });
-      
-      // Set all product data
-      setProductData(prod);
-    }
-  }
-};
-
-// percentage or saleQuantity change হলে price আর totalPrice calculate করো
-useEffect(() => {
-  console.log("useEffect triggered - percentage:", percentage, "saleQuantity:", saleQuantity);
-  if (!selectedProductName) {
-    console.log("No product selected");
-    return;
-  }
-
-  const prod = filteredProducts.find((p) => p.id === selectedProductName.value);
-  if (!prod) {
-    console.log("Product not found in filteredProducts");
-    return;
-  }
-
-  const basePrice = parseFloat(prod.product_bdt || 0);
-  const perc = parseFloat(percentage) || 0;
-  const qty = parseInt(saleQuantity) || 0;
-  
-  console.log("Base price:", basePrice, "Percentage:", perc, "Quantity:", qty);
-
-  // Calculate price with percentage
-  const priceWithPerc = basePrice + (basePrice * perc) / 100;
-  console.log("Price with percentage:", priceWithPerc);
-  setPrice(priceWithPerc.toFixed(2));
-
-  // Calculate total price only if quantity is provided
-  if (qty > 0) {
-    const tPrice = priceWithPerc * qty;
-    console.log("Total price:", tPrice);
-    setTotalPrice(tPrice.toFixed(2));
-  } else {
-    console.log("No quantity provided, setting total to 0");
-    setTotalPrice("0.00");
-  }
-}, [percentage, saleQuantity, selectedProductName, filteredProducts]);
-
-
-// Add product to table
-const addProduct = () => {
-  // Check required fields
-  if (!selectedProductName) {
-    toast.error("Please select a product");
-    return;
-  }
-  
-  if (!saleQuantity || saleQuantity <= 0) {
-    toast.error("Please enter a valid sale quantity");
-    return;
-  }
-  
-  if (!price || parseFloat(price) <= 0) {
-    toast.error("Price is required");
-    return;
-  }
-
-  // Check if product already exists in the table
-  const existingProduct = addedProducts.find(p => p.id === selectedProductName.value);
-  if (existingProduct) {
-    toast.error("This product is already added to the list");
-    return;
-  }
-
-  // Check if sale quantity exceeds current stock
-  if (parseInt(saleQuantity) > parseInt(currentStock)) {
-    toast.error(`Sale quantity cannot exceed current stock (${currentStock})`);
-    return;
-  }
-
-  const newProd = {
-    id: selectedProductName.value,
-    productName: selectedProductName.label,
-    partNumber: selectedPartNumber ? selectedPartNumber.value : "",
-    currentStock: parseInt(currentStock),
-    saleQuantity: parseInt(saleQuantity),
-    saleMRP: parseFloat(saleMRP), // MRP field
-    price: parseFloat(price), // Price after percentage
-    percentage: parseFloat(percentage) || 0,
-    totalPrice: parseFloat(totalPrice),
   };
 
-  setAddedProducts((prev) => [...prev, newProd]);
-  
-  toast.success("Product added successfully");
+  const handleProductNameChange = (val) => {
+    if (!val) {
+      setSelectedProductName(null);
+      setSelectedPartNumber(null);
+      setCurrentStock(0);
+      setSaleMRP("");
+      setPrice("");
+      setPercentage("");
+      setTotalPrice("0.00");
+      setSaleQuantity("");
+    } else {
+      setSelectedProductName(val);
 
-  // Reset product fields but keep company
-  setSelectedProductName(null);
-  setSelectedPartNumber(null);
-  setCurrentStock(0);
-  setSaleQuantity("");
-  setSaleMRP("");
-  setPrice("");
-  setPercentage("");
-  setTotalPrice("0.00");
-};
+      const prod = filteredProducts.find((p) => p.id === val.value);
+      if (prod) {
+        // Set corresponding part number
+        setSelectedPartNumber({ label: prod.part_no, value: prod.part_no });
 
-// Optional: Function to check if add button should be disabled
-const isAddButtonDisabled = () => {
-  return !selectedProductName || !saleQuantity || saleQuantity <= 0 || !price || parseFloat(price) <= 0;
-};
+        // Set all product data
+        setProductData(prod);
+      }
+    }
+  };
+
+  const handlePartNumberChange = (val) => {
+    if (!val) {
+      setSelectedPartNumber(null);
+      setSelectedProductName(null);
+      setCurrentStock(0);
+      setSaleMRP("");
+      setPrice("");
+      setPercentage("");
+      setTotalPrice("0.00");
+      setSaleQuantity("");
+    } else {
+      setSelectedPartNumber(val);
+
+      const prod = filteredProducts.find((p) => p.part_no === val.value);
+      console.log("Found product by part number:", prod);
+      if (prod) {
+        // Set corresponding product name
+        setSelectedProductName({ label: prod.product_name, value: prod.id });
+
+        // Set all product data
+        setProductData(prod);
+      }
+    }
+  };
+
+  useEffect(() => {
+    console.log(
+      "useEffect triggered - percentage:",
+      percentage,
+      "saleQuantity:",
+      saleQuantity
+    );
+    if (!selectedProductName) {
+      console.log("No product selected");
+      return;
+    }
+
+    const prod = filteredProducts.find(
+      (p) => p.id === selectedProductName.value
+    );
+    if (!prod) {
+      console.log("Product not found in filteredProducts");
+      return;
+    }
+
+    const basePrice = parseFloat(prod.product_bdt || 0);
+    const perc = parseFloat(percentage) || 0;
+    const qty = parseInt(saleQuantity) || 0;
+
+    console.log(
+      "Base price:",
+      basePrice,
+      "Percentage:",
+      perc,
+      "Quantity:",
+      qty
+    );
+
+    const priceWithPerc = basePrice + (basePrice * perc) / 100;
+    console.log("Price with percentage:", priceWithPerc);
+    setPrice(priceWithPerc.toFixed(2));
+
+    if (qty > 0) {
+      const tPrice = priceWithPerc * qty;
+      console.log("Total price:", tPrice);
+      setTotalPrice(tPrice.toFixed(2));
+    } else {
+      console.log("No quantity provided, setting total to 0");
+      setTotalPrice("0.00");
+    }
+  }, [percentage, saleQuantity, selectedProductName, filteredProducts]);
+
+  // Add product to table
+  const addProduct = () => {
+    if (!selectedProductName) {
+      toast.error("Please select a product");
+      return;
+    }
+
+    if (!saleQuantity || saleQuantity <= 0) {
+      toast.error("Please enter a valid sale quantity");
+      return;
+    }
+
+    if (!price || parseFloat(price) <= 0) {
+      toast.error("Price is required");
+      return;
+    }
+
+    const existingProduct = addedProducts.find(
+      (p) => p.id === selectedProductName.value
+    );
+    if (existingProduct) {
+      toast.error("This product is already added to the list");
+      return;
+    }
+
+    if (parseInt(saleQuantity) > parseInt(currentStock)) {
+      toast.error(
+        `Sale quantity cannot exceed current stock (${currentStock})`
+      );
+      return;
+    }
+
+    const newProd = {
+      id: selectedProductName.value,
+      productName: selectedProductName.label,
+      partNumber: selectedPartNumber ? selectedPartNumber.value : "",
+      currentStock: parseInt(currentStock),
+      saleQuantity: parseInt(saleQuantity),
+      saleMRP: parseFloat(saleMRP),
+      price: parseFloat(price),
+      percentage: parseFloat(percentage) || 0,
+      totalPrice: parseFloat(totalPrice),
+    };
+
+    setAddedProducts((prev) => [...prev, newProd]);
+
+    toast.success("Product added successfully");
+
+    // Reset product fields but keep company
+    setSelectedProductName(null);
+    setSelectedPartNumber(null);
+    setCurrentStock(0);
+    setSaleQuantity("");
+    setSaleMRP("");
+    setPrice("");
+    setPercentage("");
+    setTotalPrice("0.00");
+  };
 
   // Remove product from table
   const removeProduct = (idx) => {
     setAddedProducts((prev) => prev.filter((_, i) => i !== idx));
   };
 
-// Calculate totals when products or discount change
   useEffect(() => {
     const total = addedProducts.reduce(
       (acc, p) => acc + parseFloat(p.totalPrice),
@@ -611,91 +608,104 @@ const isAddButtonDisabled = () => {
       return;
     }
 
-    if (payments.length === 0) {
-      toast.error("Please add at least one payment");
-      return;
-    }
-
     try {
-      const totalPaid = payments.reduce(
-        (sum, payment) => sum + parseFloat(payment.paidAmount || 0),
-        0
-      );
-
       const payload = {
-        invoice_no: "", // Leave empty if auto-generated by backend
         customer_id: selectedCustomer.value,
-        company_name: selectedCompany ? selectedCompany.label : null, // or .value if company is a FK
+        company_name: selectedCompany ? selectedCompany.label : "",
         sale_date: saleDate,
         total_amount: parseFloat(totalAmount),
         discount_amount: parseFloat(discountAmount) || 0,
         total_payable_amount: parseFloat(totalPayableAmount),
-        total_paid_amount: totalPaid,
 
+        // Products data - matches SaleProduct model
         products: addedProducts.map((product) => ({
-          product: product.id,
+          product_id: product.id,
           part_no: product.partNumber,
           sale_quantity: parseInt(product.saleQuantity),
-          sale_price: parseFloat(product.salePrice),
+          sale_price: parseFloat(product.price),
           percentage: parseFloat(product.percentage) || 0,
           sale_price_with_percentage: parseFloat(
-            product.salePriceWithPercentage
-          ),
+            product.price * (1 + (product.percentage || 0) / 100)
+          ).toFixed(2),
           total_price: parseFloat(product.totalPrice),
         })),
 
+        // Payments data - matches SalePayment model
         payments: payments.map((payment) => ({
           payment_mode: payment.paymentMode,
-          bank_name: payment.bankName || "",
-          account_no: payment.accountNo || "",
-          cheque_no: payment.chequeNo || "",
+          bank_name: payment.bankName || null,
+          account_no: payment.accountNo || null,
+          cheque_no: payment.chequeNo || null,
           paid_amount: parseFloat(payment.paidAmount),
-          remarks: payment.remarks || "",
+          remarks: payment.remarks || null,
         })),
       };
 
+      console.log("Submitting payload:", JSON.stringify(payload, null, 2));
+
       const response = await axiosInstance.post("/sales/", payload);
-      console.log("Sale submitted:", response.data);
-      toast.success("Sale submitted successfully!");
+      toast.success("Sale created successfully!");
 
-      // Optional: refresh stock after successful sale
-      try {
-        const stockRes = await axiosInstance.get("/stocks/");
-        setStockList(stockRes.data);
-      } catch (stockErr) {
-        console.error("Stock reload failed:", stockErr);
-        toast.error("Failed to reload stock");
-      }
-
-      // Reset everything
-      setSelectedCustomer(null);
-      setCustomerData({
-        customer_name: "",
-        district: "",
-        customer_type: "",
-        shop_name: "",
-        phone1: "",
-        phone2: "",
-        email: "",
-        address: "",
-        date_of_birth: "",
-        nid_no: "",
-        courier_name: "",
-        remarks: "",
-        previous_due_amount: "",
-      });
-      setSelectedCompany(null);
-      setSaleDate("");
-      setTotalAmount("");
-      setDiscountAmount("");
-      setTotalPayableAmount("");
-      setAddedProducts([]);
-      setPayments([]);
-      setTotalPaidAmount("");
+      // Reset form
+      resetForm();
     } catch (error) {
-      console.error("Sale submission failed:", error);
-      toast.error("Failed to submit sale.");
+      console.error("Submission error:", error.response?.data);
+
+      if (error.response?.data) {
+        if (error.response.data.products) {
+          error.response.data.products.forEach((err, index) => {
+            if (err.product) {
+              toast.error(`Product ${index + 1}: ${err.product.join(" ")}`);
+            }
+          });
+        } else {
+          for (const [field, errors] of Object.entries(error.response.data)) {
+            toast.error(
+              `${field}: ${Array.isArray(errors) ? errors.join(" ") : errors}`
+            );
+          }
+        }
+      } else {
+        toast.error("Failed to submit sale. Please check console for details.");
+      }
     }
+  };
+
+  // Reset form function
+  const resetForm = () => {
+    setSelectedCustomer(null);
+    setCustomerData({
+      customer_name: "",
+      district: "",
+      customer_type: "",
+      shop_name: "",
+      phone1: "",
+      phone2: "",
+      email: "",
+      address: "",
+      date_of_birth: "",
+      nid_no: "",
+      courier_name: "",
+      remarks: "",
+      previous_due_amount: "",
+    });
+    setSelectedCompany(null);
+    setSelectedProductName(null);
+    setSelectedPartNumber(null);
+    setSaleDate(new Date().toISOString().split("T")[0]);
+    setAddedProducts([]);
+    setTotalAmount(0);
+    setDiscountAmount("");
+    setTotalPayableAmount(0);
+    setPayments([]);
+    setTotalPaidAmount(0);
+    setPaymentData({
+      paymentMode: "",
+      bankName: "",
+      accountNo: "",
+      chequeNo: "",
+      paidAmount: "",
+    });
   };
 
   return (
@@ -1030,23 +1040,18 @@ const isAddButtonDisabled = () => {
             </div>
 
             {/* Add Button */}
-   
-<div className="flex items-end">
-  <button
-    className={`px-4 py-2 text-sm text-white rounded ${
-      isAddButtonDisabled() 
-        ? 'bg-gray-400 cursor-not-allowed' 
-        : 'bg-sky-800 hover:bg-sky-700'
-    }`}
-    onClick={(e) => {
-      e.preventDefault();
-      addProduct();
-    }}
-    disabled={isAddButtonDisabled()}
-  >
-    Add Product
-  </button>
-</div>
+
+            <div className="flex items-end">
+              <button
+                className="px-4 py-2 text-sm text-white rounded bg-sky-800 hover:bg-sky-700"
+                onClick={(e) => {
+                  e.preventDefault();
+                  addProduct();
+                }}
+              >
+                Add Product
+              </button>
+            </div>
           </div>
         </section>
 
@@ -1062,7 +1067,7 @@ const isAddButtonDisabled = () => {
                   <th className="border px-2 py-1">Sale Qty</th>
                   <th className="border px-2 py-1">Sale Price</th>
                   <th className="border px-2 py-1">Percentage</th>
-                 
+
                   <th className="border px-2 py-1">Total Price</th>
                   <th className="border px-2 py-1">Remove</th>
                 </tr>
@@ -1070,14 +1075,28 @@ const isAddButtonDisabled = () => {
               <tbody>
                 {addedProducts.map((prod, idx) => (
                   <tr key={idx}>
-                    <td className="border text-center px-2 py-1">{prod.productName}</td>
-                    <td className="border text-center px-2 py-1">{prod.partNumber}</td>
-                    <td className="border text-center px-2 py-1">{prod.currentStock}</td>
-                    <td className="border text-center px-2 py-1">{prod.saleQuantity}</td>
-                    <td className="border text-center px-2 py-1">{prod.price}</td>
-                    <td className="border text-center px-2 py-1">{prod.percentage}</td>
-                 
-                    <td className="border text-center px-2 py-1">{prod.totalPrice}</td>
+                    <td className="border text-center px-2 py-1">
+                      {prod.productName}
+                    </td>
+                    <td className="border text-center px-2 py-1">
+                      {prod.partNumber}
+                    </td>
+                    <td className="border text-center px-2 py-1">
+                      {prod.currentStock}
+                    </td>
+                    <td className="border text-center px-2 py-1">
+                      {prod.saleQuantity}
+                    </td>
+                    <td className="border text-center px-2 py-1">
+                      {prod.price}
+                    </td>
+                    <td className="border text-center px-2 py-1">
+                      {prod.percentage}
+                    </td>
+
+                    <td className="border text-center px-2 py-1">
+                      {prod.totalPrice}
+                    </td>
                     <td className="border  px-2 py-1 text-center">
                       <button
                         onClick={() => removeProduct(idx)}
