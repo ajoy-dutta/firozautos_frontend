@@ -1,0 +1,1254 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Select from "react-select";
+import axiosInstance from "../components/AxiosInstance";
+import { toast } from "react-hot-toast";
+
+export default function CustomerProductSale() {
+  // Custom styles for react-select with vertical centering
+  const customSelectStyles = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: "30px",
+      height: "30px",
+      fontSize: "0.875rem",
+      border: "1px solid #000000",
+      borderRadius: "0.275rem",
+      borderColor: state.isFocused ? "#000000" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 0 1px #000000" : "none",
+      // Remove default padding
+      paddingTop: "0px",
+      paddingBottom: "0px",
+      // Ensure flex alignment
+      display: "flex",
+      alignItems: "center",
+    }),
+
+    valueContainer: (base) => ({
+      ...base,
+      height: "30px",
+      padding: "0 6px",
+      display: "flex",
+      alignItems: "center",
+      flexWrap: "nowrap",
+    }),
+
+    placeholder: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#9ca3af",
+      margin: "0",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    singleValue: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#000000",
+      margin: "0",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    input: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      margin: "0",
+      padding: "0",
+      color: "#000000",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: "30px",
+      display: "flex",
+      alignItems: "center",
+    }),
+
+    indicatorSeparator: (base) => ({
+      ...base,
+      backgroundColor: "#d1d5db",
+      height: "16px", // Shorter separator
+      marginTop: "auto",
+      marginBottom: "auto",
+    }),
+
+    dropdownIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      "&:hover": {
+        color: "#000000",
+      },
+    }),
+
+    clearIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      "&:hover": {
+        color: "#000000",
+      },
+    }),
+
+    option: (base, state) => ({
+      ...base,
+      fontSize: "0.875rem",
+      backgroundColor: state.isSelected
+        ? "#000000"
+        : state.isFocused
+        ? "#f3f4f6"
+        : "white",
+      color: state.isSelected ? "white" : "#000000",
+      "&:hover": {
+        backgroundColor: state.isSelected ? "#000000" : "#f3f4f6",
+      },
+    }),
+
+    menu: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+    }),
+
+    menuList: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+    }),
+  };
+
+  const [customers, setCustomers] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerData, setCustomerData] = useState({
+    customer_name: "",
+    district: "",
+    customer_type: "",
+    shop_name: "",
+    phone1: "",
+    phone2: "",
+    email: "",
+    address: "",
+    date_of_birth: "",
+    nid_no: "",
+    courier_name: "",
+    remarks: "",
+    previous_due_amount: "",
+  });
+
+  // Product section states
+  const [companyList, setCompanyList] = useState([]);
+  const [productList, setProductList] = useState([]);
+
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [selectedProductName, setSelectedProductName] = useState(null);
+  const [selectedPartNumber, setSelectedPartNumber] = useState(null);
+  const [stockList, setStockList] = useState([]);
+
+  const [saleDate, setSaleDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
+  const [currentStock, setCurrentStock] = useState(0);
+  const [saleQuantity, setSaleQuantity] = useState("");
+  const [salePrice, setSalePrice] = useState("");
+  const [percentage, setPercentage] = useState("");
+  const [salePriceWithPercentage, setSalePriceWithPercentage] =
+    useState("0.00");
+  const [totalPrice, setTotalPrice] = useState("0.00");
+
+  const [addedProducts, setAddedProducts] = useState([]);
+
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState("");
+  const [totalPayableAmount, setTotalPayableAmount] = useState(0);
+
+  // Fetch customers, companies and products on mount
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const res = await axiosInstance.get("/customers/");
+        setCustomers(res.data);
+      } catch (error) {
+        toast.error("Failed to load customers");
+      }
+    };
+
+    const fetchCompanies = async () => {
+      try {
+        const res = await axiosInstance.get("/companies/");
+        setCompanyList(res.data);
+      } catch (err) {
+        toast.error("Failed to load companies");
+      }
+    };
+
+    const fetchProducts = async () => {
+      try {
+        const res = await axiosInstance.get("/products/");
+        setProductList(res.data);
+      } catch (err) {
+        toast.error("Failed to load products");
+      }
+    };
+
+    fetchCustomers();
+    fetchCompanies();
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    const fetchStocks = async () => {
+      try {
+        const res = await axiosInstance.get("/stocks/");
+        setStockList(res.data);
+        console.log(stockList);
+      } catch (err) {
+        toast.error("Failed to load stock data");
+      }
+    };
+
+    fetchStocks();
+  }, []);
+
+  // Customer select options
+  const customerOptions = customers.map((c) => ({
+    label: c.customer_name,
+    value: c.id,
+    ...c,
+  }));
+
+  // Handle customer data change
+  const handleCustomerChange = (e) => {
+    const { name, value } = e.target;
+    setCustomerData((prev) => ({
+      ...prev,
+      [name]: value || "", // Ensure value is always a string
+    }));
+  };
+
+  // Handle customer select
+  const handleCustomerSelect = (selectedOption) => {
+    setSelectedCustomer(selectedOption);
+    if (selectedOption) {
+      // When a customer is selected, populate the form with their data
+      setCustomerData({
+        customer_name: selectedOption.customer_name || "",
+        district: selectedOption.district || "",
+        customer_type: selectedOption.customer_type || "",
+        shop_name: selectedOption.shop_name || "",
+        phone1: selectedOption.phone1 || "",
+        phone2: selectedOption.phone2 || "",
+        email: selectedOption.email || "",
+        address: selectedOption.address || "",
+        date_of_birth: selectedOption.date_of_birth || "",
+        nid_no: selectedOption.nid_no || "",
+        courier_name: selectedOption.courier_name || "",
+        remarks: selectedOption.remarks || "",
+        previous_due_amount: selectedOption.previous_due_amount || 0,
+      });
+    } else {
+      // Clear form when no customer is selected
+      setCustomerData({
+        customer_name: "",
+        district: "",
+        customer_type: "",
+        shop_name: "",
+        phone1: "",
+        phone2: "",
+        email: "",
+        address: "",
+        date_of_birth: "",
+        nid_no: "",
+        courier_name: "",
+        remarks: "",
+        previous_due_amount: "",
+      });
+    }
+  };
+  // Filter products by selected company
+  const filteredProducts = selectedCompany
+    ? productList.filter((p) => p.company === selectedCompany.value)
+    : [];
+
+  // Product name and part no options for selects
+  const productNameOptions = filteredProducts.map((p) => ({
+    label: p.product_name,
+    value: p.id,
+    part_no: p.part_no,
+    current_stock_quantity: p.current_stock_quantity || 0,
+  }));
+
+  const partNumberOptions = filteredProducts.map((p) => ({
+    label: p.part_no,
+    value: p.part_no,
+    product_id: p.id,
+    product_name: p.product_name,
+    current_stock_quantity: p.current_stock_quantity || 0,
+  }));
+
+  // When company changes, reset product selection and fields
+  useEffect(() => {
+    setSelectedProductName(null);
+    setSelectedPartNumber(null);
+    setCurrentStock(0);
+    setSaleQuantity("");
+    setSalePrice("");
+    setPercentage("");
+    setSalePriceWithPercentage("0.00");
+    setTotalPrice("0.00");
+  }, [selectedCompany]);
+
+  // যখন প্রোডাক্ট সিলেক্ট হবে
+  const handleProductNameChange = (val) => {
+    if (!val) {
+      setSelectedProductName(null);
+      setSelectedPartNumber(null);
+      setCurrentStock(0);
+      setSaleMRP("");
+      setPrice("");
+      setPercentage("");
+      setTotalPrice("0.00");
+    } else {
+      setSelectedProductName(val);
+
+      const prod = filteredProducts.find((p) => p.id === val.value);
+      if (prod) {
+        setSelectedPartNumber({ label: prod.part_no, value: prod.part_no });
+
+        const stockItem = stockList.find((s) => s.product?.id === prod.id);
+        setCurrentStock(stockItem ? stockItem.current_stock_quantity : 0);
+
+        setSaleMRP(parseFloat(prod.product_mrp).toFixed(2)); // product_mrp থেকে Sale Price (MRP)
+        setPercentage("0");
+
+        // price এর বেসিস product_bdt
+        setPrice(parseFloat(prod.product_bdt).toFixed(2));
+        setTotalPrice("0.00");
+      }
+    }
+  };
+
+  // percentage or saleQuantity change হলে price আর totalPrice calculate করো
+  useEffect(() => {
+    const basePrice = parseFloat(price) || 0; // product_bdt থেকে price
+    const perc = parseFloat(percentage) || 0;
+    const qty = parseInt(saleQuantity) || 0;
+
+    const priceWithPerc = basePrice + (basePrice * perc) / 100;
+    setPrice(priceWithPerc.toFixed(2));
+
+    const tPrice = priceWithPerc * qty;
+    setTotalPrice(tPrice.toFixed(2));
+  }, [percentage, saleQuantity]);
+
+  // saleMRP state
+  const [saleMRP, setSaleMRP] = useState("");
+
+  // price state
+  const [price, setPrice] = useState("");
+
+  const handlePartNumberChange = (val) => {
+    if (!val) {
+      setSelectedPartNumber(null);
+      setSelectedProductName(null);
+      setCurrentStock(0);
+    } else {
+      setSelectedPartNumber(val);
+
+      const prod = filteredProducts.find((p) => p.part_no === val.value);
+      if (prod) {
+        setSelectedProductName({ label: prod.product_name, value: prod.id });
+
+        // Find stock data by matching product ID
+        const stockItem = stockList.find((s) => s.product?.id === prod.id);
+
+        setCurrentStock(stockItem ? stockItem.current_stock_quantity : 0);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const sPrice = parseFloat(salePrice) || 0;
+    const perc = parseFloat(percentage) || 0;
+    const qty = parseInt(saleQuantity) || 0;
+
+    const priceWithPerc = sPrice + (sPrice * perc) / 100;
+    setSalePriceWithPercentage(priceWithPerc.toFixed(2));
+
+    const tPrice = priceWithPerc * qty;
+    setTotalPrice(tPrice.toFixed(2));
+  }, [salePrice, percentage, saleQuantity]);
+
+  // Calculate totals when products or discount change
+  useEffect(() => {
+    const total = addedProducts.reduce(
+      (acc, p) => acc + parseFloat(p.totalPrice),
+      0
+    );
+    setTotalAmount(total);
+
+    const discount = parseFloat(discountAmount) || 0;
+    const payable = total - discount;
+    setTotalPayableAmount(payable > 0 ? payable : 0);
+  }, [addedProducts, discountAmount]);
+
+  // Add product to table
+  const addProduct = () => {
+    if (!selectedProductName || !saleQuantity || !salePrice) {
+      toast.error("Please select product and enter quantity & price");
+      return;
+    }
+
+    const newProd = {
+      id: selectedProductName.value,
+      productName: selectedProductName.label,
+      partNumber: selectedPartNumber ? selectedPartNumber.value : "",
+      currentStock,
+      saleQuantity,
+      salePrice,
+      percentage,
+      salePriceWithPercentage,
+      totalPrice,
+    };
+
+    setAddedProducts((prev) => [...prev, newProd]);
+
+    // Reset product fields but keep company
+    setSelectedProductName(null);
+    setSelectedPartNumber(null);
+    setCurrentStock(0);
+    setSaleQuantity("");
+    setSalePrice("");
+    setPercentage("");
+    setSalePriceWithPercentage("0.00");
+    setTotalPrice("0.00");
+  };
+
+  // Remove product from table
+  const removeProduct = (idx) => {
+    setAddedProducts((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const [paymentModes, setPaymentModes] = useState([]);
+  const [banks, setBanks] = useState([]);
+  const [paymentData, setPaymentData] = useState({
+    paymentMode: "",
+    bankName: "",
+    accountNo: "",
+    chequeNo: "",
+    paidAmount: "",
+  });
+  const [addedPayments, setAddedPayments] = useState([]);
+
+  const [payments, setPayments] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [pmRes, bankRes] = await Promise.all([
+          axiosInstance.get("/payment-mode/"),
+          axiosInstance.get("/banks/"),
+        ]);
+        setPaymentModes(
+          pmRes.data.map((pm) => ({
+            value: pm.id,
+            label: pm.name,
+          }))
+        );
+        setBanks(
+          bankRes.data.map((bank) => ({
+            value: bank.id,
+            label: bank.name,
+          }))
+        );
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load payment data");
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handlePaymentChange = (name, value) => {
+    setPaymentData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddPayment = () => {
+    if (!paymentData.paymentMode || !paymentData.paidAmount) {
+      toast.error("Payment Mode and Paid Amount are required");
+      return;
+    }
+
+    setPayments((prev) => [...prev, paymentData]);
+
+    // reset paymentData
+    setPaymentData({
+      paymentMode: "",
+      bankName: "",
+      accountNo: "",
+      chequeNo: "",
+      paidAmount: "",
+    });
+  };
+
+  const selectedPaymentModeLabel = paymentModes.find(
+    (pm) => pm.value === paymentData.paymentMode
+  )?.label;
+
+  const isCheque = selectedPaymentModeLabel === "Cheque";
+  const isBank = selectedPaymentModeLabel === "Bank";
+
+  const handleRemovePayment = (index) => {
+    setPayments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const [totalPaidAmount, setTotalPaidAmount] = useState(0);
+
+  useEffect(() => {
+    const total = payments.reduce(
+      (sum, payment) => sum + parseFloat(payment.paidAmount || 0),
+      0
+    );
+    setTotalPaidAmount(total);
+  }, [payments]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate required fields
+    if (!selectedCustomer) {
+      toast.error("Please select a customer");
+      return;
+    }
+
+    if (addedProducts.length === 0) {
+      toast.error("Please add at least one product");
+      return;
+    }
+
+    if (payments.length === 0) {
+      toast.error("Please add at least one payment");
+      return;
+    }
+
+    try {
+      const totalPaid = payments.reduce(
+        (sum, payment) => sum + parseFloat(payment.paidAmount || 0),
+        0
+      );
+
+      const payload = {
+        invoice_no: "", // Leave empty if auto-generated by backend
+        customer_id: selectedCustomer.value,
+        company_name: selectedCompany ? selectedCompany.label : null, // or .value if company is a FK
+        sale_date: saleDate,
+        total_amount: parseFloat(totalAmount),
+        discount_amount: parseFloat(discountAmount) || 0,
+        total_payable_amount: parseFloat(totalPayableAmount),
+        total_paid_amount: totalPaid,
+
+        products: addedProducts.map((product) => ({
+          product: product.id,
+          part_no: product.partNumber,
+          sale_quantity: parseInt(product.saleQuantity),
+          sale_price: parseFloat(product.salePrice),
+          percentage: parseFloat(product.percentage) || 0,
+          sale_price_with_percentage: parseFloat(
+            product.salePriceWithPercentage
+          ),
+          total_price: parseFloat(product.totalPrice),
+        })),
+
+        payments: payments.map((payment) => ({
+          payment_mode: payment.paymentMode,
+          bank_name: payment.bankName || "",
+          account_no: payment.accountNo || "",
+          cheque_no: payment.chequeNo || "",
+          paid_amount: parseFloat(payment.paidAmount),
+          remarks: payment.remarks || "",
+        })),
+      };
+
+      const response = await axiosInstance.post("/sales/", payload);
+      console.log("Sale submitted:", response.data);
+      toast.success("Sale submitted successfully!");
+
+      // Optional: refresh stock after successful sale
+      try {
+        const stockRes = await axiosInstance.get("/stocks/");
+        setStockList(stockRes.data);
+      } catch (stockErr) {
+        console.error("Stock reload failed:", stockErr);
+        toast.error("Failed to reload stock");
+      }
+
+      // Reset everything
+      setSelectedCustomer(null);
+      setCustomerData({
+        customer_name: "",
+        district: "",
+        customer_type: "",
+        shop_name: "",
+        phone1: "",
+        phone2: "",
+        email: "",
+        address: "",
+        date_of_birth: "",
+        nid_no: "",
+        courier_name: "",
+        remarks: "",
+        previous_due_amount: "",
+      });
+      setSelectedCompany(null);
+      setSaleDate("");
+      setTotalAmount("");
+      setDiscountAmount("");
+      setTotalPayableAmount("");
+      setAddedProducts([]);
+      setPayments([]);
+      setTotalPaidAmount("");
+    } catch (error) {
+      console.error("Sale submission failed:", error);
+      toast.error("Failed to submit sale.");
+    }
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto p-4 ">
+      {/* Customer Section */}
+      <section>
+        <h2 className="font-semibold text-lg my-2">Customer Details</h2>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+          <div>
+            <label className="block mb-1 font-medium text-sm">
+              Select Customer
+            </label>
+            <Select
+              options={customerOptions}
+              value={selectedCustomer}
+              onChange={handleCustomerSelect}
+              isClearable
+              placeholder="Select..."
+              className="text-sm"
+              styles={customSelectStyles}
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-sm">
+              Customer Name *
+            </label>
+            <input
+              type="text"
+              name="customer_name"
+              value={customerData.customer_name}
+              onChange={handleCustomerChange}
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Customer Name..."
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-sm">District</label>
+            <input
+              type="text"
+              name="district"
+              value={customerData.district}
+              onChange={handleCustomerChange}
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="District..."
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-sm">
+              Customer Type *
+            </label>
+            <input
+              type="text"
+              name="customer_type"
+              value={customerData.customer_type}
+              onChange={handleCustomerChange}
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Type..."
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-sm">
+              Shop Name *
+            </label>
+            <input
+              type="text"
+              name="shop_name"
+              value={customerData.shop_name}
+              onChange={handleCustomerChange}
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Shop Name..."
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-sm">Phone 1 *</label>
+            <input
+              type="text"
+              name="phone1"
+              value={customerData.phone1}
+              onChange={handleCustomerChange}
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Phone..."
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-sm">Phone 2</label>
+            <input
+              type="text"
+              name="phone2"
+              value={customerData.phone2}
+              onChange={handleCustomerChange}
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Alt phone..."
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-sm">E-mail Id</label>
+            <input
+              type="email"
+              name="email"
+              value={customerData.email}
+              onChange={handleCustomerChange}
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Email..."
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-sm">Address *</label>
+            <input
+              type="text"
+              name="address"
+              value={customerData.address}
+              onChange={handleCustomerChange}
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Address..."
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-sm">
+              Date of Birth
+            </label>
+            <input
+              type="date"
+              name="date_of_birth"
+              value={customerData.date_of_birth}
+              onChange={handleCustomerChange}
+              className="w-full border rounded px-2 py-1 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-sm">NID No.</label>
+            <input
+              type="text"
+              name="nid_no"
+              value={customerData.nid_no}
+              onChange={handleCustomerChange}
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="NID number..."
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-sm">
+              Courier Name
+            </label>
+            <input
+              type="text"
+              name="courier_name"
+              value={customerData.courier_name}
+              onChange={handleCustomerChange}
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Courier Name..."
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium text-sm">Remarks</label>
+            <input
+              name="remarks"
+              value={customerData.remarks}
+              onChange={handleCustomerChange}
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="Remarks..."
+              rows="2"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Product Sale Section */}
+      <section>
+        <h2 className="font-semibold text-lg my-2">Product Sale</h2>
+
+        <section>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-2 mb-2">
+            {/* Sale Date */}
+            <div>
+              <label className="block text-sm mb-1 font-medium">
+                Sale Date *
+              </label>
+              <input
+                type="date"
+                value={saleDate}
+                onChange={(e) => setSaleDate(e.target.value)}
+                className="w-full text-sm border px-2 py-1 rounded"
+                required
+              />
+            </div>
+
+            {/* Company */}
+            <div>
+              <label className="block mb-1 font-medium text-sm">
+                Company Name *
+              </label>
+              <Select
+                options={companyList.map((c) => ({
+                  label: c.company_name,
+                  value: c.id,
+                }))}
+                value={selectedCompany}
+                onChange={setSelectedCompany}
+                isClearable
+                placeholder="Select company"
+                className="text-sm"
+                styles={customSelectStyles}
+              />
+            </div>
+
+            {/* Product Name */}
+            <div>
+              <label className="block mb-1 font-medium text-sm">
+                Product Name *
+              </label>
+              <Select
+                options={productNameOptions}
+                value={selectedProductName}
+                onChange={handleProductNameChange}
+                isClearable
+                placeholder="Select product name"
+                isDisabled={!selectedCompany}
+                className="text-sm"
+                styles={customSelectStyles}
+              />
+            </div>
+
+            {/* Part Number */}
+            <div>
+              <label className="block mb-1 font-medium text-sm">
+                Part Number *
+              </label>
+              <Select
+                options={partNumberOptions}
+                value={selectedPartNumber}
+                onChange={handlePartNumberChange}
+                isClearable
+                placeholder="Select part number"
+                isDisabled={!selectedCompany}
+                className="text-sm"
+                styles={customSelectStyles}
+              />
+            </div>
+
+            {/* Current Stock */}
+            <div>
+              <label className="block mb-1 font-medium text-sm">
+                Current Stock Quantity
+              </label>
+              <input
+                type="number"
+                value={currentStock}
+                disabled
+                placeholder="Current stock will appear here"
+                className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              />
+            </div>
+
+            {/* Sale Quantity */}
+            <div>
+              <label className="block mb-1 font-medium text-sm">
+                Sale Quantity *
+              </label>
+              <input
+                type="number"
+                value={saleQuantity}
+                onChange={(e) => setSaleQuantity(e.target.value)}
+                className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+                placeholder="Enter sale quantity"
+              />
+            </div>
+
+            {/* MRP (product_mrp) */}
+            <div>
+              <label className="block mb-1 font-medium text-sm">MRP</label>
+              <input
+                type="number"
+                value={saleMRP} // this is MRP from backend
+                readOnly
+                className="w-full border rounded px-2 py-1 text-sm bg-gray-100"
+              />
+            </div>
+
+            {/* Percentage (user input) */}
+            <div>
+              <label className="block mb-1 font-medium text-sm">
+                Percentage *
+              </label>
+              <input
+                type="number"
+                value={percentage}
+                onChange={(e) => setPercentage(e.target.value)}
+                className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+                placeholder="Enter percentage"
+              />
+            </div>
+
+            {/* Price (product_bdt) */}
+            <div>
+              <label className="block mb-1 font-medium text-sm">Price</label>
+              <input
+                type="number"
+                value={price}
+                readOnly
+                className="w-full border rounded px-2 py-1 text-sm bg-gray-100"
+              />
+            </div>
+
+            {/* Total Price */}
+            <div>
+              <label className="block mb-1 font-medium text-sm">
+                Total Price
+              </label>
+              <input
+                type="text"
+                value={totalPrice}
+                readOnly
+                className="w-full border rounded px-2 py-1 text-sm bg-gray-100"
+              />
+            </div>
+
+            {/* Add Button */}
+            <div className="flex items-end">
+              <button
+                className="px-4 py-2 bg-sky-800 text-sm text-white rounded hover:bg-sky-700"
+                onClick={(e) => {
+                  e.preventDefault();
+                  addProduct();
+                }}
+                disabled={!selectedCompany}
+              >
+                Add Product
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Product Table */}
+        {addedProducts.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-300">
+              <thead className="bg-gray-200">
+                <tr>
+                  <th className="border px-2 py-1">Product Name</th>
+                  <th className="border px-2 py-1">Part Number</th>
+                  <th className="border px-2 py-1">Current Stock</th>
+                  <th className="border px-2 py-1">Sale Qty</th>
+                  <th className="border px-2 py-1">Sale Price</th>
+                  <th className="border px-2 py-1">Percentage</th>
+                  <th className="border px-2 py-1">Price w/ %</th>
+                  <th className="border px-2 py-1">Total Price</th>
+                  <th className="border px-2 py-1">Remove</th>
+                </tr>
+              </thead>
+              <tbody>
+                {addedProducts.map((prod, idx) => (
+                  <tr key={idx}>
+                    <td className="border px-2 py-1">{prod.productName}</td>
+                    <td className="border px-2 py-1">{prod.partNumber}</td>
+                    <td className="border px-2 py-1">{prod.currentStock}</td>
+                    <td className="border px-2 py-1">{prod.saleQuantity}</td>
+                    <td className="border px-2 py-1">{prod.salePrice}</td>
+                    <td className="border px-2 py-1">{prod.percentage}</td>
+                    <td className="border px-2 py-1">
+                      {prod.salePriceWithPercentage}
+                    </td>
+                    <td className="border px-2 py-1">{prod.totalPrice}</td>
+                    <td className="border px-2 py-1 text-center">
+                      <button
+                        onClick={() => removeProduct(idx)}
+                        className="px-2 py-1 text-white bg-red-600 hover:bg-red-700 rounded text-xs"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Totals Section */}
+        <div className="mt-2 max-w-7xl mx-auto">
+          <div className="grid grid-cols-3 gap-2">
+            <div className="flex items-center flex-1">
+              <label className="block mb-1 font-medium text-sm">
+                Total Amount:
+              </label>
+              <input
+                type="text"
+                value={
+                  isNaN(Number(totalAmount))
+                    ? "0.00"
+                    : Number(totalAmount).toFixed(2)
+                }
+                readOnly
+                className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              />
+            </div>
+
+            <div className="flex items-center flex-1">
+              <label
+                htmlFor="discount"
+                className="block mb-1 font-medium text-sm"
+              >
+                Discount Amount:
+              </label>
+              <input
+                id="discount"
+                type="number"
+                min={0}
+                value={discountAmount}
+                onChange={(e) => setDiscountAmount(e.target.value)}
+                className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+                placeholder="0.00"
+              />
+            </div>
+
+            <div className="flex items-center flex-1">
+              <label className="block mb-1 font-medium text-sm">
+                Total Payable Amount:
+              </label>
+              <input
+                type="text"
+                value={
+                  isNaN(Number(totalPayableAmount))
+                    ? "0.00"
+                    : Number(totalPayableAmount).toFixed(2)
+                }
+                readOnly
+                className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="">
+        <h3 className="font-semibold text-lg my-2">Payment</h3>
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
+          {/* Payment Mode */}
+          <div>
+            <label className="block text-sm mb-1 font-medium">
+              Payment Mode*
+            </label>
+            <Select
+              options={paymentModes}
+              value={
+                paymentModes.find(
+                  (opt) => opt.value === paymentData.paymentMode
+                ) || null
+              }
+              onChange={(selected) =>
+                handlePaymentChange(
+                  "paymentMode",
+                  selected ? selected.value : ""
+                )
+              }
+              placeholder="Select"
+              className="text-sm"
+              styles={customSelectStyles}
+            />
+          </div>
+
+          {/* Bank Name */}
+          <div>
+            <label className="block text-sm mb-1 font-medium">Bank Name</label>
+            <Select
+              options={banks}
+              value={
+                banks.find((opt) => opt.value === paymentData.bankName) || null
+              }
+              onChange={(selected) =>
+                handlePaymentChange("bankName", selected ? selected.value : "")
+              }
+              placeholder="Select"
+              isClearable
+              isDisabled={!isBank}
+              className="text-sm"
+              styles={customSelectStyles}
+            />
+          </div>
+
+          {/* Account No */}
+          <div>
+            <label className="block text-sm mb-1 font-medium">Account No</label>
+            <input
+              type="text"
+              value={paymentData.accountNo}
+              onChange={(e) => handlePaymentChange("accountNo", e.target.value)}
+              disabled={!isBank}
+              className={`w-full border text-sm px-2 py-1 rounded ${
+                !isBank ? "bg-gray-100 text-gray-500" : ""
+              }`}
+              placeholder="Account No"
+            />
+          </div>
+
+          {/* Cheque No */}
+          <div>
+            <label className="block text-sm mb-1 font-medium">Cheque No</label>
+            <input
+              type="text"
+              value={paymentData.chequeNo}
+              onChange={(e) => handlePaymentChange("chequeNo", e.target.value)}
+              disabled={!isCheque}
+              className={`w-full border px-2 py-1 rounded ${
+                !isCheque ? "bg-gray-100 text-sm text-gray-400" : ""
+              }`}
+              placeholder="Cheque No"
+            />
+          </div>
+
+          {/* Paid Amount */}
+          <div>
+            <label className="block text-sm mb-1 font-medium">
+              Paid Amount*
+            </label>
+            <input
+              type="number"
+              value={paymentData.paidAmount}
+              onChange={(e) =>
+                handlePaymentChange("paidAmount", e.target.value)
+              }
+              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+              placeholder="0.00"
+            />
+          </div>
+
+          {/* Add Button */}
+          <div className="flex items-end justify-end">
+            <button
+              type="button"
+              onClick={handleAddPayment}
+              className="px-4 py-2 bg-sky-800 text-sm text-white rounded hover:bg-sky-700"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {payments.length > 0 && (
+        <div className="mt-2 overflow-x-auto">
+          <table className="min-w-full border text-center text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border px-2 py-1">#</th>
+                <th className="border px-2 py-1">Payment Mode</th>
+                <th className="border px-2 py-1">Bank Name</th>
+                <th className="border px-2 py-1">Account No</th>
+                <th className="border px-2 py-1">Cheque No</th>
+                <th className="border px-2 py-1">Paid Amount</th>
+                <th className="border px-2 py-1">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payments.map((pay, idx) => (
+                <tr key={idx}>
+                  <td className="border px-2 py-1">{idx + 1}</td>
+                  <td className="border px-2 py-1">
+                    {paymentModes.find((mode) => mode.value === pay.paymentMode)
+                      ?.label || "N/A"}
+                  </td>
+                  <td className="border px-2 py-1">
+                    {banks.find((bank) => bank.value === pay.bankName)?.label ||
+                      "N/A"}
+                  </td>
+                  <td className="border px-2 py-1">{pay.accountNo}</td>
+                  <td className="border px-2 py-1">{pay.chequeNo}</td>
+                  <td className="border px-2 py-1">
+                    {parseFloat(pay.paidAmount).toFixed(2)}
+                  </td>
+                  <td className="border px-2 py-1">
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePayment(idx)}
+                      className="px-2 py-1 text-white bg-red-600 hover:bg-red-700 rounded text-xs"
+                    >
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="flex items-center gap-2 mt-4">
+        <label className="block text-sm mb-1 font-medium">
+          Total Paid Amount:
+        </label>
+        <input
+          type="number"
+          value={
+            isNaN(Number(totalPaidAmount))
+              ? "0.00"
+              : Number(totalPaidAmount).toFixed(2)
+          }
+          readOnly
+          className="border rounded px-2 py-1 text-sm placeholder-gray-400"
+        />
+      </div>
+
+      <div className=" flex justify-center">
+        <button
+          onClick={handleSubmit}
+          className="px-6 py-2 text-sm bg-sky-800 text-white rounded hover:bg-sky-700"
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  );
+}
