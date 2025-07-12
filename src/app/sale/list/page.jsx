@@ -522,7 +522,15 @@ export default function SalesList() {
                         className="text-center cursor-pointer select-none"
                         onClick={() => toggleRow(sale.id)}
                       >
-                        {isExpanded ? "−" : "+"}
+                        {isExpanded ? (
+                          <span className="inline-block w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center font-bold text-xs">
+                            −
+                          </span>
+                        ) : (
+                          <span className="inline-block w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center font-bold text-xs">
+                            +
+                          </span>
+                        )}
                       </td>
                       <td className="max-w-[250px]">
                         <div className="font-medium">
@@ -911,80 +919,81 @@ export default function SalesList() {
             </form>
 
             <div className="mt-2">
-              <h4 className="font-semibold text-md mb-3">
+              {/* <h4 className="font-semibold text-md mb-3">
                 Previous Returns for This Sale
-              </h4>
+              </h4> */}
 
               <div className="overflow-x-auto">
-                <table className="table table-zebra text-sm w-full">
-                  <thead className="bg-sky-800 text-sm text-white">
-                    <tr>
-                      <th className="text-center">SL</th>
-                      <th className="text-center">Return Date</th>
-                      <th className="text-center">Product Name</th>
-                      <th className="text-center">Part No</th>
-                      <th className="text-center">Company</th>
-                      <th className="text-center">Sold Qty</th>
-                      <th className="text-center">Returned Qty</th>
-                      <th className="text-center">Returned Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {returnData
-                      .filter((item) =>
-                        returnModalSale?.products?.some(
-                          (product) => product.id === item.sale_product?.id
-                        )
-                      )
-                      .map((item, index) => (
-                        <tr key={item.id}>
-                          <td className="text-center">{index + 1}</td>
-                          <td className="text-center">
-                            {new Date(item.return_date).toLocaleString(
-                              "en-GB",
-                              {
-                                dateStyle: "short",
-                              }
-                            )}
-                          </td>
-                          <td className="text-center">
-                            {item.sale_product?.product?.product_name || "N/A"}
-                          </td>
-                          <td className="text-center">
-                            {item.sale_product?.part_no || "N/A"}
-                          </td>
-                          <td className="text-center">
-                            {item.sale_product?.product?.category_detail
-                              ?.company_detail?.company_name || "N/A"}
-                          </td>
-                          <td className="text-center">
-                            {item.sale_product?.sale_quantity || 0}
-                          </td>
-                          <td className="text-center">{item.quantity || 0}</td>
-                          <td className="text-center">
-                            {(
-                              parseFloat(item.sale_product?.sale_price || 0) *
-                              parseFloat(item.quantity || 0)
-                            ).toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                    {returnData.filter((item) =>
-                      returnModalSale?.products?.some(
-                        (product) => product.id === item.sale_product?.id
-                      )
-                    ).length === 0 && (
+                {/* Check if there's any return data matching this sale */}
+                {returnData?.some((item) =>
+                  returnModalSale?.products?.some(
+                    (product) => product.id === item.sale_product?.id
+                  )
+                ) ? (
+                  // Show table if matching returns exist
+                  <table className="table table-zebra text-sm w-full">
+                    <thead className="bg-sky-800 text-sm text-white">
                       <tr>
-                        <td
-                          colSpan={8}
-                          className="text-center py-4 text-gray-500"
-                        >
-                          No previous returns found for this sale
-                        </td>
+                        <th className="text-center">SL</th>
+                        <th className="text-center">Return Date</th>
+                        <th className="text-center">Product Name</th>
+                        <th className="text-center">Part No</th>
+                        <th className="text-center">Company</th>
+                        <th className="text-center">Sold Qty</th>
+                        <th className="text-center">Returned Qty</th>
+                        <th className="text-center">Returned Amount</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {returnData
+                        .filter((item) =>
+                          returnModalSale?.products?.some(
+                            (product) => product.id === item.sale_product?.id
+                          )
+                        )
+                        .map((item, index) => (
+                          <tr key={item.id}>
+                            <td className="text-center">{index + 1}</td>
+                            <td className="text-center">
+                              {item.return_date
+                                ? new Date(item.return_date).toLocaleString(
+                                    "en-GB",
+                                    {
+                                      dateStyle: "short",
+                                    }
+                                  )
+                                : "N/A"}
+                            </td>
+                            <td className="text-center">
+                              {item.sale_product?.product?.product_name ||
+                                "N/A"}
+                            </td>
+                            <td className="text-center">
+                              {item.sale_product?.part_no || "N/A"}
+                            </td>
+                            <td className="text-center">
+                              {item.sale_product?.product?.category_detail
+                                ?.company_detail?.company_name || "N/A"}
+                            </td>
+                            <td className="text-center">
+                              {item.sale_product?.sale_quantity || 0}
+                            </td>
+                            <td className="text-center">
+                              {item.quantity || 0}
+                            </td>
+                            <td className="text-center">
+                              {(
+                                parseFloat(item.sale_product?.sale_price || 0) *
+                                parseFloat(item.quantity || 0)
+                              ).toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="text-center  text-gray-500"></div>
+                )}
               </div>
             </div>
           </div>
