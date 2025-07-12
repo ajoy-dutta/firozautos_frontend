@@ -166,9 +166,7 @@ export default function SupplierProductPurchase() {
   const [purchasePriceWithPercentage, setPurchasePriceWithPercentage] =
     useState("0.00");
   const [totalPrice, setTotalPrice] = useState("0.00");
-
   const [addedProducts, setAddedProducts] = useState([]);
-
   const [totalAmount, setTotalAmount] = useState(0);
   const [discountAmount, setDiscountAmount] = useState("");
   const [totalPayableAmount, setTotalPayableAmount] = useState(0);
@@ -624,6 +622,7 @@ export default function SupplierProductPurchase() {
               onChange={handleSupplierChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="District..."
+              readOnly
             />
           </div>
 
@@ -636,6 +635,7 @@ export default function SupplierProductPurchase() {
               onChange={handleSupplierChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Country..."
+              readOnly
             />
           </div>
 
@@ -650,6 +650,7 @@ export default function SupplierProductPurchase() {
               onChange={handleSupplierChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Type..."
+              readOnly
             />
           </div>
 
@@ -662,6 +663,7 @@ export default function SupplierProductPurchase() {
               onChange={handleSupplierChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Shop..."
+              readOnly
             />
           </div>
 
@@ -674,6 +676,7 @@ export default function SupplierProductPurchase() {
               onChange={handleSupplierChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Phone..."
+              readOnly
             />
           </div>
 
@@ -686,6 +689,7 @@ export default function SupplierProductPurchase() {
               onChange={handleSupplierChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Alt phone..."
+              readOnly
             />
           </div>
 
@@ -698,6 +702,7 @@ export default function SupplierProductPurchase() {
               onChange={handleSupplierChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Email..."
+              readOnly
             />
           </div>
 
@@ -710,6 +715,7 @@ export default function SupplierProductPurchase() {
               onChange={handleSupplierChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Address..."
+              readOnly
             />
           </div>
 
@@ -723,6 +729,7 @@ export default function SupplierProductPurchase() {
               value={supplierData.dob}
               onChange={handleSupplierChange}
               className="w-full border rounded px-2 py-1 text-sm"
+              readOnly
             />
           </div>
 
@@ -735,6 +742,7 @@ export default function SupplierProductPurchase() {
               onChange={handleSupplierChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="NID number..."
+              readOnly
             />
           </div>
         </div>

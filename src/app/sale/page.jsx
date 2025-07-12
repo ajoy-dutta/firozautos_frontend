@@ -4,8 +4,33 @@ import { useState, useEffect } from "react";
 import Select from "react-select";
 import axiosInstance from "../components/AxiosInstance";
 import { toast } from "react-hot-toast";
+import { useRef } from "react";
 
 export default function CustomerProductSale() {
+     const containerRef = useRef(null);
+
+  // Enter press handler
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      const container = containerRef.current;
+
+      // Get all usable inputs/selects (not disabled/readonly/hidden)
+      const focusableElements = Array.from(
+        container.querySelectorAll(
+          'input:not([disabled]):not([readonly]), select, textarea, button'
+        )
+      ).filter((el) => el.offsetParent !== null);
+
+      const currentIndex = focusableElements.indexOf(e.target);
+
+      if (currentIndex > -1 && currentIndex < focusableElements.length - 1) {
+        focusableElements[currentIndex + 1].focus();
+      }
+    }
+  };
+
   // Custom styles for react-select with vertical centering
   const customSelectStyles = {
     control: (base, state) => ({
@@ -318,7 +343,9 @@ export default function CustomerProductSale() {
     if (!product) return;
 
     // Find stock data by matching product ID
-    const stockItem = stockList.find((s) => s.product?.id === product.id);
+      const stockItem = stockList.find(
+    (s) => s.product?.id === product.id && s.part_no === product.part_no
+  );
     const stockQty = stockItem ? stockItem.current_stock_quantity : 0;
     setCurrentStock(stockQty);
 
@@ -709,9 +736,9 @@ export default function CustomerProductSale() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 ">
+    <div className="max-w-7xl mx-auto p-4  ">
       {/* Customer Section */}
-      <section>
+      <section >
         <h2 className="font-semibold text-lg my-2">Customer Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
           <div>
@@ -726,23 +753,11 @@ export default function CustomerProductSale() {
               placeholder="Select..."
               className="text-sm"
               styles={customSelectStyles}
+              readOnly
             />
           </div>
 
-          <div>
-            <label className="block mb-1 font-medium text-sm">
-              Customer Name *
-            </label>
-            <input
-              type="text"
-              name="customer_name"
-              value={customerData.customer_name}
-              onChange={handleCustomerChange}
-              className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
-              placeholder="Customer Name..."
-              required
-            />
-          </div>
+
 
           <div>
             <label className="block mb-1 font-medium text-sm">District</label>
@@ -753,6 +768,7 @@ export default function CustomerProductSale() {
               onChange={handleCustomerChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="District..."
+              readOnly
             />
           </div>
 
@@ -768,6 +784,7 @@ export default function CustomerProductSale() {
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Type..."
               required
+                   readOnly
             />
           </div>
 
@@ -783,6 +800,7 @@ export default function CustomerProductSale() {
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Shop Name..."
               required
+                   readOnly
             />
           </div>
 
@@ -796,6 +814,7 @@ export default function CustomerProductSale() {
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Phone..."
               required
+                   readOnly
             />
           </div>
 
@@ -808,6 +827,7 @@ export default function CustomerProductSale() {
               onChange={handleCustomerChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Alt phone..."
+                   readOnly
             />
           </div>
 
@@ -820,6 +840,7 @@ export default function CustomerProductSale() {
               onChange={handleCustomerChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Email..."
+                   readOnly
             />
           </div>
 
@@ -833,6 +854,7 @@ export default function CustomerProductSale() {
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Address..."
               required
+                   readOnly
             />
           </div>
 
@@ -846,6 +868,7 @@ export default function CustomerProductSale() {
               value={customerData.date_of_birth}
               onChange={handleCustomerChange}
               className="w-full border rounded px-2 py-1 text-sm"
+                   readOnly
             />
           </div>
 
@@ -858,6 +881,7 @@ export default function CustomerProductSale() {
               onChange={handleCustomerChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="NID number..."
+                   readOnly
             />
           </div>
 
@@ -872,6 +896,7 @@ export default function CustomerProductSale() {
               onChange={handleCustomerChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Courier Name..."
+                   readOnly
             />
           </div>
 
