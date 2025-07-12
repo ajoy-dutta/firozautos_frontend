@@ -850,7 +850,8 @@ export default function PurchaseList() {
     }
   };
 
-  const [returnData, setReturnData] = useState(null);
+  const [returnData, setReturnData] = useState([]);
+
   useEffect(() => {
     const fetchReturnData = async () => {
       if (returnModalPurchase?.invoice_no) {
@@ -1586,78 +1587,90 @@ export default function PurchaseList() {
                 </button>
               </div>
 
-              <table className="table w-full border text-sm mt-4">
-                <thead className="bg-sky-800 text-white ">
-                  <tr className="text-sm  whitespace-nowrap">
-                    <th className="border px-2 py-2 text-center">SL</th>
-                    <th className="border px-2 py-2 text-center">
-                      Return Date
-                    </th>
-                    <th className="border px-2 py-2 text-center">
-                      Product Name
-                    </th>
-                    <th className="border px-2 py-2 text-center">Part No</th>
-                    <th className="border px-2 py-2 text-center">
-                      Company Name
-                    </th>
-                    <th className="border px-2 py-2 text-center">
-                      Purchased Qty
-                    </th>
-                    <th className="border px-2 py-2 text-center">
-                      Returned Qty
-                    </th>
-                    <th className="border px-2 py-2 text-center">
-                      Returned Amount
-                    </th>
-                    <th className="border px-2 py-2 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {returnData.map((item, index) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="border px-3 py-2 text-center">
-                        {index + 1}
-                      </td>
-                      <td className="border text-center px-3 py-2">
-                        {new Date(item.return_date).toLocaleString("en-GB", {
-                          dateStyle: "short",
-                        })}
-                      </td>
-                      <td className="border text-center px-3 py-2">
-                        {item.purchase_product?.product?.product_name || "N/A"}
-                      </td>
-                      <td className="border text-center px-3 py-2">
-                        {item.purchase_product?.product?.part_no || "N/A"}
-                      </td>
-                      <td className="border text-center px-3 py-2">
-                        {item.purchase_product?.product?.category_detail
-                          ?.company_detail?.company_name || "N/A"}
-                      </td>
-                      <td className="border  px-3 py-2 text-center">
-                        {item.purchase_product?.purchase_quantity || 0}
-                      </td>
-                      <td className="border  px-3 py-2 text-center">
-                        {item.quantity || 0}
-                      </td>
-                      <td className="border px-3 py-2 text-center">
-                        {(
-                          parseFloat(
-                            item.purchase_product?.purchase_price || 0
-                          ) * parseFloat(item.quantity || 0)
-                        ).toFixed(2)}
-                      </td>
-                      <td className="border px-3 py-2 text-center">
-                        <button
-                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                          onClick={() => handleEditReturn(item)}
-                        >
-                          Edit
-                        </button>
-                      </td>
+              {returnData && returnData.length > 0 ? (
+                <table className="table w-full border text-sm mt-4">
+                  <thead className="bg-sky-800 text-white">
+                    <tr className="text-sm whitespace-nowrap">
+                      <th className="border px-2 py-2 text-center">SL</th>
+                      <th className="border px-2 py-2 text-center">
+                        Return Date
+                      </th>
+                      <th className="border px-2 py-2 text-center">
+                        Product Name
+                      </th>
+                      <th className="border px-2 py-2 text-center">Part No</th>
+                      <th className="border px-2 py-2 text-center">
+                        Company Name
+                      </th>
+                      <th className="border px-2 py-2 text-center">
+                        Purchased Qty
+                      </th>
+                      <th className="border px-2 py-2 text-center">
+                        Returned Qty
+                      </th>
+                      <th className="border px-2 py-2 text-center">
+                        Returned Amount
+                      </th>
+                      <th className="border px-2 py-2 text-center">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {returnData.map((item, index) => (
+                      <tr key={item.id} className="hover:bg-gray-50">
+                        <td className="border px-3 py-2 text-center">
+                          {index + 1}
+                        </td>
+                        <td className="border text-center px-3 py-2">
+                          {item.return_date
+                            ? new Date(item.return_date).toLocaleString(
+                                "en-GB",
+                                {
+                                  dateStyle: "short",
+                                }
+                              )
+                            : "N/A"}
+                        </td>
+                        <td className="border text-center px-3 py-2">
+                          {item.purchase_product?.product?.product_name ||
+                            "N/A"}
+                        </td>
+                        <td className="border text-center px-3 py-2">
+                          {item.purchase_product?.product?.part_no || "N/A"}
+                        </td>
+                        <td className="border text-center px-3 py-2">
+                          {item.purchase_product?.product?.category_detail
+                            ?.company_detail?.company_name || "N/A"}
+                        </td>
+                        <td className="border px-3 py-2 text-center">
+                          {item.purchase_product?.purchase_quantity || 0}
+                        </td>
+                        <td className="border px-3 py-2 text-center">
+                          {item.quantity || 0}
+                        </td>
+                        <td className="border px-3 py-2 text-center">
+                          {(
+                            parseFloat(
+                              item.purchase_product?.purchase_price || 0
+                            ) * parseFloat(item.quantity || 0)
+                          ).toFixed(2)}
+                        </td>
+                        <td className="border px-3 py-2 text-center">
+                          <button
+                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            onClick={() => handleEditReturn(item)}
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="text-center  text-gray-500">
+                 
+                </div>
+              )}
             </form>
           </div>
 
