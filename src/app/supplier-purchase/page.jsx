@@ -592,8 +592,41 @@ export default function SupplierProductPurchase() {
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key !== "Enter") return;
 
-  
+    // Skip if react-select menu is open
+    const selectMenuOpen = document.querySelector(".react-select__menu");
+    if (selectMenuOpen) return;
+
+    e.preventDefault();
+
+    // Select all focusable elements
+    const allFocusable = Array.from(
+      document.querySelectorAll(
+        `input:not([type="hidden"]),
+       select,
+       textarea,
+       button,
+       [tabindex]:not([tabindex="-1"])`
+      )
+    ).filter(
+      (el) =>
+        el.offsetParent !== null && // visible
+        !el.disabled && // not disabled
+        !(el.readOnly === true || el.getAttribute("readonly") !== null) // not readonly
+    );
+
+    const currentIndex = allFocusable.indexOf(e.target);
+
+    if (currentIndex !== -1) {
+      for (let i = currentIndex + 1; i < allFocusable.length; i++) {
+        const nextEl = allFocusable[i];
+        nextEl.focus();
+        break;
+      }
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-4 ">
@@ -613,6 +646,7 @@ export default function SupplierProductPurchase() {
               placeholder="Select..."
               className="text-sm"
               styles={customSelectStyles}
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -767,6 +801,7 @@ export default function SupplierProductPurchase() {
               onChange={(e) => setPurchaseDate(e.target.value)}
               className="w-full text-sm border px-2 py-1 rounded"
               required
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -785,6 +820,7 @@ export default function SupplierProductPurchase() {
               placeholder="Select company"
               className="text-sm"
               styles={customSelectStyles}
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -801,6 +837,7 @@ export default function SupplierProductPurchase() {
               isDisabled={!selectedCompany}
               className="text-sm"
               styles={customSelectStyles}
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -817,6 +854,7 @@ export default function SupplierProductPurchase() {
               isDisabled={!selectedCompany}
               className="text-sm"
               styles={customSelectStyles}
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -843,6 +881,7 @@ export default function SupplierProductPurchase() {
               onChange={(e) => setPurchaseQuantity(e.target.value)}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Enter purchase quantity"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -856,6 +895,7 @@ export default function SupplierProductPurchase() {
               onChange={(e) => setPurchasePrice(e.target.value)}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Enter purchase price"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -869,6 +909,7 @@ export default function SupplierProductPurchase() {
               onChange={(e) => setPercentage(e.target.value)}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Enter percentage"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -904,6 +945,7 @@ export default function SupplierProductPurchase() {
                 addProduct();
               }}
               disabled={!selectedCompany}
+              onKeyDown={handleKeyDown}
             >
               Add Product
             </button>
@@ -991,6 +1033,7 @@ export default function SupplierProductPurchase() {
                 onChange={(e) => setDiscountAmount(e.target.value)}
                 className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
                 placeholder="0.00"
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -1038,6 +1081,7 @@ export default function SupplierProductPurchase() {
               placeholder="Select"
               className="text-sm"
               styles={customSelectStyles}
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -1057,6 +1101,7 @@ export default function SupplierProductPurchase() {
               isDisabled={!isBank}
               className="text-sm"
               styles={customSelectStyles}
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -1071,6 +1116,7 @@ export default function SupplierProductPurchase() {
               className={`w-full border text-sm px-2 py-1 rounded ${
                 !isBank ? "bg-gray-100 text-gray-500" : ""
               }`}
+              onKeyDown={handleKeyDown}
               placeholder="Account No"
             />
           </div>
@@ -1087,6 +1133,7 @@ export default function SupplierProductPurchase() {
                 !isCheque ? "bg-gray-100 text-sm text-gray-400" : ""
               }`}
               placeholder="Cheque No"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -1103,6 +1150,7 @@ export default function SupplierProductPurchase() {
               }
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="0.00"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -1112,6 +1160,7 @@ export default function SupplierProductPurchase() {
               type="button"
               onClick={handleAddPayment}
               className="px-4 py-2 bg-sky-800 text-sm text-white rounded hover:bg-sky-700"
+              onKeyDown={handleKeyDown}
             >
               Add
             </button>
@@ -1186,6 +1235,7 @@ export default function SupplierProductPurchase() {
         <button
           onClick={handleSubmit}
           className="px-6 py-2 text-sm bg-sky-800 text-white rounded hover:bg-sky-700"
+          onKeyDown={handleKeyDown}
         >
           Submit
         </button>
