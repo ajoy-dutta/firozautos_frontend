@@ -135,7 +135,6 @@ export default function EmployeeForm() {
       formDataToSend.append("photo", formData.photo);
     }
 
-
     // ✅ Append education as JSON string
     const formattedEducation = education.map((item) => ({
       exam_name: item.exam,
@@ -163,28 +162,62 @@ export default function EmployeeForm() {
     } catch (error) {
       console.error("❌ Submit error:", error.response?.data || error);
       alert(
-        `❌ Failed to submit employee form.\n\nError: ${error.response?.data
-          ? JSON.stringify(error.response.data)
-          : "Check console for details."
+        `❌ Failed to submit employee form.\n\nError: ${
+          error.response?.data
+            ? JSON.stringify(error.response.data)
+            : "Check console for details."
         }`
       );
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key !== "Enter") return;
 
+    // Skip if react-select menu is open
+    const selectMenuOpen = document.querySelector(".react-select__menu");
+    if (selectMenuOpen) return;
 
+    e.preventDefault();
+
+    // Select all focusable elements
+    const allFocusable = Array.from(
+      document.querySelectorAll(
+        `input:not([type="hidden"]),
+       select,
+       textarea,
+       button,
+       [tabindex]:not([tabindex="-1"])`
+      )
+    ).filter(
+      (el) =>
+        el.offsetParent !== null && // visible
+        !el.disabled && // not disabled
+        !(el.readOnly === true || el.getAttribute("readonly") !== null) // not readonly
+    );
+
+    const currentIndex = allFocusable.indexOf(e.target);
+
+    if (currentIndex !== -1) {
+      for (let i = currentIndex + 1; i < allFocusable.length; i++) {
+        const nextEl = allFocusable[i];
+        nextEl.focus();
+        break;
+      }
+    }
+  };
 
   return (
-    <div className="text-sm text-slate-600">
-      <h2 className="text-2xl  mb-4  border-b border-slate-500 pb-2">
+    <div className="text-sm text-black">
+      <h2 className="text-2xl  mb-4  border-b border-back pb-2">
         Add-Edit Employee
       </h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <h3 className="text-xl italic font-medium text-slate-700 mb-4">
+      <form onSubmit={handleSubmit} className="space-y-4 text-black">
+        <h3 className="text-xl italic font-medium text-black mb-4">
           Basic Details
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="font-medium">
               Employee Name <span className="text-red-500">*</span>
@@ -195,7 +228,8 @@ export default function EmployeeForm() {
               value={formData.employee_name}
               onChange={handleChange}
               placeholder="Employee Name"
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -208,7 +242,8 @@ export default function EmployeeForm() {
               value={formData.father_name}
               onChange={handleChange}
               placeholder="Father's Name"
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -221,7 +256,8 @@ export default function EmployeeForm() {
               value={formData.mother_name}
               onChange={handleChange}
               placeholder="Mother's Name"
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -230,7 +266,8 @@ export default function EmployeeForm() {
               type="text"
               value="AUTO GENERATE"
               readOnly
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs bg-slate-100"
+              className="w-full border border-black py-1 px-2 rounded-xs bg-slate-100"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -241,7 +278,8 @@ export default function EmployeeForm() {
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             >
               <option value="">select</option>
               <option>Male</option>
@@ -251,23 +289,23 @@ export default function EmployeeForm() {
           </div>
           <div>
             <label className="font-medium">Blood Group</label>
-       <select
-            name="blood_group"
-            value={formData.blood_group}
-            onChange={handleChange}
-            className="w-full border border-slate-400 py-1 px-2 rounded-xs"
-          >
-            <option value="">Select</option>
-            <option value="A+">A+</option>
-            <option value="A-">A−</option>
-            <option value="B+">B+</option>
-            <option value="B-">B−</option>
-            <option value="AB+">AB+</option>
-            <option value="AB-">AB−</option>
-            <option value="O+">O+</option>
-            <option value="O-">O−</option>
-          </select>
-
+            <select
+              name="blood_group"
+              value={formData.blood_group}
+              onChange={handleChange}
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
+            >
+              <option value="">Select</option>
+              <option value="A+">A+</option>
+              <option value="A-">A−</option>
+              <option value="B+">B+</option>
+              <option value="B-">B−</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB−</option>
+              <option value="O+">O+</option>
+              <option value="O-">O−</option>
+            </select>
           </div>
           <div>
             <label className="font-medium">
@@ -278,7 +316,8 @@ export default function EmployeeForm() {
               name="date_of_birth"
               value={formData.date_of_birth}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -290,7 +329,8 @@ export default function EmployeeForm() {
               name="joining_date"
               value={formData.joining_date}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -299,7 +339,8 @@ export default function EmployeeForm() {
               type="file"
               name="photo"
               onChange={handlePhotoChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -309,7 +350,8 @@ export default function EmployeeForm() {
               name="age"
               value={formData.age}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -318,7 +360,8 @@ export default function EmployeeForm() {
               name="religion"
               value={formData.religion}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             >
               <option value="">select</option>
               <option value="Islam">Islam</option>
@@ -326,7 +369,6 @@ export default function EmployeeForm() {
               <option value="Christianity">Christianity</option>
               <option value="Other">Other</option>
             </select>
-
           </div>
           <div>
             <label className="font-medium">Birth ID No.</label>
@@ -335,7 +377,8 @@ export default function EmployeeForm() {
               name="birth_id_no"
               value={formData.birth_id_no}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -345,7 +388,8 @@ export default function EmployeeForm() {
               name="nid_no"
               value={formData.nid_no}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -355,7 +399,8 @@ export default function EmployeeForm() {
               name="passport_no"
               value={formData.passport_no}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -364,7 +409,8 @@ export default function EmployeeForm() {
               name="nationality"
               value={formData.nationality}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             >
               <option>Bangladeshi</option>
             </select>
@@ -376,7 +422,8 @@ export default function EmployeeForm() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -386,7 +433,8 @@ export default function EmployeeForm() {
               name="mobile_no"
               value={formData.mobile_no}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -396,7 +444,8 @@ export default function EmployeeForm() {
               name="father_mobile_no"
               value={formData.father_mobile_no}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -406,7 +455,8 @@ export default function EmployeeForm() {
               name="mother_mobile_no"
               value={formData.mother_mobile_no}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -416,7 +466,8 @@ export default function EmployeeForm() {
               name="other_mobile_no"
               value={formData.other_mobile_no}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -426,71 +477,83 @@ export default function EmployeeForm() {
               name="salary_amount"
               value={formData.salary_amount}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
         </div>
 
-
-        <h3 className="text-xl italic font-medium text-slate-700 mt-10 mb-4">
+        <h3 className="text-xl italic font-medium text-black mt-10 mb-4">
           Education Qualification
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
           <input
             name="exam"
             placeholder="Exam Name"
             value={eduInput.exam}
             onChange={handleEduChange}
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="institute"
             placeholder="Institute Name"
             value={eduInput.institute}
             onChange={handleEduChange}
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="passingYear"
             placeholder="Passing Year"
             value={eduInput.passingYear}
             onChange={handleEduChange}
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="group"
             placeholder="Group"
             value={eduInput.group}
             onChange={handleEduChange}
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="gpa"
             placeholder="GPA/Grade"
             value={eduInput.gpa}
             onChange={handleEduChange}
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="board"
             placeholder="Board/University"
             value={eduInput.board}
             onChange={handleEduChange}
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
+
+          <div className="flex  items-center">
+            <button
+              onClick={handleAddEducation}
+              type="button"
+              className="bg-sky-900 text-white btn btn-sm px-4 py-1 rounded-xs hover:bg-sky-700 "
+              onKeyDown={handleKeyDown}
+            >
+              Add
+            </button>
+          </div>
         </div>
-        <button
-          onClick={handleAddEducation}
-          type="button"
-          className="bg-sky-900 text-white px-4 py-1 rounded-xs hover:bg-sky-700 mb-4"
-        >
-          Add
-        </button>
 
         {education.length === 0 ? (
-          <p className="text-slate-500 italic">No Education Qualification Found</p>
+          <p className="text-slate-500 italic">
+            No Education Qualification Found
+          </p>
         ) : (
-          <table className="w-full border border-slate-400 mt-4">
+          <table className="w-full border border-slate-800 mt-4">
             <thead>
               <tr className="bg-slate-100">
                 <th className="border border-slate-400 py-1 px-2">Exam</th>
@@ -505,12 +568,24 @@ export default function EmployeeForm() {
             <tbody>
               {education.map((edu, idx) => (
                 <tr key={idx} className="text-center">
-                  <td className="border border-slate-400 py-1 px-2">{edu.exam}</td>
-                  <td className="border border-slate-400 py-1 px-2">{edu.institute}</td>
-                  <td className="border border-slate-400 py-1 px-2">{edu.passingYear}</td>
-                  <td className="border border-slate-400 py-1 px-2">{edu.group}</td>
-                  <td className="border border-slate-400 py-1 px-2">{edu.gpa}</td>
-                  <td className="border border-slate-400 py-1 px-2">{edu.board}</td>
+                  <td className="border border-slate-400 py-1 px-2">
+                    {edu.exam}
+                  </td>
+                  <td className="border border-slate-400 py-1 px-2">
+                    {edu.institute}
+                  </td>
+                  <td className="border border-slate-400 py-1 px-2">
+                    {edu.passingYear}
+                  </td>
+                  <td className="border border-slate-400 py-1 px-2">
+                    {edu.group}
+                  </td>
+                  <td className="border border-slate-400 py-1 px-2">
+                    {edu.gpa}
+                  </td>
+                  <td className="border border-slate-400 py-1 px-2">
+                    {edu.board}
+                  </td>
                   <td className="border border-slate-400 py-1 px-2">
                     <button
                       className="bg-red-500 text-white px-3 py-1 rounded-xs"
@@ -525,11 +600,10 @@ export default function EmployeeForm() {
           </table>
         )}
 
-
-        <h3 className="text-xl italic font-medium text-slate-700 mt-8 mb-4">
+        <h3 className="text-xl italic font-medium text-black mt-8 mb-4">
           Address Details
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="font-medium">Country</label>
             <input
@@ -537,7 +611,8 @@ export default function EmployeeForm() {
               name="country"
               value={formData.country}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -547,7 +622,8 @@ export default function EmployeeForm() {
               name="district"
               value={formData.district}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -557,7 +633,8 @@ export default function EmployeeForm() {
               name="division"
               value={formData.division}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -567,7 +644,8 @@ export default function EmployeeForm() {
               name="police_station"
               value={formData.police_station}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -577,7 +655,8 @@ export default function EmployeeForm() {
               name="post_office"
               value={formData.post_office}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -587,86 +666,94 @@ export default function EmployeeForm() {
               name="town_or_village"
               value={formData.town_or_village}
               onChange={handleChange}
-              className="w-full border border-slate-400 py-1 px-2 rounded-xs"
+              className="w-full border border-black py-1 px-2 rounded-xs"
+              onKeyDown={handleKeyDown}
             />
           </div>
         </div>
 
-        <h3 className="text-xl italic font-medium text-slate-700 mt-10 mb-4">
+        <h3 className="text-xl italic font-medium text-black mt-10 mb-4">
           Experience Information
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
           <input
             name="previous_work"
             value={formData.previous_work}
             onChange={handleChange}
             placeholder="Previous Work Name"
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="shop_name"
             value={formData.shop_name}
             onChange={handleChange}
             placeholder="Shop Name"
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="shop_address"
             value={formData.shop_address}
             onChange={handleChange}
             placeholder="Address"
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
         </div>
 
-        <h3 className="text-xl italic font-medium text-slate-700 mb-4">
+        <h3 className="text-xl italic font-medium text-black mb-4">
           Bank Accounts Details
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <input
             name="account_name"
             value={formData.account_name}
             onChange={handleChange}
             placeholder="Accounts Name"
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="account_no"
             value={formData.account_no}
             onChange={handleChange}
             placeholder="Accounts No"
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="bank_name"
             value={formData.bank_name}
             onChange={handleChange}
             placeholder="Bank Name"
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
-        </div>
-        <div className="mt-4">
-          <textarea
+
+          <input
             name="branch_address"
-            rows="2"
+            rows="1"
             value={formData.branch_address}
             onChange={handleChange}
             placeholder="Bank/Branch Address"
-            className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+            className="border col-span-2 border-black py-1 px-2 rounded-xs w-full"
+            onKeyDown={handleKeyDown}
           />
         </div>
 
-        <h3 className="text-xl italic font-medium text-slate-700 mt-10 mb-4">
+        <h3 className="text-xl italic font-medium text-black mt-10 mb-4">
           Mobile Banking
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
           <input
             name="bkash_no"
             value={formData.bkash_no}
             onChange={handleChange}
             type="text"
             placeholder="Bkash No"
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="roket_no"
@@ -674,7 +761,8 @@ export default function EmployeeForm() {
             onChange={handleChange}
             type="text"
             placeholder="Rocket No"
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="nagad_no"
@@ -682,7 +770,8 @@ export default function EmployeeForm() {
             onChange={handleChange}
             type="text"
             placeholder="Nagad No"
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="reference_by"
@@ -690,7 +779,8 @@ export default function EmployeeForm() {
             onChange={handleChange}
             type="text"
             placeholder="Reference By"
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="reference_mobile"
@@ -698,7 +788,8 @@ export default function EmployeeForm() {
             onChange={handleChange}
             type="text"
             placeholder="Mobile No"
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
           <input
             name="reference_address"
@@ -706,12 +797,16 @@ export default function EmployeeForm() {
             onChange={handleChange}
             type="text"
             placeholder="Address"
-            className="border border-slate-400 py-1 px-2 rounded-xs"
+            className="border border-black py-1 px-2 rounded-xs"
+            onKeyDown={handleKeyDown}
           />
         </div>
 
         <div className="mt-6">
-          <button className="bg-sky-900 text-white px-6 py-1 rounded-xs hover:bg-sky-700">
+          <button
+            className="bg-sky-900 text-white px-6 py-1 rounded-xs hover:bg-sky-700"
+            onKeyDown={handleKeyDown}
+          >
             Submit
           </button>
         </div>

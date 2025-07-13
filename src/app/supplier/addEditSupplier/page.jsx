@@ -138,6 +138,43 @@ export default function SupplierForm() {
     }
   };
 
+
+    const handleKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+
+    // Skip if react-select menu is open
+    const selectMenuOpen = document.querySelector(".react-select__menu");
+    if (selectMenuOpen) return;
+
+    e.preventDefault();
+
+    // Select all focusable elements
+    const allFocusable = Array.from(
+      document.querySelectorAll(
+        `input:not([type="hidden"]),
+       select,
+       textarea,
+       button,
+       [tabindex]:not([tabindex="-1"])`
+      )
+    ).filter(
+      (el) =>
+        el.offsetParent !== null && // visible
+        !el.disabled && // not disabled
+        !(el.readOnly === true || el.getAttribute("readonly") !== null) // not readonly
+    );
+
+    const currentIndex = allFocusable.indexOf(e.target);
+
+    if (currentIndex !== -1) {
+      for (let i = currentIndex + 1; i < allFocusable.length; i++) {
+        const nextEl = allFocusable[i];
+        nextEl.focus();
+        break;
+      }
+    }
+  };
+
   return (
     <div className="p-4 text-sm text-slate-700">
       <h2 className="text-xl font-semibold mb-4">Supplier Entry</h2>
@@ -157,6 +194,7 @@ export default function SupplierForm() {
             onChange={handleChange}
             required
             className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+             onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -164,13 +202,15 @@ export default function SupplierForm() {
           <label className="font-medium">
             District <span className="text-red-500">*</span>
           </label>
-          <select
-            name="district"
-            value={formData.district}
-            onChange={handleChange}
-            required
-            className="border border-slate-400 py-1 px-2 rounded-xs w-full"
-          >
+        <select
+  name="district"
+  value={formData.district}
+  onChange={handleChange}
+  required
+  className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+  onKeyDown={handleKeyDown} // ✅ Add this line
+>
+
             <option value="">--Select--</option>
             {districts.map((d) => (
               <option key={d.id} value={d.id}>
@@ -191,6 +231,7 @@ export default function SupplierForm() {
             onChange={handleChange}
             required
             className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+             onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -204,6 +245,7 @@ export default function SupplierForm() {
             onChange={handleChange}
             required
             className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+              onKeyDown={handleKeyDown}
           >
             <option value="">--Select--</option>
             {supplierTypes.map((s) => (
@@ -211,6 +253,7 @@ export default function SupplierForm() {
                 {s.name}
               </option>
             ))}
+           
           </select>
         </div>
 
@@ -222,6 +265,7 @@ export default function SupplierForm() {
             value={formData.shop_name}
             onChange={handleChange}
             className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+             onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -236,6 +280,7 @@ export default function SupplierForm() {
             onChange={handleChange}
             required
             className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+             onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -247,6 +292,7 @@ export default function SupplierForm() {
             value={formData.phone2}
             onChange={handleChange}
             className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+             onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -258,6 +304,7 @@ export default function SupplierForm() {
             value={formData.email}
             onChange={handleChange}
             className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+             onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -272,6 +319,7 @@ export default function SupplierForm() {
             onChange={handleChange}
             required
             className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+             onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -283,6 +331,7 @@ export default function SupplierForm() {
             value={formData.date_of_birth}
             onChange={handleChange}
             className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+             onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -296,6 +345,7 @@ export default function SupplierForm() {
               value={formData.nid_no}
               onChange={handleChange}
               className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+               onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -307,6 +357,7 @@ export default function SupplierForm() {
               value={formData.remarks}
               onChange={handleChange}
               className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+               onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -318,6 +369,7 @@ export default function SupplierForm() {
               value={formData.previous_due_amount}
               onChange={handleChange}
               className="border border-slate-400 py-1 px-2 rounded-xs w-full"
+               onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -326,6 +378,7 @@ export default function SupplierForm() {
             <button
               type="submit"
               className="bg-blue-950 hover:bg-blue-700 text-white px-2 py-[6px] rounded-md w-1/3 cursor-pointer"
+               onKeyDown={handleKeyDown}
             >
               {editingId ? "Update" : "Save"}
             </button>
@@ -334,6 +387,7 @@ export default function SupplierForm() {
               type="button"
               onClick={handleReset}
               className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded cursor-pointer"
+               onKeyDown={handleKeyDown}
             >
               Reset
             </button>

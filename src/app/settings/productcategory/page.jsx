@@ -44,11 +44,10 @@ export default function ProductCategoryPage() {
     try {
       if (editingId) {
         await AxiosInstance.put(`product-categories/${editingId}/`, formData);
-      alert("Updated successfully!");
+        alert("Updated successfully!");
       } else {
         await AxiosInstance.post("product-categories/", formData);
-      alert("Saved successfully!");
-
+        alert("Saved successfully!");
       }
       fetchCategories();
       setFormData({ company: "", category_name: "" });
@@ -67,13 +66,49 @@ export default function ProductCategoryPage() {
   };
 
   const handleDelete = async (id) => {
-        if (!confirm("Are you sure you want to delete?")) return;
+    if (!confirm("Are you sure you want to delete?")) return;
 
     try {
       await AxiosInstance.delete(`product-categories/${id}/`);
       fetchCategories();
     } catch (error) {
       console.error("Delete error:", error);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+
+    // Skip if react-select menu is open
+    const selectMenuOpen = document.querySelector(".react-select__menu");
+    if (selectMenuOpen) return;
+
+    e.preventDefault();
+
+    // Select all focusable elements
+    const allFocusable = Array.from(
+      document.querySelectorAll(
+        `input:not([type="hidden"]),
+       select,
+       textarea,
+       button,
+       [tabindex]:not([tabindex="-1"])`
+      )
+    ).filter(
+      (el) =>
+        el.offsetParent !== null && // visible
+        !el.disabled && // not disabled
+        !(el.readOnly === true || el.getAttribute("readonly") !== null) // not readonly
+    );
+
+    const currentIndex = allFocusable.indexOf(e.target);
+
+    if (currentIndex !== -1) {
+      for (let i = currentIndex + 1; i < allFocusable.length; i++) {
+        const nextEl = allFocusable[i];
+        nextEl.focus();
+        break;
+      }
     }
   };
 
@@ -84,7 +119,10 @@ export default function ProductCategoryPage() {
           Product Category Master
         </h2>
 
-        <form onSubmit={handleSubmit} className="flex items-end gap-4 flex-wrap">
+        <form
+          onSubmit={handleSubmit}
+          className="flex items-end gap-4 flex-wrap"
+        >
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               Company Name:<span className="text-red-600">*</span>
@@ -94,6 +132,7 @@ export default function ProductCategoryPage() {
               value={formData.company}
               onChange={handleChange}
               required
+              onKeyDown={handleKeyDown}
               className="border border-gray-300 rounded px-3 py-[6px] w-64 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value=""> ----Select---- </option>
@@ -115,19 +154,21 @@ export default function ProductCategoryPage() {
               onChange={handleChange}
               type="text"
               required
+              onKeyDown={handleKeyDown}
               className="border border-gray-300 rounded px-3 py-1 w-64 focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
 
           <div className="flex gap-3 pt-10 mb-1">
-          <button
-        type="submit"
-        className="bg-blue-950 hover:bg-blue-700 text-white px-2 py-[6px] rounded-md w-1/2 cursor-pointer"
-      >
+            <button
+              type="submit"
+              className="bg-blue-950 hover:bg-blue-700 text-white px-2 py-[6px] rounded-md w-1/2 cursor-pointer"
+            >
               {editingId ? "Update" : "Save"}
             </button>
             <button
               type="reset"
+              onKeyDown={handleKeyDown}
               className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded cursor-pointer"
               onClick={() => {
                 setFormData({ company: "", category_name: "" });
@@ -159,14 +200,30 @@ export default function ProductCategoryPage() {
             <tbody>
               {categoryList.map((item, index) => (
                 <tr key={item.id} className="text-center">
-                  <td className="border border-gray-400 px-2 py-1">{index + 1}</td>
-                  <td className="border border-gray-400 px-2 py-1">{item.company_detail.company_name}</td>
-                  <td className="border border-gray-400 px-2 py-1">{item.category_name}</td>
-                  <td className="border border-gray-400 px-2 py-1">{item.company_detail.incharge_name}</td>
-                  <td className="border border-gray-400 px-2 py-1">{item.company_detail.phone_no}</td>
-                  <td className="border border-gray-400 px-2 py-1">{item.company_detail.email}</td>
-                  <td className="border border-gray-400 px-2 py-1">{item.company_detail.address}</td>
-                  <td className="border border-gray-400 px-2 py-1">{item.company_detail.country}</td>
+                  <td className="border border-gray-400 px-2 py-1">
+                    {index + 1}
+                  </td>
+                  <td className="border border-gray-400 px-2 py-1">
+                    {item.company_detail.company_name}
+                  </td>
+                  <td className="border border-gray-400 px-2 py-1">
+                    {item.category_name}
+                  </td>
+                  <td className="border border-gray-400 px-2 py-1">
+                    {item.company_detail.incharge_name}
+                  </td>
+                  <td className="border border-gray-400 px-2 py-1">
+                    {item.company_detail.phone_no}
+                  </td>
+                  <td className="border border-gray-400 px-2 py-1">
+                    {item.company_detail.email}
+                  </td>
+                  <td className="border border-gray-400 px-2 py-1">
+                    {item.company_detail.address}
+                  </td>
+                  <td className="border border-gray-400 px-2 py-1">
+                    {item.company_detail.country}
+                  </td>
                   <td
                     className="border border-gray-400 px-2 py-1 text-yellow-600 cursor-pointer"
                     onClick={() => handleEdit(item)}

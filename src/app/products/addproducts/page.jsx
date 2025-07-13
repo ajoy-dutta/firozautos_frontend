@@ -29,7 +29,6 @@ export default function ProductEntryForm() {
     percentage: "",
     product_bdt: "",
     product_code: "",
-    
   });
 
   const fetchCompanyNames = async () => {
@@ -200,14 +199,50 @@ export default function ProductEntryForm() {
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+
+    // Skip if react-select menu is open
+    const selectMenuOpen = document.querySelector(".react-select__menu");
+    if (selectMenuOpen) return;
+
+    e.preventDefault();
+
+    // Select all focusable elements
+    const allFocusable = Array.from(
+      document.querySelectorAll(
+        `input:not([type="hidden"]),
+       select,
+       textarea,
+       button,
+       [tabindex]:not([tabindex="-1"])`
+      )
+    ).filter(
+      (el) =>
+        el.offsetParent !== null && // visible
+        !el.disabled && // not disabled
+        !(el.readOnly === true || el.getAttribute("readonly") !== null) // not readonly
+    );
+
+    const currentIndex = allFocusable.indexOf(e.target);
+
+    if (currentIndex !== -1) {
+      for (let i = currentIndex + 1; i < allFocusable.length; i++) {
+        const nextEl = allFocusable[i];
+        nextEl.focus();
+        break;
+      }
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6 text-sm">
-      <h2 className="text-xl text-slate-700  mb-4 pb-3 border-slate-400 border-b-[1px]">
+      <h2 className="text-xl text-black  mb-4 pb-3 border-slate-400 border-b-[1px]">
         Products Entry
       </h2>
-      <form className="space-y-4 text-slate-700" onSubmit={handleSubmit}>
+      <form className="space-y-2 text-black" onSubmit={handleSubmit}>
         {/* Rows */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-8 place-items-start">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-2 mt-8 place-items-start">
           <div>
             <label className="block ">
               Company Name:<span className="text-red-500">*</span>
@@ -217,6 +252,7 @@ export default function ProductEntryForm() {
               onChange={handleChange}
               value={formData.company || ""}
               className="w-[190px] border rounded px-2 py-[6px]"
+              onKeyDown={handleKeyDown}
             >
               <option value="">--Select--</option>
               {companyList.map((company) => (
@@ -235,6 +271,7 @@ export default function ProductEntryForm() {
               onChange={handleChange}
               value={formData.category || ""}
               className="w-[190px] border rounded px-2 py-[6px]"
+              onKeyDown={handleKeyDown}
             >
               <option value="">--Select--</option>
               {filteredCategories.map((cat) => (
@@ -254,6 +291,7 @@ export default function ProductEntryForm() {
               value={formData.product_name || ""}
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -266,6 +304,7 @@ export default function ProductEntryForm() {
               value={formData.part_no || ""}
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -274,6 +313,7 @@ export default function ProductEntryForm() {
               value={formData.product_code || "AUTO GENERATE"}
               readOnly
               className="w-full border rounded px-2 py-1 bg-gray-100 text-gray-500"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -284,6 +324,7 @@ export default function ProductEntryForm() {
               name="image"
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -294,6 +335,7 @@ export default function ProductEntryForm() {
               value={formData.brand_name || ""}
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -304,6 +346,7 @@ export default function ProductEntryForm() {
               value={formData.model_no || ""}
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div>
@@ -314,6 +357,7 @@ export default function ProductEntryForm() {
               value={formData.net_weight || ""}
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -326,6 +370,7 @@ export default function ProductEntryForm() {
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
               rows="1"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -337,6 +382,7 @@ export default function ProductEntryForm() {
               type="text"
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -348,6 +394,7 @@ export default function ProductEntryForm() {
               type="text"
               onChange={handleChange || ""}
               className="w-full border rounded px-2 py-1"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -360,6 +407,7 @@ export default function ProductEntryForm() {
               value={formData.product_bdt || ""}
               readOnly
               className="w-full border rounded px-2 py-1"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -376,6 +424,7 @@ export default function ProductEntryForm() {
               required
               onChange={handleChange}
               className="w-full border rounded px-2 py-1"
+              onKeyDown={handleKeyDown}
             />
           </div>
         </div>
@@ -388,6 +437,7 @@ export default function ProductEntryForm() {
           <div>
             <button
               type="submit"
+              onKeyDown={handleKeyDown}
               className="bg-sky-950 text-white px-3 py-1 rounded hover:bg-sky-700"
             >
               {editId ? "Update" : "Submit"}

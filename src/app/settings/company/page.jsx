@@ -83,6 +83,42 @@ export default function CompanyPage() {
 
   // Delete company
 
+    const handleKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+
+    // Skip if react-select menu is open
+    const selectMenuOpen = document.querySelector(".react-select__menu");
+    if (selectMenuOpen) return;
+
+    e.preventDefault();
+
+    // Select all focusable elements
+    const allFocusable = Array.from(
+      document.querySelectorAll(
+        `input:not([type="hidden"]),
+       select,
+       textarea,
+       button,
+       [tabindex]:not([tabindex="-1"])`
+      )
+    ).filter(
+      (el) =>
+        el.offsetParent !== null && // visible
+        !el.disabled && // not disabled
+        !(el.readOnly === true || el.getAttribute("readonly") !== null) // not readonly
+    );
+
+    const currentIndex = allFocusable.indexOf(e.target);
+
+    if (currentIndex !== -1) {
+      for (let i = currentIndex + 1; i < allFocusable.length; i++) {
+        const nextEl = allFocusable[i];
+        nextEl.focus();
+        break;
+      }
+    }
+  };
+
   return (
     <div className="">
       <h2 className="text-xl font-semibold mb-4">Company Master</h2>
@@ -101,6 +137,7 @@ export default function CompanyPage() {
         onChange={handleChange}
         required
         className="border rounded-sm p-1 w-full"
+        onKeyDown={handleKeyDown}
       />
     </div>
     <div>
@@ -114,6 +151,7 @@ export default function CompanyPage() {
         onChange={handleChange}
         required
         className="border rounded-sm p-1 w-full"
+        onKeyDown={handleKeyDown}
       />
     </div>
     <div>
@@ -127,6 +165,7 @@ export default function CompanyPage() {
         onChange={handleChange}
         required
         className="border rounded-sm p-1 w-full"
+        onKeyDown={handleKeyDown}
       />
     </div>
     <div>
@@ -140,6 +179,7 @@ export default function CompanyPage() {
         onChange={handleChange}
         required
         className="border rounded-sm p-1 w-full"
+        onKeyDown={handleKeyDown}
       />
     </div>
 
@@ -154,6 +194,7 @@ export default function CompanyPage() {
         onChange={handleChange}
         required
         className="border rounded-sm px-2 py-[3px]  w-full"
+        onKeyDown={handleKeyDown}
       />
     </div>
     <div>
@@ -167,6 +208,7 @@ export default function CompanyPage() {
         onChange={handleChange}
         required
         className="border rounded-sm p-1 w-full"
+        onKeyDown={handleKeyDown}
       />
     </div>
 
@@ -174,6 +216,7 @@ export default function CompanyPage() {
     <div className="col-span-1 flex self-end">
       <button
         type="submit"
+        onKeyDown={handleKeyDown}
         className="bg-blue-950 hover:bg-blue-700 text-white px-2 py-[6px] rounded-md w-1/3 cursor-pointer"
       >
         {editingId ? "Update" : "Save"}
