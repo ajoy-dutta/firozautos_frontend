@@ -139,6 +139,7 @@ export default function SalesList() {
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [returnModalSale, setReturnModalSale] = useState(null);
   const [returnData, setReturnData] = useState([]);
+    const [payModalSale, setPayModalSale] = useState(null);
   const [formData, setFormData] = useState({
     returnDate: new Date().toISOString().slice(0, 10),
     productName: "",
@@ -433,6 +434,440 @@ export default function SalesList() {
     }
   };
 
+  const handleGenerateSalePdf = (sale) => {
+    const totalQty = sale.products.reduce(
+      (sum, item) => sum + parseFloat(item.sale_quantity || 0),
+      0
+    );
+    const totalAmount = parseFloat(sale.total_amount || 0);
+    const discount = parseFloat(sale.discount_amount || 0);
+    const grossTotal = totalAmount - discount;
+    const previousBalance = parseFloat(sale.customer?.previous_due_amount || 0);
+    const netAmount = grossTotal;
+    const paidAmount =
+      sale.payments?.reduce(
+        (sum, payment) => sum + parseFloat(payment.paid_amount || 0),
+        0
+      ) || 0;
+    const dueAmount = netAmount - paidAmount;
+    const totalDueBalance = previousBalance + dueAmount;
+
+    const now = new Date();
+    const printDate = now.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    const htmlContent = `
+  <html>
+  <head>
+    <style>
+      @page { margin: 15mm; size: A4; }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        margin: 0;
+        padding: 15px;
+        font-size: 14px;
+        font-family: Arial;
+        box-sizing: border-box;
+      }
+
+      .header {
+        text-align: center;
+        line-height: 1.4;
+      }
+
+      .company-name { font-size: 20px; font-weight: bold; }
+      .subtitle { font-size: 16px; font-weight: semibold; }
+      .contact-info {
+        font-size: 12px;
+        color: #444;
+        margin-top: 2px;
+        line-height: 1.3;
+      }
+
+      .customer-info {
+        display: flex;
+        justify-content: space-between;
+        margin: 10px 0;
+      }
+
+      .left-info, .right-info {
+        flex: 1;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      th, td {
+        border: 1px solid #000;
+        padding: 6px;
+        text-align: left;
+      }
+
+      .text-right { text-align: right; }
+      .text-center { text-align: center; }
+
+      .calc-table {
+        width: 60%;
+        margin-left: auto;
+        margin-top: 20px;
+        margin-bottom: 30px;
+      }
+
+      .calc-table td {
+        padding: 6px;
+      }
+
+      .calc-table td:last-child {
+        text-align: right;
+      }
+
+      .main-content { flex: 1; }
+
+      .bottom-section {
+        margin-top: auto;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      .signature-container {
+        display: flex;
+        justify-content: space-between;
+        margin: 30px 0 10px 0;
+        page-break-inside: avoid;
+      }
+
+      .signature {
+        text-align: center;
+        width: 45%;
+      }
+
+      .signature-line {
+        margin-bottom: 2px;
+        border-top: 1px solid #000;
+        width: 100%;
+      }
+
+      .footer-content {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        border-top: 1px solid #000;
+        padding-top: 10px;
+        page-break-inside: avoid;
+      }
+
+      .footer-left { text-align: left; }
+      .footer-right { text-align: right; }
+    </style>
+  </head>
+  <body>
+    <div class="main-content">
+      <div class="header">
+        <div class="company-name">Feroz Autos</div>
+        <div class="subtitle">A company which fulfill your demands</div>
+        <div class="contact-info">Genuine Motorcycle Parts Importer & WholePurchaser.</div>
+        <div class="contact-info">77.R.N.Road, Noldanga Road (Heaven Building), Jashore-7400</div>
+        <div class="contact-info">Phone:0421-66095, Mob: 01924-331354, 01711-355328, 01778-117515</div>
+        <div class="contact-info">E-mail: heavenautos77jsr@yahoo.com / heavenautojessore@gmail.com</div>
+      </div>
+
+      <h2 style="text-align:center; margin: 20px 0;">Sale Invoice</h2>
+
+      <div class="customer-info">
+        <div class="left-info">
+          <div><strong>Invoice No:</strong> ${sale.invoice_no || "N/A"}</div>
+          <div><strong>Customer Name:</strong> ${
+            sale.customer?.customer_name || "N/A"
+          }</div>
+          <div><strong>Address:</strong> ${
+            sale.customer?.address || "N/A"
+          }</div>
+        </div>
+        <div class="right-info" style="text-align:right;">
+          <div><strong>Sale Date:</strong> ${sale.sale_date || "N/A"}</div>
+          <div><strong>Shop Name:</strong> ${
+            sale.customer?.shop_name || "N/A"
+          }</div>
+          <div><strong>Phone:</strong> ${sale.customer?.phone1 || "N/A"}</div>
+        </div>
+      </div>
+
+      <div><strong>Product Details:</strong> </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th class="text-center">Sl No</th>
+            <th class="text-center">Brand Name</th>
+            <th class="text-center">Part No</th>
+            <th class="text-center">Product Name</th>
+            <th class="text-center">Quantity</th>
+            <th class="text-center">MRP</th>
+            <th class="text-center">Price</th>
+            <th class="text-center">Total Taka</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sale.products
+            .map(
+              (item, index) => `
+            <tr>
+              <td class="text-center">${index + 1}</td>
+              <td class="text-center">${
+                item.product?.category_detail?.company_detail?.company_name ||
+                "N/A"
+              }</td>
+              <td class="text-center">${item.part_no || "N/A"}</td>
+              <td class="text-center">${
+                item.product?.product_name || "N/A"
+              }</td>
+              <td class="text-center">${parseFloat(
+                item.sale_quantity || 0
+              ).toFixed(2)}</td>
+              <td class="text-center">${parseFloat(
+                item.product?.product_mrp || 0
+              ).toFixed(2)}</td>
+              <td class="text-center">${parseFloat(
+                item.sale_price || 0
+              ).toFixed(2)}</td>
+              <td class="text-center">${parseFloat(
+                item.total_price || 0
+              ).toFixed(2)}</td>
+            </tr>
+          `
+            )
+            .join("")}
+          <tr>
+            <td colspan="3" style="border: none;"></td>
+            <td style="border: none;">Total Quantity</td>
+            <td style="border: none;" class="text-right"><strong>${totalQty.toFixed(
+              2
+            )}</strong></td>
+            <td colspan="3" style="border: none;"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table class="calc-table">
+        <tr><td>Total Sale Amount</td><td>${totalAmount.toFixed(2)}</td></tr>
+        <tr><td>(-) Discount</td><td>${discount.toFixed(2)}</td></tr>
+        <tr><td>Gross Total</td><td>${grossTotal.toFixed(2)}</td></tr>
+        <tr><td>(+) Previous Balance</td><td>${previousBalance.toFixed(
+          2
+        )}</td></tr>
+        <tr><td>Net Amount</td><td>${netAmount.toFixed(2)}</td></tr>
+        <tr><td>Paid Taka</td><td>${paidAmount.toFixed(2)}</td></tr>
+        <tr><td>Returnable Taka</td><td>0.00</td></tr>
+        <tr><td>Due Balance</td><td>${dueAmount.toFixed(2)}</td></tr>
+        <tr><td>Total Due Balance</td><td>${totalDueBalance.toFixed(
+          2
+        )}</td></tr>
+      </table>
+    </div>
+
+    <div class="bottom-section">
+      <div class="signature-container">
+        <div class="signature">
+          <div class="signature-line"></div>
+          Customer Signature
+        </div>
+        <div class="signature">
+          <div class="signature-line"></div>
+          Approved By (Feroz Autos)
+        </div>
+      </div>
+      <div class="footer-content">
+        <div class="footer-left">
+          <div>*Sold goods are not returnable (especially electronics).</div>
+          <div>*Save Trees, Save Generations.</div>
+        </div>
+        <div class="footer-right">
+          Print: Admin, ${printDate}
+        </div>
+      </div>
+    </div>
+
+    <script>
+      setTimeout(() => { window.print(); }, 200);
+    </script>
+  </body>
+  </html>
+  `;
+
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
+
+  const [banks, setBanks] = useState([]);
+  const [paymentModes, setPaymentModes] = useState([]);
+  const [editingPayment, setEditingPayment] = useState(null);
+
+  const [paymentData, setPaymentData] = useState({
+    paymentMode: "",
+    bankName: "",
+    accountNo: "",
+    chequeNo: "",
+    paidAmount: "",
+  });
+
+  const [isBank, setIsBank] = useState(false);
+  const [isCheque, setIsCheque] = useState(false);
+
+  // Fetch banks and payment modes on mount
+  useEffect(() => {
+    const fetchBanks = async () => {
+      try {
+        const res = await axiosInstance.get("/banks/");
+        const options = res.data.map((bank) => ({
+          value: bank.id,
+          label: bank.name,
+        }));
+        setBanks(options);
+      } catch (error) {
+        console.error("Error fetching banks:", error);
+        toast.error("Failed to load banks");
+      }
+    };
+
+    const fetchPaymentModes = async () => {
+      try {
+        const res = await axiosInstance.get("/payment-mode/");
+        const options = res.data.map((mode) => ({
+          value: mode.id,
+          label: mode.name,
+        }));
+        setPaymentModes(options);
+      } catch (error) {
+        console.error("Error fetching payment modes:", error);
+        toast.error("Failed to load payment modes");
+      }
+    };
+
+    fetchBanks();
+    fetchPaymentModes();
+  }, [axiosInstance, toast]);
+
+  // Get bank name label from id
+  const getBankName = (bankId) => {
+    if (!bankId) return "N/A";
+    const bank = banks.find((b) => b.value === Number(bankId));
+    return bank?.label || "N/A";
+  };
+
+  // Get payment mode name from id
+  const getPaymentModeName = (id) => {
+    const mode = paymentModes.find((pm) => pm.value === Number(id));
+    return mode?.label || "N/A";
+  };
+
+  // Handle input/select changes
+  const handlePaymentChange = (field, value) => {
+    setPaymentData((prev) => ({ ...prev, [field]: value }));
+
+    if (field === "paymentMode") {
+      const selectedMode = paymentModes.find((opt) => opt.value === value);
+      const modeLabel = selectedMode ? selectedMode.label.toLowerCase() : "";
+
+      setIsBank(modeLabel === "bank");
+      setIsCheque(modeLabel === "cheque");
+
+      // Clear bank and cheque related fields if mode changes
+      if (modeLabel !== "bank") {
+        setPaymentData((prev) => ({ ...prev, bankName: "", accountNo: "" }));
+      }
+      if (modeLabel !== "cheque") {
+        setPaymentData((prev) => ({ ...prev, chequeNo: "" }));
+      }
+    }
+  };
+
+  // Reset form to initial state
+  const handleResetPaymentForm = () => {
+    setEditingPayment(null);
+    setPaymentData({
+      paymentMode: "",
+      bankName: "",
+      accountNo: "",
+      chequeNo: "",
+      paidAmount: "",
+    });
+    setIsBank(false);
+    setIsCheque(false);
+  };
+
+  // Save new payment
+  const handleSavePayment = () => {
+    const newPaymentData = {
+      payment_mode: paymentData.paymentMode || "",
+      bank_name: paymentData.bankName || "",
+      account_no: paymentData.accountNo || "",
+      cheque_no: paymentData.chequeNo || "",
+      paid_amount: paymentData.paidAmount || "0.00",
+    };
+    console.log("Saving payment:", newPaymentData);
+
+    // TODO: API call to save payment here
+
+    handleResetPaymentForm();
+  };
+
+  // Edit existing payment: fill form with data
+  const handleEditClick = (payment) => {
+    const editData = {
+      paymentMode: payment.payment_mode ? Number(payment.payment_mode) : "",
+      bankName: payment.bank_name ? Number(payment.bank_name) : "",
+      accountNo: payment.account_no || "",
+      chequeNo: payment.cheque_no || "",
+      paidAmount: payment.paid_amount ? String(payment.paid_amount) : "",
+    };
+    setPaymentData(editData);
+
+    if (payment.payment_mode && paymentModes.length > 0) {
+      const selectedMode = paymentModes.find(
+        (opt) => opt.value === Number(payment.payment_mode)
+      );
+      const modeLabel = selectedMode ? selectedMode.label.toLowerCase() : "";
+      setIsBank(modeLabel === "bank");
+      setIsCheque(modeLabel === "cheque");
+    } else {
+      setIsBank(false);
+      setIsCheque(false);
+    }
+    setEditingPayment(payment.id);
+  };
+
+  // Update existing payment
+  const handleUpdatePayment = () => {
+    const updatedData = {
+      payment_mode: paymentData.paymentMode || "",
+      bank_name: paymentData.bankName || "",
+      account_no: paymentData.accountNo || "",
+      cheque_no: paymentData.chequeNo || "",
+      paid_amount: paymentData.paidAmount || "0.00",
+    };
+    console.log("Updating payment ID:", editingPayment, updatedData);
+
+    // TODO: API call to update payment here
+
+    handleResetPaymentForm();
+  };
+
+  
+
   // Pagination
   const totalPages = Math.ceil(sales.length / itemsPerPage);
   const paginatedSales = sales.slice(
@@ -562,12 +997,21 @@ export default function SalesList() {
                       <td className="text-center">{paidAmount.toFixed(2)}</td>
                       <td className="text-center">{dueAmount.toFixed(2)}</td>
                       <td className="text-center">
-                        <button className="text-blue-600 hover:underline text-sm">
+                        <button
+                          onClick={() => handleGenerateSalePdf(sale)}
+                          className="text-blue-600 hover:underline text-sm"
+                        >
                           Invoice
                         </button>
                       </td>
                       <td className="text-center">
-                        <button className="text-blue-600 hover:underline text-sm">
+                        <button
+                          onClick={() => {
+                            setPayModalSale(sale);
+                            handleResetPaymentForm();
+                          }}
+                          className="text-blue-600 hover:underline text-sm"
+                        >
                           Pay
                         </button>
                       </td>
@@ -660,6 +1104,234 @@ export default function SalesList() {
           </tbody>
         </table>
       </div>
+
+      {/* Payment Modal */}
+      {payModalSale && (
+        <dialog id="pay_modal" className="modal modal-open">
+          <div className="modal-box max-w-4xl relative">
+            <button
+              onClick={() => {
+                setPayModalSale(null);
+                handleResetPaymentForm();
+              }}
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+            >
+              ✕
+            </button>
+
+            <h3 className="font-bold text-lg mb-4">
+              Payment Details for Invoice: {payModalSale.invoice_no}
+            </h3>
+
+            <div className="mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+                {/* Payment Mode */}
+                <div>
+                  <label className="block text-sm mb-1 font-medium">
+                    Payment Mode*
+                  </label>
+                  <Select
+                    options={paymentModes}
+                    value={
+                      paymentData.paymentMode
+                        ? paymentModes.find(
+                            (opt) =>
+                              opt.value === Number(paymentData.paymentMode)
+                          ) || null
+                        : null
+                    }
+                    onChange={(selected) =>
+                      handlePaymentChange("paymentMode", selected?.value || "")
+                    }
+                    placeholder="Select"
+                    className="text-sm"
+                   styles={customSelectStyles}
+                  />
+                </div>
+
+                {/* Bank Name */}
+                <div>
+                  <label className="block text-sm mb-1 font-medium">
+                    Bank Name
+                  </label>
+                  <Select
+                    options={banks}
+                    value={
+                      paymentData.bankName
+                        ? banks.find(
+                            (opt) => opt.value === Number(paymentData.bankName)
+                          ) || null
+                        : null
+                    }
+                    onChange={(selected) =>
+                      handlePaymentChange("bankName", selected?.value || "")
+                    }
+                    placeholder="Select"
+                    isClearable
+                    isDisabled={!isBank}
+                    className="text-sm"
+                        styles={customSelectStyles}
+                  />
+                </div>
+
+                {/* Account No */}
+                <div>
+                  <label className="block text-sm mb-1 font-medium">
+                    Account No
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentData.accountNo}
+                    onChange={(e) =>
+                      handlePaymentChange("accountNo", e.target.value)
+                    }
+                    disabled={!isBank}
+                    className={`w-full border text-sm px-2 py-1 rounded ${
+                      !isBank ? "bg-gray-100 text-gray-500" : ""
+                    }`}
+                    placeholder="Account No"
+                  />
+                </div>
+
+                {/* Cheque No */}
+                <div>
+                  <label className="block text-sm mb-1 font-medium">
+                    Cheque No
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentData.chequeNo}
+                    onChange={(e) =>
+                      handlePaymentChange("chequeNo", e.target.value)
+                    }
+                    disabled={!isCheque}
+                    className={`w-full border px-2 py-1 text-sm rounded ${
+                      !isCheque ? "bg-gray-100 text-gray-400" : ""
+                    }`}
+                    placeholder="Cheque No"
+                  />
+                </div>
+
+                {/* Paid Amount */}
+                <div>
+                  <label className="block text-sm mb-1 font-medium">
+                    Paid Amount*
+                  </label>
+                  <input
+                    type="number"
+                    value={paymentData.paidAmount}
+                    onChange={(e) =>
+                      handlePaymentChange("paidAmount", e.target.value)
+                    }
+                    className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-center gap-5 mt-5">
+                <button
+                  type="button"
+                  onClick={handleResetPaymentForm}
+                  className="px-4 py-2 border text-sm rounded hover:bg-gray-100"
+                >
+                  Reset
+                </button>
+
+                {editingPayment ? (
+                  <button
+                    type="button"
+                    onClick={handleUpdatePayment}
+                    className="px-4 py-2 bg-green-700 text-sm text-white rounded hover:bg-green-600"
+                  >
+                    Update
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSavePayment}
+                    className="px-4 py-2 bg-sky-800 text-sm text-white rounded hover:bg-sky-700"
+                  >
+                    Save
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Existing payment table */}
+            <div className="overflow-x-auto rounded-box border border-base-content/5 mt-8 bg-base-100">
+              <table className="table text-sm">
+                <thead className="bg-sky-800 text-white">
+                  <tr>
+                    <th className="text-center">SL</th>
+                    <th className="text-center">Due Date</th>
+                    <th className="text-center">Payment Mode</th>
+                    <th className="text-center">Bank Name</th>
+                    <th className="text-center">Account Number</th>
+                    <th className="text-center">Cheque Number</th>
+                    <th className="text-center">Amount</th>
+                    <th className="text-center">Create Date</th>
+                    <th className="text-center">Due Invoice</th>
+                    <th className="text-center">Edit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payModalSale.payments?.length > 0 ? (
+                    payModalSale.payments.map((payment, idx) => (
+                      <tr key={payment.id}>
+                        <td className="text-center">{idx + 1}</td>
+                        <td className="text-center">
+                          {payment.due_date || "N/A"}
+                        </td>
+                        <td>{getPaymentModeName(payment.payment_mode)}</td>
+                        <td className="text-center">
+                          {getBankName(payment.bank_name)}
+                        </td>
+                        <td className="text-center">
+                          {payment.account_no || "N/A"}
+                        </td>
+                        <td className="text-center">
+                          {payment.cheque_no || "N/A"}
+                        </td>
+                        <td className="text-center">
+                          {parseFloat(payment.paid_amount || 0).toFixed(2)}
+                        </td>
+                        <td className="text-center">
+                          {payment.created_at?.slice(0, 10) || "N/A"}
+                        </td>
+                        <td className="text-center">
+                          {payment.due_invoice || "N/A"}
+                        </td>
+                        <td className="text-center">
+                          <button
+                            className="text-blue-600 hover:underline"
+                            onClick={() => handleEditClick(payment)}
+                          >
+                            EDIT
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={10}
+                        className="text-center py-4 text-gray-500"
+                      >
+                        No payments found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setPayModalSale(null)}>close</button>
+          </form>
+        </dialog>
+      )}
 
       {/* Return Modal */}
       <dialog ref={returnModalRef} className="modal">
