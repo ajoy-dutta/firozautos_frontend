@@ -167,6 +167,40 @@ export default function AddEditCustomerPage() {
     router.back();
   };
 
+  const handleKeyDown = (e) => {
+  if (e.key === "Enter") {
+    // Detect if inside an open react-select menu
+    const selectMenuOpen = document.querySelector(".react-select__menu");
+    if (selectMenuOpen) return; // Let Enter work inside select menu
+
+    e.preventDefault(); // Prevent form submission
+
+    const form = e.target.form;
+    const elements = Array.from(form.elements);
+
+    const index = elements.indexOf(e.target);
+    let nextElement = null;
+
+    for (let i = index + 1; i < elements.length; i++) {
+      const el = elements[i];
+      if (
+        el.offsetParent !== null &&
+        !el.disabled &&
+        el.type !== "hidden" &&
+        el.tagName !== "BUTTON"
+      ) {
+        nextElement = el;
+        break;
+      }
+    }
+
+    if (nextElement) {
+      nextElement.focus();
+    }
+  }
+};
+
+
   const renderField = (name, label, type = "text", required = false, placeholder = "") => (
     <div className="flex flex-col">
       <label className="text-sm mb-1 font-medium">
@@ -180,6 +214,7 @@ export default function AddEditCustomerPage() {
         placeholder={placeholder || `Enter ${label.toLowerCase()}`}
         className={`border px-2 py-1 rounded bg-white ${errors[name] ? "border-red-500" : "border-black"}`}
         required={required}
+        onKeyDown={handleKeyDown}
       />
       {errors[name] && <span className="text-red-500 text-xs mt-1">{errors[name]}</span>}
     </div>
@@ -210,6 +245,7 @@ export default function AddEditCustomerPage() {
               options={districts}
               isClearable
               placeholder="Select district"
+              onKeyDown={handleKeyDown}
             />
             {errors.district && <span className="text-red-500 text-xs mt-1">{errors.district}</span>}
           </div>
@@ -228,6 +264,7 @@ export default function AddEditCustomerPage() {
               options={customerTypes.map(t => ({ value: t, label: t }))}
               isClearable
               placeholder="Select type"
+              onKeyDown={handleKeyDown}
             />
             {errors.customerType && <span className="text-red-500 text-xs mt-1">{errors.customerType}</span>}
           </div>

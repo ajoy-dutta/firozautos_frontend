@@ -7,30 +7,6 @@ import { toast } from "react-hot-toast";
 import { useRef } from "react";
 
 export default function CustomerProductSale() {
-     const containerRef = useRef(null);
-
-  // Enter press handler
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-
-      const container = containerRef.current;
-
-      // Get all usable inputs/selects (not disabled/readonly/hidden)
-      const focusableElements = Array.from(
-        container.querySelectorAll(
-          'input:not([disabled]):not([readonly]), select, textarea, button'
-        )
-      ).filter((el) => el.offsetParent !== null);
-
-      const currentIndex = focusableElements.indexOf(e.target);
-
-      if (currentIndex > -1 && currentIndex < focusableElements.length - 1) {
-        focusableElements[currentIndex + 1].focus();
-      }
-    }
-  };
-
   // Custom styles for react-select with vertical centering
   const customSelectStyles = {
     control: (base, state) => ({
@@ -343,9 +319,9 @@ export default function CustomerProductSale() {
     if (!product) return;
 
     // Find stock data by matching product ID
-      const stockItem = stockList.find(
-    (s) => s.product?.id === product.id && s.part_no === product.part_no
-  );
+    const stockItem = stockList.find(
+      (s) => s.product?.id === product.id && s.part_no === product.part_no
+    );
     const stockQty = stockItem ? stockItem.current_stock_quantity : 0;
     setCurrentStock(stockQty);
 
@@ -735,10 +711,46 @@ export default function CustomerProductSale() {
     });
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+
+    // Skip if react-select menu is open
+    const selectMenuOpen = document.querySelector(".react-select__menu");
+    if (selectMenuOpen) return;
+
+    e.preventDefault();
+
+    // Select all focusable elements
+    const allFocusable = Array.from(
+      document.querySelectorAll(
+        `input:not([type="hidden"]),
+       select,
+       textarea,
+       button,
+       [tabindex]:not([tabindex="-1"])`
+      )
+    ).filter(
+      (el) =>
+        el.offsetParent !== null && // visible
+        !el.disabled && // not disabled
+        !(el.readOnly === true || el.getAttribute("readonly") !== null) // not readonly
+    );
+
+    const currentIndex = allFocusable.indexOf(e.target);
+
+    if (currentIndex !== -1) {
+      for (let i = currentIndex + 1; i < allFocusable.length; i++) {
+        const nextEl = allFocusable[i];
+        nextEl.focus();
+        break;
+      }
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-4  ">
       {/* Customer Section */}
-      <section >
+      <section>
         <h2 className="font-semibold text-lg my-2">Customer Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
           <div>
@@ -754,10 +766,9 @@ export default function CustomerProductSale() {
               className="text-sm"
               styles={customSelectStyles}
               readOnly
+              onKeyDown={handleKeyDown}
             />
           </div>
-
-
 
           <div>
             <label className="block mb-1 font-medium text-sm">District</label>
@@ -784,7 +795,7 @@ export default function CustomerProductSale() {
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Type..."
               required
-                   readOnly
+              readOnly
             />
           </div>
 
@@ -800,7 +811,7 @@ export default function CustomerProductSale() {
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Shop Name..."
               required
-                   readOnly
+              readOnly
             />
           </div>
 
@@ -814,7 +825,7 @@ export default function CustomerProductSale() {
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Phone..."
               required
-                   readOnly
+              readOnly
             />
           </div>
 
@@ -827,7 +838,7 @@ export default function CustomerProductSale() {
               onChange={handleCustomerChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Alt phone..."
-                   readOnly
+              readOnly
             />
           </div>
 
@@ -840,7 +851,7 @@ export default function CustomerProductSale() {
               onChange={handleCustomerChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Email..."
-                   readOnly
+              readOnly
             />
           </div>
 
@@ -854,7 +865,7 @@ export default function CustomerProductSale() {
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Address..."
               required
-                   readOnly
+              readOnly
             />
           </div>
 
@@ -868,7 +879,7 @@ export default function CustomerProductSale() {
               value={customerData.date_of_birth}
               onChange={handleCustomerChange}
               className="w-full border rounded px-2 py-1 text-sm"
-                   readOnly
+              readOnly
             />
           </div>
 
@@ -881,7 +892,7 @@ export default function CustomerProductSale() {
               onChange={handleCustomerChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="NID number..."
-                   readOnly
+              readOnly
             />
           </div>
 
@@ -896,7 +907,7 @@ export default function CustomerProductSale() {
               onChange={handleCustomerChange}
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Courier Name..."
-                   readOnly
+              readOnly
             />
           </div>
 
@@ -909,6 +920,7 @@ export default function CustomerProductSale() {
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="Remarks..."
               rows="2"
+              onKeyDown={handleKeyDown}
             />
           </div>
         </div>
@@ -931,6 +943,7 @@ export default function CustomerProductSale() {
                 onChange={(e) => setSaleDate(e.target.value)}
                 className="w-full text-sm border px-2 py-1 rounded"
                 required
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -950,6 +963,7 @@ export default function CustomerProductSale() {
                 placeholder="Select company"
                 className="text-sm"
                 styles={customSelectStyles}
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -967,6 +981,7 @@ export default function CustomerProductSale() {
                 isDisabled={!selectedCompany}
                 className="text-sm"
                 styles={customSelectStyles}
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -984,6 +999,7 @@ export default function CustomerProductSale() {
                 isDisabled={!selectedCompany}
                 className="text-sm"
                 styles={customSelectStyles}
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -1012,6 +1028,7 @@ export default function CustomerProductSale() {
                 onChange={(e) => setSaleQuantity(e.target.value)}
                 className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
                 placeholder="Enter sale quantity"
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -1023,6 +1040,7 @@ export default function CustomerProductSale() {
                 value={saleMRP} // this is MRP from backend
                 readOnly
                 className="w-full border rounded px-2 py-1 text-sm bg-gray-100"
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -1037,6 +1055,7 @@ export default function CustomerProductSale() {
                 onChange={(e) => setPercentage(e.target.value)}
                 className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
                 placeholder="Enter percentage"
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -1048,6 +1067,7 @@ export default function CustomerProductSale() {
                 value={price}
                 readOnly
                 className="w-full border rounded px-2 py-1 text-sm bg-gray-100"
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -1061,6 +1081,7 @@ export default function CustomerProductSale() {
                 value={totalPrice}
                 readOnly
                 className="w-full border rounded px-2 py-1 text-sm bg-gray-100"
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -1073,6 +1094,7 @@ export default function CustomerProductSale() {
                   e.preventDefault();
                   addProduct();
                 }}
+                onKeyDown={handleKeyDown}
               >
                 Add Product
               </button>
@@ -1126,6 +1148,7 @@ export default function CustomerProductSale() {
                       <button
                         onClick={() => removeProduct(idx)}
                         className="px-2 py-1 text-white bg-red-600 hover:bg-red-700 rounded text-xs"
+                        onKeyDown={handleKeyDown}
                       >
                         Remove
                       </button>
@@ -1153,6 +1176,7 @@ export default function CustomerProductSale() {
                 }
                 readOnly
                 className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -1171,6 +1195,7 @@ export default function CustomerProductSale() {
                 onChange={(e) => setDiscountAmount(e.target.value)}
                 className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
                 placeholder="0.00"
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -1187,6 +1212,7 @@ export default function CustomerProductSale() {
                 }
                 readOnly
                 className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
+                onKeyDown={handleKeyDown}
               />
             </div>
           </div>
@@ -1217,6 +1243,7 @@ export default function CustomerProductSale() {
               placeholder="Select"
               className="text-sm"
               styles={customSelectStyles}
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -1236,6 +1263,7 @@ export default function CustomerProductSale() {
               isDisabled={!isBank}
               className="text-sm"
               styles={customSelectStyles}
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -1251,6 +1279,7 @@ export default function CustomerProductSale() {
                 !isBank ? "bg-gray-100 text-gray-500" : ""
               }`}
               placeholder="Account No"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -1266,6 +1295,7 @@ export default function CustomerProductSale() {
                 !isCheque ? "bg-gray-100 text-sm text-gray-400" : ""
               }`}
               placeholder="Cheque No"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -1282,6 +1312,7 @@ export default function CustomerProductSale() {
               }
               className="w-full border rounded px-2 py-1 text-sm placeholder-gray-400"
               placeholder="0.00"
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -1291,6 +1322,7 @@ export default function CustomerProductSale() {
               type="button"
               onClick={handleAddPayment}
               className="px-4 py-2 bg-sky-800 text-sm text-white rounded hover:bg-sky-700"
+              onKeyDown={handleKeyDown}
             >
               Add
             </button>
