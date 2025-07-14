@@ -58,6 +58,42 @@ export default function BankCategoryPage() {
     }
   };
 
+    const handleKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+
+    // Skip if react-select menu is open
+    const selectMenuOpen = document.querySelector(".react-select__menu");
+    if (selectMenuOpen) return;
+
+    e.preventDefault();
+
+    // Select all focusable elements
+    const allFocusable = Array.from(
+      document.querySelectorAll(
+        `input:not([type="hidden"]),
+       select,
+       textarea,
+       button,
+       [tabindex]:not([tabindex="-1"])`
+      )
+    ).filter(
+      (el) =>
+        el.offsetParent !== null && // visible
+        !el.disabled && // not disabled
+        !(el.readOnly === true || el.getAttribute("readonly") !== null) // not readonly
+    );
+
+    const currentIndex = allFocusable.indexOf(e.target);
+
+    if (currentIndex !== -1) {
+      for (let i = currentIndex + 1; i < allFocusable.length; i++) {
+        const nextEl = allFocusable[i];
+        nextEl.focus();
+        break;
+      }
+    }
+  };
+
   return (
     <div>
       <h2 className="text-lg font-semibold text-gray-800 mb-2 border-b pb-2">
@@ -74,6 +110,7 @@ export default function BankCategoryPage() {
             value={formData.name}
             onChange={handleChange}
             type="text"
+            onKeyDown={handleKeyDown}
             required
             className="border border-gray-300 rounded px-3 py-1 w-64 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
@@ -83,11 +120,14 @@ export default function BankCategoryPage() {
           <button
             type="submit"
             className="bg-blue-950 hover:bg-blue-700 text-white px-2 py-[6px] rounded-md w-1/2 cursor-pointer"
-          >
+          
+            onKeyDown={handleKeyDown}
+            >
             {editingId ? "Update" : "Save"}
           </button>
           <button
             type="reset"
+              onKeyDown={handleKeyDown}
             className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded cursor-pointer"
             onClick={() => {
               setFormData({ name: "" });

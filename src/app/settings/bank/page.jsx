@@ -80,6 +80,42 @@ export default function BankMasterPage() {
     }
   };
 
+      const handleKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+
+    // Skip if react-select menu is open
+    const selectMenuOpen = document.querySelector(".react-select__menu");
+    if (selectMenuOpen) return;
+
+    e.preventDefault();
+
+    // Select all focusable elements
+    const allFocusable = Array.from(
+      document.querySelectorAll(
+        `input:not([type="hidden"]),
+       select,
+       textarea,
+       button,
+       [tabindex]:not([tabindex="-1"])`
+      )
+    ).filter(
+      (el) =>
+        el.offsetParent !== null && // visible
+        !el.disabled && // not disabled
+        !(el.readOnly === true || el.getAttribute("readonly") !== null) // not readonly
+    );
+
+    const currentIndex = allFocusable.indexOf(e.target);
+
+    if (currentIndex !== -1) {
+      for (let i = currentIndex + 1; i < allFocusable.length; i++) {
+        const nextEl = allFocusable[i];
+        nextEl.focus();
+        break;
+      }
+    }
+  };
+
   return (
     <div>
       <h2 className="text-lg font-semibold text-gray-800 mb-2 border-b pb-2">
@@ -92,6 +128,7 @@ export default function BankMasterPage() {
             Bank category:<span className="text-red-600">*</span>
           </label>
           <select
+          onKeyDown={handleKeyDown}
             name="bank_category"
             value={formData.bank_category}
             onChange={handleChange}
@@ -112,6 +149,7 @@ export default function BankMasterPage() {
             Bank Name:<span className="text-red-600">*</span>
           </label>
           <input
+            onKeyDown={handleKeyDown}
             name="name"
             value={formData.name}
             onChange={handleChange}
@@ -124,12 +162,14 @@ export default function BankMasterPage() {
         <div className="flex gap-3 pt-7 mb-1">
           <button
             type="submit"
+              onKeyDown={handleKeyDown}
             className="bg-blue-950 hover:bg-blue-700 text-white px-3 py-[6px] rounded-md w-1/2 cursor-pointer"
           >
             {editingId ? "Update" : "Save"}
           </button>
           <button
             type="reset"
+              onKeyDown={handleKeyDown}
             className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded cursor-pointer"
             onClick={() => {
               setFormData({ bank_category: "", name: "" });

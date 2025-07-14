@@ -6,6 +6,128 @@ import axiosInstance from "../../components/AxiosInstance";
 import { toast } from "react-hot-toast";
 
 export default function AddLoanPage() {
+  const customSelectStyles = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: "30px",
+      height: "30px",
+      fontSize: "0.875rem",
+      border: "1px solid #000000",
+      borderRadius: "0.275rem",
+      borderColor: state.isFocused ? "#000000" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 0 1px #000000" : "none",
+      // Remove default padding
+      paddingTop: "0px",
+      paddingBottom: "0px",
+      // Ensure flex alignment
+      display: "flex",
+      alignItems: "center",
+    }),
+
+    valueContainer: (base) => ({
+      ...base,
+      height: "30px",
+      padding: "0 6px",
+      display: "flex",
+      alignItems: "center",
+      flexWrap: "nowrap",
+    }),
+
+    placeholder: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#9ca3af",
+      margin: "0",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    singleValue: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#000000",
+      margin: "0",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    input: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      margin: "0",
+      padding: "0",
+      color: "#000000",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: "30px",
+      display: "flex",
+      alignItems: "center",
+    }),
+
+    indicatorSeparator: (base) => ({
+      ...base,
+      backgroundColor: "#d1d5db",
+      height: "16px", // Shorter separator
+      marginTop: "auto",
+      marginBottom: "auto",
+    }),
+
+    dropdownIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      "&:hover": {
+        color: "#000000",
+      },
+    }),
+
+    clearIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      "&:hover": {
+        color: "#000000",
+      },
+    }),
+
+    option: (base, state) => ({
+      ...base,
+      fontSize: "0.875rem",
+      backgroundColor: state.isSelected
+        ? "#000000"
+        : state.isFocused
+        ? "#f3f4f6"
+        : "white",
+      color: state.isSelected ? "white" : "#000000",
+      "&:hover": {
+        backgroundColor: state.isSelected ? "#000000" : "#f3f4f6",
+      },
+    }),
+
+    menu: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+    }),
+
+    menuList: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+    }),
+  };
+
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     sourceCategory: "", // id
@@ -179,6 +301,42 @@ export default function AddLoanPage() {
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+
+    // Skip if react-select menu is open
+    const selectMenuOpen = document.querySelector(".react-select__menu");
+    if (selectMenuOpen) return;
+
+    e.preventDefault();
+
+    // Select all focusable elements
+    const allFocusable = Array.from(
+      document.querySelectorAll(
+        `input:not([type="hidden"]),
+       select,
+       textarea,
+       button,
+       [tabindex]:not([tabindex="-1"])`
+      )
+    ).filter(
+      (el) =>
+        el.offsetParent !== null && // visible
+        !el.disabled && // not disabled
+        !(el.readOnly === true || el.getAttribute("readonly") !== null) // not readonly
+    );
+
+    const currentIndex = allFocusable.indexOf(e.target);
+
+    if (currentIndex !== -1) {
+      for (let i = currentIndex + 1; i < allFocusable.length; i++) {
+        const nextEl = allFocusable[i];
+        nextEl.focus();
+        break;
+      }
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto  ">
       <h2 className="text-xl font-semibold mb-4 text-center">Add Loan</h2>
@@ -193,7 +351,8 @@ export default function AddLoanPage() {
             name="date"
             value={formData.date}
             onChange={handleChange}
-            className="w-full border px-2 py-1 rounded"
+            className="w-full border input-md px-2 py-1 rounded"
+            onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -212,6 +371,8 @@ export default function AddLoanPage() {
               handleSelectChange("sourceCategory", selected)
             }
             placeholder="Select"
+            onKeyDown={handleKeyDown}
+            styles={customSelectStyles}
           />
         </div>
 
@@ -230,6 +391,8 @@ export default function AddLoanPage() {
               handleSelectChange("bankCategory", selected)
             }
             placeholder="Select"
+            onKeyDown={handleKeyDown}
+            styles={customSelectStyles}
           />
         </div>
 
@@ -249,6 +412,8 @@ export default function AddLoanPage() {
             }
             placeholder="Select bank"
             isDisabled={!formData.bankCategory}
+            onKeyDown={handleKeyDown}
+            styles={customSelectStyles}
           />
         </div>
 
@@ -263,6 +428,8 @@ export default function AddLoanPage() {
             }
             onChange={(selected) => handleSelectChange("loanType", selected)}
             placeholder="Select"
+            onKeyDown={handleKeyDown}
+            styles={customSelectStyles}
           />
         </div>
 
@@ -284,6 +451,8 @@ export default function AddLoanPage() {
               handleSelectChange("transactionType", selected)
             }
             placeholder="Select"
+            onKeyDown={handleKeyDown}
+            styles={customSelectStyles}
           />
         </div>
 
@@ -297,7 +466,8 @@ export default function AddLoanPage() {
             value={formData.principalAmount}
             onChange={handleChange}
             placeholder="0.00"
-            className="w-full border px-2 py-1 rounded"
+            className="w-full input-md border px-2 py-1 rounded"
+            onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -309,7 +479,8 @@ export default function AddLoanPage() {
             value={formData.ratePercent}
             onChange={handleChange}
             placeholder="e.g., 12"
-            className="w-full border px-2 py-1 rounded"
+            className="w-full border input-md px-2 py-1 rounded"
+            onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -323,7 +494,8 @@ export default function AddLoanPage() {
             value={formData.numberOfMonths}
             onChange={handleChange}
             placeholder="e.g., 12"
-            className="w-full border px-2 py-1 rounded"
+            className="w-full border input-md px-2 py-1 rounded"
+            onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -336,7 +508,8 @@ export default function AddLoanPage() {
             name="interestAmount"
             value={formData.interestAmount}
             readOnly
-            className="w-full border px-2 py-1 bg-gray-100 rounded"
+            className="w-full input-md border px-2 py-1 bg-gray-100 rounded"
+            onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -349,7 +522,8 @@ export default function AddLoanPage() {
             name="totalPayableAmount"
             value={formData.totalPayableAmount}
             readOnly
-            className="w-full border px-2 py-1 bg-gray-100 rounded"
+            className="w-full input-md border px-2 py-1 bg-gray-100 rounded"
+            onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -362,7 +536,8 @@ export default function AddLoanPage() {
             name="installmentPerMonth"
             value={formData.installmentPerMonth}
             readOnly
-            className="w-full border px-2 py-1 bg-gray-100 rounded"
+            className="w-full input-md border px-2 py-1 bg-gray-100 rounded"
+            onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -373,7 +548,8 @@ export default function AddLoanPage() {
             value={formData.remarks}
             onChange={handleChange}
             placeholder="Any remarks..."
-            className="w-full border px-2 py-1 rounded"
+            className="w-full input-md border px-2 py-1 rounded"
+            onKeyDown={handleKeyDown}
           />
         </div>
 
@@ -385,6 +561,7 @@ export default function AddLoanPage() {
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"
             }`}
+            onKeyDown={handleKeyDown}
             disabled={isSubmitting}
           >
             {isSubmitting ? "Processing..." : "Submit"}

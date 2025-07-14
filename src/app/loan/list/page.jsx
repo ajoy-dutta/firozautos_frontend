@@ -6,12 +6,135 @@ import { toast } from "react-hot-toast";
 import Select from "react-select";
 
 export default function LoanListPage() {
+  const customSelectStyles = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: "30px",
+      height: "30px",
+      fontSize: "0.875rem",
+      border: "1px solid #000000",
+      borderRadius: "0.275rem",
+      borderColor: state.isFocused ? "#000000" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 0 1px #000000" : "none",
+      // Remove default padding
+      paddingTop: "0px",
+      paddingBottom: "0px",
+      // Ensure flex alignment
+      display: "flex",
+      alignItems: "center",
+    }),
+
+    valueContainer: (base) => ({
+      ...base,
+      height: "30px",
+      padding: "0 6px",
+      display: "flex",
+      alignItems: "center",
+      flexWrap: "nowrap",
+    }),
+
+    placeholder: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#9ca3af",
+      margin: "0",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    singleValue: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#000000",
+      margin: "0",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    input: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      margin: "0",
+      padding: "0",
+      color: "#000000",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: "30px",
+      display: "flex",
+      alignItems: "center",
+    }),
+
+    indicatorSeparator: (base) => ({
+      ...base,
+      backgroundColor: "#d1d5db",
+      height: "16px", // Shorter separator
+      marginTop: "auto",
+      marginBottom: "auto",
+    }),
+
+    dropdownIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      "&:hover": {
+        color: "#000000",
+      },
+    }),
+
+    clearIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      "&:hover": {
+        color: "#000000",
+      },
+    }),
+
+    option: (base, state) => ({
+      ...base,
+      fontSize: "0.875rem",
+      backgroundColor: state.isSelected
+        ? "#000000"
+        : state.isFocused
+        ? "#f3f4f6"
+        : "white",
+      color: state.isSelected ? "white" : "#000000",
+      "&:hover": {
+        backgroundColor: state.isSelected ? "#000000" : "#f3f4f6",
+      },
+    }),
+
+    menu: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+    }),
+
+    menuList: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+    }),
+  };
+
   const [loans, setLoans] = useState([]);
   const [banks, setBanks] = useState([]);
   const [bankCategories, setBankCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedBankCategoryName, setSelectedBankCategoryName] = useState(null);
+  const [selectedBankCategoryName, setSelectedBankCategoryName] =
+    useState(null);
   const [selectedBankName, setSelectedBankName] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,8 +163,7 @@ export default function LoanListPage() {
     }
   };
 
-
-    // Helper to get bank name by id (from banks array)
+  // Helper to get bank name by id (from banks array)
   const getBankNameById = (id) => {
     const bank = banks.find((b) => b.id === Number(id));
     return bank ? bank.name : "-";
@@ -51,7 +173,7 @@ export default function LoanListPage() {
   const getBankCategoryNameById = (id) => {
     const cat = bankCategories.find((c) => c.id === Number(id));
     return cat ? cat.name : "-";
-  }; 
+  };
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this loan?")) return;
@@ -75,9 +197,7 @@ export default function LoanListPage() {
 
   // Filter loans: first by bank category name if selected
   let filteredLoans = selectedBankCategoryName
-    ? loans.filter(
-        (loan) => loan.bank_category === selectedBankCategoryName
-      )
+    ? loans.filter((loan) => loan.bank_category === selectedBankCategoryName)
     : loans;
 
   // Then by bank name if selected
@@ -87,18 +207,52 @@ export default function LoanListPage() {
     );
   }
 
+  const handleKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+
+    // Skip if react-select menu is open
+    const selectMenuOpen = document.querySelector(".react-select__menu");
+    if (selectMenuOpen) return;
+
+    e.preventDefault();
+
+    // Select all focusable elements
+    const allFocusable = Array.from(
+      document.querySelectorAll(
+        `input:not([type="hidden"]),
+       select,
+       textarea,
+       button,
+       [tabindex]:not([tabindex="-1"])`
+      )
+    ).filter(
+      (el) =>
+        el.offsetParent !== null && // visible
+        !el.disabled && // not disabled
+        !(el.readOnly === true || el.getAttribute("readonly") !== null) // not readonly
+    );
+
+    const currentIndex = allFocusable.indexOf(e.target);
+
+    if (currentIndex !== -1) {
+      for (let i = currentIndex + 1; i < allFocusable.length; i++) {
+        const nextEl = allFocusable[i];
+        nextEl.focus();
+        break;
+      }
+    }
+  };
+
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentLoans = filteredLoans.slice(indexOfFirstItem, indexOfLastItem);
 
-
-
   return (
     <div className="max-w-6xl mx-auto">
       <h2 className="text-xl font-semibold mb-4 text-center">Loan List</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         {/* Bank Category Filter */}
         <div>
           <label className="block mb-1 font-medium">Bank Category</label>
@@ -107,9 +261,14 @@ export default function LoanListPage() {
               label: cat.name,
               value: cat.name,
             }))}
+            styles={customSelectStyles}
+            onKeyDown={handleKeyDown}
             value={
               selectedBankCategoryName
-                ? { label: selectedBankCategoryName, value: selectedBankCategoryName }
+                ? {
+                    label: selectedBankCategoryName,
+                    value: selectedBankCategoryName,
+                  }
                 : null
             }
             onChange={(selected) => {
@@ -128,8 +287,10 @@ export default function LoanListPage() {
           <Select
             options={filteredBanks.map((bank) => ({
               label: bank.name,
-              value: bank.name,
+              value: bank.name, 
             }))}
+            styles={customSelectStyles}
+            onKeyDown={handleKeyDown}
             value={
               selectedBankName
                 ? { label: selectedBankName, value: selectedBankName }
@@ -174,9 +335,11 @@ export default function LoanListPage() {
                     <td className="p-2 border">{loan.principal_amount}</td>
                     <td className="p-2 border">{loan.total_payable_amount}</td>
                     <td className="p-2 border space-x-2">
-                      <button  className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600">Edit</button>
+                      <button className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600">
+                        Edit
+                      </button>
                       <button
-                       className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                        className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                         onClick={() => handleDelete(loan.id)}
                       >
                         Delete
@@ -242,14 +405,18 @@ export default function LoanListPage() {
             {/* Next */}
             <li>
               <button
-                disabled={currentPage === Math.ceil(filteredLoans.length / itemsPerPage)}
+                disabled={
+                  currentPage === Math.ceil(filteredLoans.length / itemsPerPage)
+                }
                 onClick={() => setCurrentPage(currentPage + 1)}
                 className={`px-3 py-1 border rounded-r-md ${
                   currentPage === Math.ceil(filteredLoans.length / itemsPerPage)
                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                     : "bg-white text-blue-600 hover:bg-blue-100"
                 }`}
-                aria-disabled={currentPage === Math.ceil(filteredLoans.length / itemsPerPage)}
+                aria-disabled={
+                  currentPage === Math.ceil(filteredLoans.length / itemsPerPage)
+                }
               >
                 Next
               </button>

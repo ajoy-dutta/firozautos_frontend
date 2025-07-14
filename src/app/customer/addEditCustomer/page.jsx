@@ -11,6 +11,128 @@ export default function AddEditCustomerPage() {
   const [initialData, setInitialData] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
+  const customSelectStyles = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: "30px",
+      height: "30px",
+      fontSize: "0.875rem",
+      border: "1px solid #000000",
+      borderRadius: "0.275rem",
+      borderColor: state.isFocused ? "#000000" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 0 1px #000000" : "none",
+      // Remove default padding
+      paddingTop: "0px",
+      paddingBottom: "0px",
+      // Ensure flex alignment
+      display: "flex",
+      alignItems: "center",
+    }),
+
+    valueContainer: (base) => ({
+      ...base,
+      height: "30px",
+      padding: "0 6px",
+      display: "flex",
+      alignItems: "center",
+      flexWrap: "nowrap",
+    }),
+
+    placeholder: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#9ca3af",
+      margin: "0",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    singleValue: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      color: "#000000",
+      margin: "0",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    input: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+      margin: "0",
+      padding: "0",
+      color: "#000000",
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+    }),
+
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: "30px",
+      display: "flex",
+      alignItems: "center",
+    }),
+
+    indicatorSeparator: (base) => ({
+      ...base,
+      backgroundColor: "#d1d5db",
+      height: "16px", // Shorter separator
+      marginTop: "auto",
+      marginBottom: "auto",
+    }),
+
+    dropdownIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      "&:hover": {
+        color: "#000000",
+      },
+    }),
+
+    clearIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      "&:hover": {
+        color: "#000000",
+      },
+    }),
+
+    option: (base, state) => ({
+      ...base,
+      fontSize: "0.875rem",
+      backgroundColor: state.isSelected
+        ? "#000000"
+        : state.isFocused
+        ? "#f3f4f6"
+        : "white",
+      color: state.isSelected ? "white" : "#000000",
+      "&:hover": {
+        backgroundColor: state.isSelected ? "#000000" : "#f3f4f6",
+      },
+    }),
+
+    menu: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+    }),
+
+    menuList: (base) => ({
+      ...base,
+      fontSize: "0.875rem",
+    }),
+  };
+
   const [formData, setFormData] = useState({
     customerName: "",
     district: null,
@@ -48,7 +170,7 @@ export default function AddEditCustomerPage() {
     const fetchDistricts = async () => {
       try {
         const res = await axiosInstance.get("/districts/");
-        const options = res.data.map(d => ({ value: d.id, label: d.name }));
+        const options = res.data.map((d) => ({ value: d.id, label: d.name }));
         setDistricts(options);
       } catch (error) {
         console.error("Failed to fetch districts", error);
@@ -63,7 +185,7 @@ export default function AddEditCustomerPage() {
   useEffect(() => {
     if (isEditMode && initialData && districts.length > 0) {
       const selectedDistrict = districts.find(
-        d => d.label === initialData.district
+        (d) => d.label === initialData.district
       );
 
       setFormData({
@@ -79,35 +201,43 @@ export default function AddEditCustomerPage() {
         nid: initialData.nid_no || "",
         courierName: initialData.courier_name || "",
         remarks: initialData.remarks || "",
-        previousDue: initialData.previous_due_amount ? String(initialData.previous_due_amount) : "",
+        previousDue: initialData.previous_due_amount
+          ? String(initialData.previous_due_amount)
+          : "",
       });
     }
   }, [initialData, isEditMode, districts]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.customerName.trim()) newErrors.customerName = "Customer name is required";
+    if (!formData.customerName.trim())
+      newErrors.customerName = "Customer name is required";
     if (!formData.district) newErrors.district = "District is required";
-    if (!formData.customerType) newErrors.customerType = "Customer type is required";
+    if (!formData.customerType)
+      newErrors.customerType = "Customer type is required";
     if (!formData.phone1.trim()) newErrors.phone1 = "Phone 1 is required";
     if (!formData.address.trim()) newErrors.address = "Address is required";
 
     const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
-    if (formData.phone1 && !phoneRegex.test(formData.phone1)) newErrors.phone1 = "Please enter a valid phone number";
-    if (formData.phone2 && !phoneRegex.test(formData.phone2)) newErrors.phone2 = "Please enter a valid phone number";
+    if (formData.phone1 && !phoneRegex.test(formData.phone1))
+      newErrors.phone1 = "Please enter a valid phone number";
+    if (formData.phone2 && !phoneRegex.test(formData.phone2))
+      newErrors.phone2 = "Please enter a valid phone number";
 
     if (formData.email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) newErrors.email = "Please enter a valid email address";
+      if (!emailRegex.test(formData.email))
+        newErrors.email = "Please enter a valid email address";
     }
 
-    if (formData.previousDue && isNaN(formData.previousDue)) newErrors.previousDue = "Previous due must be a number";
+    if (formData.previousDue && isNaN(formData.previousDue))
+      newErrors.previousDue = "Previous due must be a number";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -132,7 +262,9 @@ export default function AddEditCustomerPage() {
         nid_no: formData.nid,
         courier_name: formData.courierName,
         remarks: formData.remarks,
-        previous_due_amount: formData.previousDue ? parseFloat(formData.previousDue) : null,
+        previous_due_amount: formData.previousDue
+          ? parseFloat(formData.previousDue)
+          : null,
       };
 
       if (isEditMode && initialData) {
@@ -155,9 +287,19 @@ export default function AddEditCustomerPage() {
   const handleReset = () => {
     if (confirm("Are you sure you want to reset the form?")) {
       setFormData({
-        customerName: "", district: null, customerType: "", shopName: "", phone1: "",
-        phone2: "", email: "", address: "", dob: "", nid: "", courierName: "",
-        remarks: "", previousDue: "",
+        customerName: "",
+        district: null,
+        customerType: "",
+        shopName: "",
+        phone1: "",
+        phone2: "",
+        email: "",
+        address: "",
+        dob: "",
+        nid: "",
+        courierName: "",
+        remarks: "",
+        previousDue: "",
       });
       setErrors({});
     }
@@ -167,41 +309,44 @@ export default function AddEditCustomerPage() {
     router.back();
   };
 
-  const handleKeyDown = (e) => {
+const handleKeyDown = (e) => {
   if (e.key === "Enter") {
-    // Detect if inside an open react-select menu
     const selectMenuOpen = document.querySelector(".react-select__menu");
-    if (selectMenuOpen) return; // Let Enter work inside select menu
+    if (selectMenuOpen) return;
 
-    e.preventDefault(); // Prevent form submission
+    e.preventDefault();
 
     const form = e.target.form;
-    const elements = Array.from(form.elements);
-
-    const index = elements.indexOf(e.target);
-    let nextElement = null;
-
-    for (let i = index + 1; i < elements.length; i++) {
-      const el = elements[i];
-      if (
-        el.offsetParent !== null &&
+    const elements = Array.from(form.elements).filter(
+      (el) =>
+        el.offsetParent !== null && // visible
         !el.disabled &&
-        el.type !== "hidden" &&
-        el.tagName !== "BUTTON"
-      ) {
-        nextElement = el;
-        break;
-      }
-    }
+        el.type !== "hidden"
+    );
 
-    if (nextElement) {
-      nextElement.focus();
+    let index = elements.indexOf(e.target);
+
+    if (index > -1 && index < elements.length - 1) {
+      let next = elements[index + 1];
+      while (next && (next.disabled || next.offsetParent === null)) {
+        index++;
+        next = elements[index + 1];
+      }
+      if (next) next.focus();
     }
   }
 };
 
 
-  const renderField = (name, label, type = "text", required = false, placeholder = "") => (
+
+
+  const renderField = (
+    name,
+    label,
+    type = "text",
+    required = false,
+    placeholder = ""
+  ) => (
     <div className="flex flex-col">
       <label className="text-sm mb-1 font-medium">
         {label} {required && <span className="text-red-500">*</span>}
@@ -212,11 +357,15 @@ export default function AddEditCustomerPage() {
         value={formData[name]}
         onChange={handleChange}
         placeholder={placeholder || `Enter ${label.toLowerCase()}`}
-        className={`border px-2 py-1 rounded bg-white ${errors[name] ? "border-red-500" : "border-black"}`}
+        className={`border input-md px-2 py-1 rounded bg-white ${
+          errors[name] ? "border-red-500" : "border-black"
+        }`}
         required={required}
         onKeyDown={handleKeyDown}
       />
-      {errors[name] && <span className="text-red-500 text-xs mt-1">{errors[name]}</span>}
+      {errors[name] && (
+        <span className="text-red-500 text-xs mt-1">{errors[name]}</span>
+      )}
     </div>
   );
 
@@ -239,15 +388,21 @@ export default function AddEditCustomerPage() {
               name="district"
               value={formData.district}
               onChange={(selected) => {
-                setFormData(prev => ({ ...prev, district: selected }));
-                if (errors.district) setErrors(prev => ({ ...prev, district: "" }));
+                setFormData((prev) => ({ ...prev, district: selected }));
+                if (errors.district)
+                  setErrors((prev) => ({ ...prev, district: "" }));
               }}
               options={districts}
               isClearable
               placeholder="Select district"
               onKeyDown={handleKeyDown}
+              styles={customSelectStyles}
             />
-            {errors.district && <span className="text-red-500 text-xs mt-1">{errors.district}</span>}
+            {errors.district && (
+              <span className="text-red-500 text-xs mt-1">
+                {errors.district}
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col">
@@ -256,17 +411,33 @@ export default function AddEditCustomerPage() {
             </label>
             <Select
               name="customerType"
-              value={formData.customerType ? { label: formData.customerType, value: formData.customerType } : null}
+              value={
+                formData.customerType
+                  ? {
+                      label: formData.customerType,
+                      value: formData.customerType,
+                    }
+                  : null
+              }
               onChange={(selected) => {
-                setFormData(prev => ({ ...prev, customerType: selected?.value || "" }));
-                if (errors.customerType) setErrors(prev => ({ ...prev, customerType: "" }));
+                setFormData((prev) => ({
+                  ...prev,
+                  customerType: selected?.value || "",
+                }));
+                if (errors.customerType)
+                  setErrors((prev) => ({ ...prev, customerType: "" }));
               }}
-              options={customerTypes.map(t => ({ value: t, label: t }))}
+              options={customerTypes.map((t) => ({ value: t, label: t }))}
               isClearable
               placeholder="Select type"
               onKeyDown={handleKeyDown}
+               styles={customSelectStyles}
             />
-            {errors.customerType && <span className="text-red-500 text-xs mt-1">{errors.customerType}</span>}
+            {errors.customerType && (
+              <span className="text-red-500 text-xs mt-1">
+                {errors.customerType}
+              </span>
+            )}
           </div>
 
           {renderField("shopName", "Shop Name")}
@@ -276,7 +447,13 @@ export default function AddEditCustomerPage() {
           {renderField("address", "Address", "text", true)}
           {renderField("nid", "NID No")}
           {renderField("courierName", "Courier Name")}
-          {renderField("previousDue", "Previous Due Amount", "number", false, "0.00")}
+          {renderField(
+            "previousDue",
+            "Previous Due Amount",
+            "number",
+            false,
+            "0.00"
+          )}
           {renderField("remarks", "Remarks")}
         </div>
 
@@ -286,15 +463,19 @@ export default function AddEditCustomerPage() {
             onClick={handleReset}
             className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors"
             disabled={isSubmitting}
+               onKeyDown={handleKeyDown}
           >
             Reset
           </button>
           <button
             type="submit"
             className={`px-6 py-2 rounded text-white transition-colors ${
-              isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-sky-800 hover:bg-sky-700"
+              isSubmitting
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-sky-800 hover:bg-sky-700"
             }`}
             disabled={isSubmitting}
+               onKeyDown={handleKeyDown}
           >
             {isSubmitting ? "Processing..." : isEditMode ? "Update" : "Submit"}
           </button>

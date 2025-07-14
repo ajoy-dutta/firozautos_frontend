@@ -163,7 +163,8 @@ export default function ProductCategoryPage() {
             <button
               type="submit"
               className="bg-blue-950 hover:bg-blue-700 text-white px-2 py-[6px] rounded-md w-1/2 cursor-pointer"
-            >
+             onKeyDown={handleKeyDown}
+          >
               {editingId ? "Update" : "Save"}
             </button>
             <button

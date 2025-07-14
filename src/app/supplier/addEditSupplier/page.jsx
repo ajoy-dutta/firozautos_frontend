@@ -176,7 +176,7 @@ export default function SupplierForm() {
   };
 
   return (
-    <div className="p-4 text-sm text-slate-700">
+    <div className="p-4 text-sm text-black">
       <h2 className="text-xl font-semibold mb-4">Supplier Entry</h2>
 
       <form
