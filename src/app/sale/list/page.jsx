@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Select from "react-select";
 import axiosInstance from "../../components/AxiosInstance";
 import toast from "react-hot-toast";
+import AxiosInstance from "../../components/AxiosInstance";
 
 export default function SalesList() {
   const customSelectStyles = {
@@ -139,7 +140,7 @@ export default function SalesList() {
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [returnModalSale, setReturnModalSale] = useState(null);
   const [returnData, setReturnData] = useState([]);
-    const [payModalSale, setPayModalSale] = useState(null);
+  const [payModalSale, setPayModalSale] = useState(null);
   const [formData, setFormData] = useState({
     returnDate: new Date().toISOString().slice(0, 10),
     productName: "",
@@ -711,7 +712,6 @@ export default function SalesList() {
     printWindow.document.close();
   };
 
-
   const [banks, setBanks] = useState([]);
   const [paymentModes, setPaymentModes] = useState([]);
   const [editingPayment, setEditingPayment] = useState(null);
@@ -809,39 +809,57 @@ export default function SalesList() {
     setIsCheque(false);
   };
 
-  // Save new payment
-  const handleSavePayment = () => {
-    const newPaymentData = {
-      payment_mode: paymentData.paymentMode || "",
-      bank_name: paymentData.bankName || "",
-      account_no: paymentData.accountNo || "",
-      cheque_no: paymentData.chequeNo || "",
-      paid_amount: paymentData.paidAmount || "0.00",
-    };
-    console.log("Saving payment:", newPaymentData);
+  const handleSavePayment = async () => {
+    try {
+      const response = await axiosInstance.post(`/sale-payments/`, {
+        sale_id: payModalSale.id, // ⬅️ Required
+        payment_mode_id: paymentData.paymentMode,
+        bank_name_id: paymentData.bankName || null,
+        account_no: paymentData.accountNo || null,
+        cheque_no: paymentData.chequeNo || null,
+        paid_amount: paymentData.paidAmount,
+        remarks: paymentData.remarks || "",
+      });
 
-    // TODO: API call to save payment here
+      toast.success("Payment added successfully");
 
-    handleResetPaymentForm();
+      // Optionally: Re-fetch the sale to update payment table
+      const saleRes = await axiosInstance.get(`/sales/${payModalSale.id}/`);
+      setPayModalSale(saleRes.data);
+
+      handleResetPaymentForm();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Axios error:", error.response?.data || error.message);
+      } else {
+        console.error("Unexpected error:", error);
+      }
+      toast.error("Failed to save payment");
+    }
   };
 
   // Edit existing payment: fill form with data
   const handleEditClick = (payment) => {
     const editData = {
-      paymentMode: payment.payment_mode ? Number(payment.payment_mode) : "",
-      bankName: payment.bank_name ? Number(payment.bank_name) : "",
+      paymentMode: payment.payment_mode?.id || "", // use .id here
+      bankName: payment.bank_name?.id || "", // use .id here
       accountNo: payment.account_no || "",
       chequeNo: payment.cheque_no || "",
       paidAmount: payment.paid_amount ? String(payment.paid_amount) : "",
+      remarks: payment.remarks || "",
     };
     setPaymentData(editData);
 
     if (payment.payment_mode && paymentModes.length > 0) {
       const selectedMode = paymentModes.find(
-        (opt) => opt.value === Number(payment.payment_mode)
+        (opt) => opt.value === (payment.payment_mode?.id || 0)
       );
       const modeLabel = selectedMode ? selectedMode.label.toLowerCase() : "";
-      setIsBank(modeLabel === "bank");
+      setIsBank(
+        modeLabel === "bank" ||
+          modeLabel === "bank transfer" ||
+          modeLabel === "online"
+      );
       setIsCheque(modeLabel === "cheque");
     } else {
       setIsBank(false);
@@ -851,22 +869,36 @@ export default function SalesList() {
   };
 
   // Update existing payment
-  const handleUpdatePayment = () => {
-    const updatedData = {
-      payment_mode: paymentData.paymentMode || "",
-      bank_name: paymentData.bankName || "",
-      account_no: paymentData.accountNo || "",
-      cheque_no: paymentData.chequeNo || "",
-      paid_amount: paymentData.paidAmount || "0.00",
-    };
-    console.log("Updating payment ID:", editingPayment, updatedData);
+  const handleUpdatePayment = async () => {
+    try {
+      const response = await axiosInstance.patch(
+        `/sale-payments/${editingPayment}/`,
+        {
+          payment_mode_id: paymentData.paymentMode,
+          bank_name_id: paymentData.bankName || null,
+          account_no: paymentData.accountNo || "",
+          cheque_no: paymentData.chequeNo || "",
+          paid_amount: paymentData.paidAmount,
+          remarks: paymentData.remarks || "",
+        }
+      );
 
-    // TODO: API call to update payment here
+      toast.success("Payment updated successfully");
 
-    handleResetPaymentForm();
+      // Re-fetch updated sale to refresh payment list
+      const saleRes = await axiosInstance.get(`/sales/${payModalSale.id}/`);
+      setPayModalSale(saleRes.data);
+
+      handleResetPaymentForm(); // clear form + exit edit mode
+    } catch (error) {
+      if (axiosInstance.isAxiosError(error)) {
+        console.error("Axios error:", error.response?.data || error.message);
+      } else {
+        console.error("Unexpected error:", error);
+      }
+      toast.error("Failed to update payment");
+    }
   };
-
-  
 
   // Pagination
   const totalPages = Math.ceil(sales.length / itemsPerPage);
@@ -1145,7 +1177,7 @@ export default function SalesList() {
                     }
                     placeholder="Select"
                     className="text-sm"
-                   styles={customSelectStyles}
+                    styles={customSelectStyles}
                   />
                 </div>
 
@@ -1170,7 +1202,7 @@ export default function SalesList() {
                     isClearable
                     isDisabled={!isBank}
                     className="text-sm"
-                        styles={customSelectStyles}
+                    styles={customSelectStyles}
                   />
                 </div>
 
