@@ -63,7 +63,7 @@ function SidebarContent() {
       label: "Product Order",
       icon: "⚙️",
       children: [
-        { label: "Order Form", href: "/order/form" },
+        { label: "Order Form", href: "/order/addEdit" },
         { label: "Order List", href: "/order/list" }
       ]
     },

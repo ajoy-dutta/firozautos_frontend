@@ -80,7 +80,7 @@ export default function BankMasterPage() {
     }
   };
 
-      const handleKeyDown = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key !== "Enter") return;
 
     // Skip if react-select menu is open
@@ -128,7 +128,7 @@ export default function BankMasterPage() {
             Bank category:<span className="text-red-600">*</span>
           </label>
           <select
-          onKeyDown={handleKeyDown}
+            onKeyDown={handleKeyDown}
             name="bank_category"
             value={formData.bank_category}
             onChange={handleChange}
@@ -162,14 +162,14 @@ export default function BankMasterPage() {
         <div className="flex gap-3 pt-7 mb-1">
           <button
             type="submit"
-              onKeyDown={handleKeyDown}
+            onKeyDown={handleKeyDown}
             className="bg-blue-950 hover:bg-blue-700 text-white px-3 py-[6px] rounded-md w-1/2 cursor-pointer"
           >
             {editingId ? "Update" : "Save"}
           </button>
           <button
             type="reset"
-              onKeyDown={handleKeyDown}
+            onKeyDown={handleKeyDown}
             className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded cursor-pointer"
             onClick={() => {
               setFormData({ bank_category: "", name: "" });
@@ -186,7 +186,9 @@ export default function BankMasterPage() {
           <thead className="bg-sky-900 text-white">
             <tr>
               <th className="border border-gray-400 px-2 py-1">SL</th>
-              <th className="border border-gray-400 px-2 py-1">Bank category</th>
+              <th className="border border-gray-400 px-2 py-1">
+                Bank category
+              </th>
               <th className="border border-gray-400 px-2 py-1">Bank Name</th>
               <th className="border border-gray-400 px-2 py-1">Edit</th>
               <th className="border border-gray-400 px-2 py-1">Delete</th>
@@ -195,11 +197,15 @@ export default function BankMasterPage() {
           <tbody>
             {bankList.map((item, index) => (
               <tr key={item.id} className="text-center">
-                <td className="border border-gray-400 px-2 py-1">{index + 1}</td>
+                <td className="border border-gray-400 px-2 py-1">
+                  {index + 1}
+                </td>
                 <td className="border border-gray-400 px-2 py-1">
                   {item.bank_category_detail?.name || "—"}
                 </td>
-                <td className="border border-gray-400 px-2 py-1">{item.name}</td>
+                <td className="border border-gray-400 px-2 py-1">
+                  {item.name}
+                </td>
                 <td
                   className="border border-gray-400 px-2 py-1 text-yellow-600 cursor-pointer"
                   onClick={() => handleEdit(item)}
